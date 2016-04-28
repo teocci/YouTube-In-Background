@@ -308,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
             alertDialog.setTitle("Teocci");
             alertDialog.setIcon(R.mipmap.ic_launcher);
-            alertDialog.setMessage("TubTub v1.01\n\nvanste25@gmail.com\n\nMarch 2016.\n");
+            alertDialog.setMessage("YTinBG v1.01\n\nteocci@naver.com\n\nMarch 2016.\n");
             alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
@@ -325,9 +325,9 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_search) {
             MenuItemCompat.expandActionView(item);
             return true;
-        } else if (id == R.id.action_color_picker) {
+        } //else if (id == R.id.action_color_picker) {
             /* Show color picker dialog */
-            ColorPickerDialogBuilder
+            /* ColorPickerDialogBuilder
                     .with(this)
                     .setTitle("Choose background and text color")
                     .initialColor(initialColor)
@@ -357,7 +357,7 @@ public class MainActivity extends AppCompatActivity {
                     .showColorEdit(true)
                     .build()
                     .show();
-        }
+        }*/
 
         return super.onOptionsItemSelected(item);
     }
