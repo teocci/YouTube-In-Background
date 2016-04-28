@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="14dip" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Recently played videos"
+        android:layout_gravity="center"
+        android:id="@+id/fragment_title_text_view" />
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="3dip" />
+
+    <com.nhaarman.listviewanimations.itemmanipulation.DynamicListView
+        android:id="@+id/recently_played"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:dividerHeight="3dp" />
+</LinearLayout>

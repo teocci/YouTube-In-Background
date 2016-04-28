@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/row_item"
+    android:layout_width="match_parent"
+    android:layout_height="110dp"
+    android:background="?android:attr/activatedBackgroundIndicator"
+    android:descendantFocusability="blocksDescendants"
+    android:orientation="horizontal"
+    android:padding="7dp">
+
+    <FrameLayout
+        android:id="@+id/image_frame_layout"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="40">
+
+        <ImageView
+            android:id="@+id/video_thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp" />
+
+        <TextView
+            android:id="@+id/video_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|left"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:background="@android:color/black"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/info_frame_layout"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="3dp"
+        android:layout_weight="60"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/video_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|left"
+            android:maxLines="3"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/views_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|left"
+            android:layout_marginBottom="5dp"
+            android:maxLines="1"
+            android:textSize="12sp" />
+
+        <CheckBox
+            android:id="@+id/imageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|bottom"
+            android:button="@drawable/favorite_button_selector" />
+
+    </FrameLayout>
+</LinearLayout>
