@@ -9,6 +9,9 @@ YTinBG provides mechanisms for searching videos and playlists on YT, as well as 
 ## Download
 You can [download the APP here](https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/app/com.teocci.utubinbg-release.apk)
 
+## Install
+You can install the APK following the [next guide](https://github.com/teocci/YouTube-In-Background/blob/master/INSTALL.md)
+
 ## Contribute
 You can contribute to YouTube-In-Background by different means. You can help find bugs (and report them in the [issue tracker](https://github.com/teocci/YouTube-In-Background/issues)), help with the translation to different languages or you can try and implement new things yourself.
 
