@@ -23,8 +23,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.RemoteException;
@@ -33,20 +33,19 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.util.SparseArray;
 
-import com.commit451.youtubeextractor.YouTubeExtractionResult;
-import com.commit451.youtubeextractor.YouTubeExtractor;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 import com.teocci.utubinbg.receivers.MediaButtonIntentReceiver;
 import com.teocci.utubinbg.utils.Config;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import at.huber.youtubeExtractor.YouTubeUriExtractor;
+import at.huber.youtubeExtractor.YtFile;
 
 /**
  * Service class for background youtube playback
@@ -58,7 +57,9 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     private static final String TAG = "UTUBINBG SERVICE CLASS";
 
     private static final int YOUTUBE_ITAG_140 = 140; //mp4a - stereo, 44.1 KHz 128 Kbps
-    private static final int YOUTUBE_ITAG_18 = 17; //mp4 - stereo, 44.1 KHz 96-100 Kbps
+    private static final int YOUTUBE_ITAG_22 = 22; //mp4 - stereo, 44.1 KHz 96-100 Kbps
+    private static final int YOUTUBE_ITAG_18 = 18; //mp4 - stereo, 44.1 KHz 96-100 Kbps
+    private static final int YOUTUBE_ITAG_17 = 17;
 
     public static final String ACTION_PLAY = "action_play";
     public static final String ACTION_PAUSE = "action_pause";
@@ -427,55 +428,22 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
      * Extracts link from youtube video ID, so mediaPlayer can play it
      */
     private void extractUrlAndPlay() {
-        final String youtubeLink = videoItem.getId();
+        final String youtubeLink = "http://youtube.com/watch?v=" + videoItem.getId();
 
         Log.e(TAG, youtubeLink);
-        // this will extract the result on the current thread. Don't use this on the main thread!
-        YouTubeExtractor extractor = YouTubeExtractor.create();
-        extractor.extract(youtubeLink).enqueue(new Callback<YouTubeExtractionResult>() {
-            @Override
-            public void onResponse(Call<YouTubeExtractionResult> call, Response<YouTubeExtractionResult> response)
-            {
-                Log.e(TAG, ""+response.headers());
-                Log.e(TAG, ""+response.raw().body().contentType());
-                Log.e(TAG, ""+response.raw().request());
-                Log.e(TAG, ""+response.isSuccessful());
-                Log.e(TAG, response.toString());
-                Log.e(TAG, ""+response.body().getSd360VideoUri());
-                Uri hdUri = response.body().getBestAvailableQualityVideoUri();
-                Log.e(TAG, String.valueOf(hdUri));
-                /*try {
-                    Log.d(TAG, "Start playback");
-                    if (mMediaPlayer != null) {
-                        mMediaPlayer.reset();
-                        mMediaPlayer.setDataSource(String.valueOf(hdUri));
-                        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                        mMediaPlayer.prepare();
-                        mMediaPlayer.start();
-                    }
-                } catch (IOException io) {
-                    io.printStackTrace();
-                }*/
-                //See the sample for more
-            }
 
-            @Override
-            public void onFailure(Call<YouTubeExtractionResult> call, Throwable t) {
-                t.printStackTrace();
-                //Alert your user!
-            }
-        });
-
-        //Response<YouTubeExtractionResult> response = extractor.extract(GRID_VIDEO_ID).execute();
-        /*YouTubeUriExtractor ytEx = new YouTubeUriExtractor(this) {
+        YouTubeUriExtractor ytEx = new YouTubeUriExtractor(this) {
             @Override
             public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
+                Log.e(TAG, "NULLL");
                 if (ytFiles != null) {
+                    Log.e(TAG, "NOT NULL");
                     YtFile ytFile = ytFiles.get(YOUTUBE_ITAG_140);
                     if (ytFile == null) {
                         ytFile = ytFiles.get(YOUTUBE_ITAG_18);
                     }
                     try {
+                        Log.e(TAG, ytFile.getUrl());
                         Log.d(TAG, "Start playback");
                         if (mMediaPlayer != null) {
                             mMediaPlayer.reset();
@@ -489,8 +457,12 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
                     }
                 }
             }
-        };*/
-        //ytEx.execute(youtubeLink);
+        };
+        // Ignore the webm container format
+        ytEx.setIncludeWebM(false);
+        ytEx.setParseDashManifest(true);
+        // Lets execute the request
+        ytEx.execute(youtubeLink);
     }
 
     @Override

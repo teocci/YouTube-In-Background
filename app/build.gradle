@@ -75,8 +75,7 @@ dependencies {
     compile 'com.android.support:support-v4:23.2.0'
     compile 'com.android.support:recyclerview-v7:23.2.0'
     compile 'com.google.android.gms:play-services-auth:8.4.0'
-    compile project(':youtubeextractor')
-    compile project(':rxyoutubeextractor')
+    compile project(':youtubeExtractor')
     compile files('libs/nineoldandroids-2.4.0.jar')
     compile files('libs/listviewanimations_lib-core-slh_3.1.0.jar')
     compile files('libs/listviewanimations_lib-manipulation_3.1.0.jar')
