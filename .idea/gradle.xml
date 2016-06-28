@@ -9,12 +9,16 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/rxyoutubeextractor" />
+            <option value="$PROJECT_DIR$/youtubeextractor" />
           </set>
         </option>
         <option name="myModules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/rxyoutubeextractor" />
+            <option value="$PROJECT_DIR$/youtubeextractor" />
           </set>
         </option>
       </GradleProjectSettings>

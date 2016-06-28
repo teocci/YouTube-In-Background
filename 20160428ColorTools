@@ -1,0 +1,116 @@
+
+Bug Fixing Vs. Problem Solving - From Agile to Lean
+http://www.infoq.com/articles/bug-fixing-problem-solving
+
+
+How to fix bugs, step by step
+http://www.yacoset.com/Home/how-to-fix-bugs-step-by-step
+
+
+Move to the new repo Directory 
+cd newrepo
+
+Add all the files to be commited
+git --git-dir=/path/to/my/oldrepo/.git/ --work-tree=/path/to/my/newrepo/ add .
+
+Commit the changes
+git --git-dir=/path/to/my/oldrepo/.git/ --work-tree=/path/to/my/newrepo/ commit -a -m "This is the Android Studio version"
+
+Add the remote origin
+git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ remote add origin https://github.com/your/project.git
+
+Push the changes
+git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ git push -u origin master
+
+Now you can delete the directory and clone again the new project as a master
+git clone https://github.com/your/project.git
+
+
+
+Colors Tools
+http://trycolors.com/colors/C4322E/
+http://www.materialup.com/posts/waveinapp
+http://www.materialpalette.com/
+
+
+https://github.com/pylerSM/YouTubeBackgroundPlayback
+https://github.com/yhcting/netmbuddy/blob/master/HackTest/src/YTHackTest.java
+
+
+
+MAC Fonts
+http://www.noobslab.com/2015/11/macbuntu-1510-transformation-pack-for.html
+http://www.noobslab.com/2014/04/macbuntu-1404-pack-is-released.html
+http://www.noobslab.com/2013/05/mac-os-x-theme-for-ubuntu-1304-raring.html
+
+
+
+git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ commit -a -m "This is the Android Studio version"
+
+
+
+
+  520  ls -al
+  521  git --git-dir=~/AndroidSRC/Camtest0110/.git --work-tree=~/AndroidSRC/Camtest01101/ commit -a -m "This is the Android Studio version"
+  522  git --git-dir=/home/Teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/Teocci/AndroidSRC/Camtest01101/ commit -a -m "This is the Android Studio version"
+  523  git --git-dir=/home/Teocci/AndroidSRC/Camtest0110/.git/ --work-tree=/home/Teocci/AndroidSRC/Camtest01101/ commit -a -m "This is the Android Studio version"
+  524  cd /home/Teocci/AndroidSRC/Camtest0110/.git/
+  525  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ commit -a -m "This is the Android Studio version"
+  526  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ commit -m "This is the Android Studio version"
+  527  git pust
+  528  git push
+  529  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ remote add origin https://github.com/teocci/Camtest0110.git
+  530  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ git push -u origin master
+  531  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ git init
+  532  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ init
+  533  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ commit -a -m "This is the Android Studio version"
+  534  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ add
+  535  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ add .
+  536  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ commit -a -m "This is the Android Studio version"
+  537  git --git-dir=/home/teocci/AndroidSRC/Camtest0110/.git --work-tree=/home/teocci/AndroidSRC/Camtest01101/ push -u origin master
+  538  touch README
+  539  echo "Camera Streaming (HTTP MJPEG), DSP processing, Viola Jones face detection." >> README.md
+  540  git init
+  541  git add README.md
+  542  ls -al
+  543  git commit -m "adding README file"
+  544  git push -u origin master
+  545  git push
+  546  ls -al
+  547  git push -u origin master
+  548  git checkout master
+  549  rm README
+  550  ls -al
+  551  git add README.md 
+  552  git commit -m "Adding README.md file"
+  553  git add .
+  554  git commit -m "Adding README.md file"
+  555  git push -u origin master
+  556  git remote add origin https://github.com/teocci/Camtest0110.git
+  557  git push -u origin master
+  558  git pull
+  559  git push -u origin master
+  560  touch README.md
+  561  echo "#  Camera Streaming (HTTP MJPEG), DSP processing, Viola Jones face detection." >> README.md
+  562  git commit -m "Adding a README file."
+  563  git commit -a -m "Adding a README file."
+  564  git commit -a -m "Removing .iml"
+  565  git push
+  566  git add README.md 
+  567  git commit -a -m "Adding a README file."
+  568  git push -u origin master
+  569  exit
+  570  git clone https://github.com/teocci/Camtest0110.git
+  571  git clone 
+  572  git clone https://github.com/teocci/Camtest0110.git
+  573  mv -vR Camtest0110/
+  574  rm -vR Camtest0110/
+  575  ls -al
+  576  cd AndroidSRC/
+  577  git clone https://github.com/teocci/Camtest0110.git
+  578  cd ..
+  579  cd Downloads/
+  580  wget -O mac-fonts.zip http://drive.noobslab.com/data/Mac-14.04/macfonts.zip
+  581  sudo unzip mac-fonts.zip -d /usr/share/fonts; rm mac-fonts.zip
+  582  sudo fc-cache -f -v
+  583  cmd
