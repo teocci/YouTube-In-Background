@@ -435,9 +435,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
         YouTubeUriExtractor ytEx = new YouTubeUriExtractor(this) {
             @Override
             public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
-                Log.e(TAG, "NULLL");
                 if (ytFiles != null) {
-                    Log.e(TAG, "NOT NULL");
                     YtFile ytFile = ytFiles.get(YOUTUBE_ITAG_140);
                     if (ytFile == null) {
                         ytFile = ytFiles.get(YOUTUBE_ITAG_18);

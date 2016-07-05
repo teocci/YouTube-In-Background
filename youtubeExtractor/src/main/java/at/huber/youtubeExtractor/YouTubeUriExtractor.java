@@ -54,8 +54,10 @@ public abstract class YouTubeUriExtractor extends AsyncTask<String, Void, Sparse
     private final Lock lock = new ReentrantLock();
     private final Condition jsExecuting = lock.newCondition();
 
-    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) " +
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.115 Safari/537.36";
+    /*private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) " +
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.115 Safari/537.36";*/
+    private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 5.2; WOW64; rv:43.0) " +
+            "Gecko/20100101 Firefox/43.0";
 
     private static final Pattern patYouTubePageLink = Pattern.compile("(http|https)://(www\\.|m" +
             ".|)youtube\\.com/watch\\?v=(.+?)( |\\z|&)");
@@ -328,8 +330,8 @@ public abstract class YouTubeUriExtractor extends AsyncTask<String, Void, Sparse
             if (url != null) {
                 Meta meta = META_MAP.get(itag);
                 String finalUrl = URLDecoder.decode(url, "UTF-8");
-                finalUrl = URLDecoder.decode(finalUrl, "UTF-8");
-                finalUrl = finalUrl + "&signature=" + encSignatures.get(itag);
+                //finalUrl = URLDecoder.decode(finalUrl, "UTF-8");
+                //finalUrl = finalUrl + "&signature=" + encSignatures.get(itag);
                 YtFile newVideo = new YtFile(meta, finalUrl);
                 ytFiles.put(itag, newVideo);
                 Log.e(LOG_TAG, finalUrl);
@@ -566,8 +568,8 @@ public abstract class YouTubeUriExtractor extends AsyncTask<String, Void, Sparse
             File cacheFile = new File(context.getCacheDir().getAbsolutePath() + "/" +
                     CACHE_FILE_NAME);
             // The cached functions are valid for 2 weeks
-            if (cacheFile.exists() && (System.currentTimeMillis() - cacheFile.lastModified()) <
-                    1209600000) {
+            if (cacheFile.exists() &&
+                    (System.currentTimeMillis() - cacheFile.lastModified()) < 1209600000) {
                 BufferedReader reader = null;
                 try {
                     reader = new BufferedReader(new InputStreamReader(new FileInputStream
