@@ -121,7 +121,6 @@ public class YouTubeSearch {
      * @param keywords - query
      */
     public void searchVideos(final String keywords) {
-
         new Thread() {
             public void run() {
                 try {
@@ -221,7 +220,7 @@ public class YouTubeSearch {
                     YouTube.Playlists.List searchList = youtube.playlists().list("id,snippet,contentDetails,status").setKey(Config.YOUTUBE_API_KEY);
 
                     searchList.setChannelId(channel.getId());
-                    searchList.setFields("items(id,snippet/title,snippet/thumbnails/default/url,contentDetails/itemCount,status)");
+                    searchList.setFields("items(id,snippet/title,snippet/thumbnails/default/url,contentDetails/itemCount,status,contentDetails/videoId)");
                     searchList.setMaxResults((long) 50);
 
                     PlaylistListResponse playListResponse = searchList.execute();
@@ -240,7 +239,8 @@ public class YouTubeSearch {
                         while (iteratorPlaylistResults.hasNext()) {
                             Playlist playlist = iteratorPlaylistResults.next();
 
-                            YouTubePlaylist playlistItem = new YouTubePlaylist(playlist.getSnippet().getTitle(),
+                            YouTubePlaylist playlistItem = new YouTubePlaylist(
+                                    playlist.getSnippet().getTitle(),
                                     playlist.getSnippet().getThumbnails().getDefault().getUrl(),
                                     playlist.getId(),
                                     playlist.getContentDetails().getItemCount(),
@@ -272,7 +272,7 @@ public class YouTubeSearch {
             @Override
             public void run() {
 
-                Log.d(TAG, "Chosen name: " + mChosenAccountName);
+                Log.e(TAG, "Chosen name: " + mChosenAccountName);
                 credential.setSelectedAccountName(mChosenAccountName);
 
                 youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), credential)

@@ -87,11 +87,13 @@ public class YouTubePlaylist implements Serializable {
         this.status = status;
     }
 
+
     @Override
     public String toString() {
         return "YouTubePlaylist {" +
                 "id='" + id + '\'' +
-                ", title='" + title + '\'' + ", number of videos=" + numberOfVideos +
+                ", title='" + title + '\'' +
+                ", number of videos=" + numberOfVideos +
                 ", " + status +
                 '}';
     }

@@ -213,8 +213,7 @@ public class YouTubeSqlDb {
      */
     public class Playlists {
 
-        private Playlists() {
-        }
+        private Playlists() {}
 
         /**
          * Creates playlist entry in playlists table

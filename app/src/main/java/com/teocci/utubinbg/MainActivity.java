@@ -40,10 +40,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.flask.colorpicker.ColorPickerView;
-import com.flask.colorpicker.OnColorSelectedListener;
-import com.flask.colorpicker.builder.ColorPickerClickListener;
-import com.flask.colorpicker.builder.ColorPickerDialogBuilder;
 import com.teocci.utubinbg.database.YouTubeSqlDb;
 import com.teocci.utubinbg.fragments.FavoritesFragment;
 import com.teocci.utubinbg.fragments.PlaylistsFragment;
@@ -325,40 +321,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_search) {
             MenuItemCompat.expandActionView(item);
             return true;
-        } //else if (id == R.id.action_color_picker) {
-            /* Show color picker dialog */
-            /* ColorPickerDialogBuilder
-                    .with(this)
-                    .setTitle("Choose background and text color")
-                    .initialColor(initialColor)
-                    .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
-                    .setPickerCount(2)
-                    .initialColors(initialColors)
-                    .density(12)
-                    .setOnColorSelectedListener(new OnColorSelectedListener() {
-                        @Override
-                        public void onColorSelected(int selectedColor) {
-                        }
-                    })
-                    .setPositiveButton("ok", new ColorPickerClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int selectedColor, Integer[] allColors) {
-                            //changeBackgroundColor(selectedColor);
-                            if (allColors != null) {
-                                setColors(allColors[0], allColors[1]);
-                            }
-                        }
-                    })
-                    .setNegativeButton("cancel", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                        }
-                    })
-                    .showColorEdit(true)
-                    .build()
-                    .show();
-        }*/
-
+        }
         return super.onOptionsItemSelected(item);
     }
 
