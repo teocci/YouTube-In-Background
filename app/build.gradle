@@ -1,14 +1,6 @@
 apply plugin: 'com.android.application'
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'YTinBG'
-            keyPassword 'ytinbg'
-            storeFile file('D:/Teocci/ytinbg.keystore')
-            storePassword 'ytinbg'
-        }
-    }
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
     defaultConfig {
@@ -48,6 +40,14 @@ android {
     }
     dexOptions {
         javaMaxHeapSize "4g"
+    }
+    signingConfigs {
+        config {
+            keyAlias 'YTinBG'
+            keyPassword 'ytinbg'
+            storeFile file('D:/Teocci/ytinbg.keystore')
+            storePassword 'ytinbg'
+        }
     }
 }
 
