@@ -35,10 +35,10 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.util.SparseArray;
 
-import com.teocci.utubinbg.receivers.MediaButtonIntentReceiver;
-import com.teocci.utubinbg.utils.Config;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+import com.teocci.utubinbg.receivers.MediaButtonIntentReceiver;
+import com.teocci.utubinbg.utils.Config;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,7 +57,9 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     private static final String TAG = "UTUBINBG SERVICE CLASS";
 
     private static final int YOUTUBE_ITAG_140 = 140; //mp4a - stereo, 44.1 KHz 128 Kbps
-    private static final int YOUTUBE_ITAG_18 = 17; //mp4 - stereo, 44.1 KHz 96-100 Kbps
+    private static final int YOUTUBE_ITAG_22 = 22; //mp4 - stereo, 44.1 KHz 96-100 Kbps
+    private static final int YOUTUBE_ITAG_18 = 18; //mp4 - stereo, 44.1 KHz 96-100 Kbps
+    private static final int YOUTUBE_ITAG_17 = 17;
 
     public static final String ACTION_PLAY = "action_play";
     public static final String ACTION_PAUSE = "action_pause";
@@ -427,6 +429,9 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
      */
     private void extractUrlAndPlay() {
         final String youtubeLink = "http://youtube.com/watch?v=" + videoItem.getId();
+
+        Log.e(TAG, youtubeLink);
+
         YouTubeUriExtractor ytEx = new YouTubeUriExtractor(this) {
             @Override
             public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
@@ -436,6 +441,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
                         ytFile = ytFiles.get(YOUTUBE_ITAG_18);
                     }
                     try {
+                        Log.e(TAG, ytFile.getUrl());
                         Log.d(TAG, "Start playback");
                         if (mMediaPlayer != null) {
                             mMediaPlayer.reset();
@@ -450,6 +456,10 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
                 }
             }
         };
+        // Ignore the webm container format
+        ytEx.setIncludeWebM(false);
+        ytEx.setParseDashManifest(true);
+        // Lets execute the request
         ytEx.execute(youtubeLink);
     }
 
