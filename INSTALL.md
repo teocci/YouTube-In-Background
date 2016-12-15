@@ -1,9 +1,9 @@
 # How to Install Applications (APK Files) on Your Android Phone
 
-Android app package files commonly known as an APK (.apk) files are the format of installable files on Android platform. Every application you have installed or want to install on your Android device has the .apk extension or file format.
+Android app package files commonly known as an APK (`.apk`) files are the format of installable files on Android platform. Every application you have installed or want to install on your Android device has the .apk extension or file format.
 You can install applications from the Google Play Store but there are also methods that let you install applications directly on your Android device without having to install any application Market. 
 
-In the Android world, directly installing an APK is also called “sideloading”. There are numerous reasons why you should know about installing apk files. Not all manufacturers support Google Play Store on their Android devices, in that case you have to install apps via sideloading.
+In the Android world, directly installing an APK is also called **“sideloading”**. There are numerous reasons why you should know about installing `apk` files. Not all manufacturers support Google Play Store on their Android devices, in that case you have to install apps via sideloading.
 There are also times when Google Play will not let you install an app due to region restrictions or it won’t even display the app in your region, which again makes sideloading a necessity. In order to successfully sideload an app or install an apk file, you must follow some really simple steps.
 
 ## Prerequisite
@@ -18,7 +18,7 @@ There are also times when Google Play will not let you install an app due to reg
 ### Get the APK file.
 If you already have an APK file downloaded on your Android device then skip to Step "Install the APK file". In order to install the APK file you must first download the APK file.
 You can install any APK you want by following the same method.
-Click here to [download the APK](https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/app/com.teocci.utubinbg-release.apk)
+Click here to [download the APK](https://github.com/teocci/YouTube-In-Background/releases/download/1.7.15/com.teocci.utubinbg-release.apk)
 If you already have the APK file downloaded on your laptop or PC then connect your Android device to the computer and copy the APK to the external/internal storage on your device.
 
 ### Install the APK file.
