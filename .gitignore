@@ -14,19 +14,21 @@ local.properties
 .signing
 
 # User-specific configurations
+.idea/copyright/
+.idea/copyright/profiles_settings.xml
 .idea/libraries/
 .idea/markdown-navigator/
-.idea/compiler.xml
-.idea/encodings.xml
-.idea/markdown-navigator.xml
+.idea/scopes/scope_settings.xml
 .idea/misc.xml
 .idea/modules.xml
 .idea/workspace.xml
+.idea/compiler.xml
+.idea/encodings.xml
+.idea/markdown-navigator.xml
+.idea/markdown-exported-files.xml
 .idea/tasks.xml
 .idea/vcs.xml
 .idea/.name
-.idea/copyright/profiles_settings.xml
-.idea/scopes/scope_settings.xml
 *.iml
 
 # OS-specific files
@@ -38,9 +40,5 @@ local.properties
 ehthumbs.db
 Thumbs.db
 
-*.iml
-.gradle
-/local.properties
-.DS_Store
 /build
-/captures
+
