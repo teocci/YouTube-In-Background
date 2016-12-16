@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2016 SMedic
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.teocci.utubinbg;
+package com.teocci.ytinbg;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -39,8 +24,8 @@ import android.util.SparseArray;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
-import com.teocci.utubinbg.receivers.MediaButtonIntentReceiver;
-import com.teocci.utubinbg.utils.Config;
+import com.teocci.ytinbg.receivers.MediaButtonIntentReceiver;
+import com.teocci.ytinbg.utils.Config;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,12 +41,12 @@ import at.huber.youtubeExtractor.YtFile;
 public class BackgroundAudioService extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener {
 
-    private static final String TAG = "UTUBINBG SERVICE CLASS";
+    private static final String TAG = "BackgroundAudioService";
 
-    private static final int YOUTUBE_ITAG_140 = 140; //mp4a - stereo, 44.1 KHz 128 Kbps
-    private static final int YOUTUBE_ITAG_22 = 22; //mp4 - stereo, 44.1 KHz 96-100 Kbps
-    private static final int YOUTUBE_ITAG_18 = 18; //mp4 - stereo, 44.1 KHz 96-100 Kbps
-    private static final int YOUTUBE_ITAG_17 = 17;
+    private static final int YOUTUBE_ITAG_251 = 251;    // webm - stereo, 48 KHz 160 Kbps
+    private static final int YOUTUBE_ITAG_141 = 141;    // mp4a - stereo, 44.1 KHz 256 Kbps
+    private static final int YOUTUBE_ITAG_140 = 140;    // mp4a - stereo, 44.1 KHz 128 Kbps
+    private static final int YOUTUBE_ITAG_17 = 17;      // mp4 - stereo, 44.1 KHz 96-100 Kbps
 
     public static final String ACTION_PLAY = "action_play";
     public static final String ACTION_PAUSE = "action_pause";
@@ -109,17 +94,17 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void initPhoneCallListener(){
+    private void initPhoneCallListener() {
         PhoneStateListener phoneStateListener = new PhoneStateListener() {
             @Override
             public void onCallStateChanged(int state, String incomingNumber) {
                 if (state == TelephonyManager.CALL_STATE_RINGING) {
                     //Incoming call: Pause music
                     pauseVideo();
-                } else if(state == TelephonyManager.CALL_STATE_IDLE) {
+                } else if (state == TelephonyManager.CALL_STATE_IDLE) {
                     //Not in call: Play music
                     resumeVideo();
-                } else if(state == TelephonyManager.CALL_STATE_OFFHOOK) {
+                } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
                     //A call is dialing, active or on hold
                 }
                 super.onCallStateChanged(state, incomingNumber);
@@ -127,7 +112,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
         };
 
         TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        if(mgr != null) {
+        if (mgr != null) {
             mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
         }
     }
@@ -466,14 +451,15 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
      * @return Audio stream with highest bitrate
      */
     private YtFile getBestStream(SparseArray<YtFile> ytFiles) {
-        if (ytFiles.get(141) != null) {
-            return ytFiles.get(141); //mp4a - stereo, 44.1 KHz 256 Kbps
-        } else if (ytFiles.get(251) != null) {
-            return ytFiles.get(251); //webm - stereo, 48 KHz 160 Kbps
-        } else if (ytFiles.get(140) != null) {
-            return ytFiles.get(140);  //mp4a - stereo, 44.1 KHz 128 Kbps
+        if (ytFiles.get(YOUTUBE_ITAG_141) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_141);
+        } else if (ytFiles.get(YOUTUBE_ITAG_251) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_251);
+        } else if (ytFiles.get(YOUTUBE_ITAG_140) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_140);
         }
-        return ytFiles.get(17); //mp4 - stereo, 44.1 KHz 96-100 Kbps
+
+        return ytFiles.get(YOUTUBE_ITAG_17);
     }
 
     /**

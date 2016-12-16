@@ -1,4 +1,4 @@
-package com.teocci.utubinbg.receivers;
+package com.teocci.ytinbg.receivers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

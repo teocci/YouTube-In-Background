@@ -2,25 +2,15 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    buildToolsVersion "23.0.3"
     defaultConfig {
-        applicationId "com.teocci.utubinbg"
+        applicationId "com.teocci.ytinbg"
         minSdkVersion 16
-        targetSdkVersion 23
+        targetSdkVersion 22
         versionCode 1
         versionName "1.7.15"
     }
-    dexOptions {
-        javaMaxHeapSize "4g"
-    }
-    signingConfigs {
-        config {
-            keyAlias 'ytinBG'
-            keyPassword 'ytinBG'
-            storeFile file('/home/teocci/Dropbox/YouTubeInBG/ytinbg.jks')
-            storePassword 'ytinBG'
-        }
-    }
+
     buildTypes {
         debug {
             applicationVariants.all { variant ->
@@ -47,6 +37,9 @@ android {
             }
         }
     }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
 
     packagingOptions {
         pickFirst 'META-INF/maven/com.squareup.okhttp3/okhttp/pom.properties'
@@ -72,6 +65,8 @@ dependencies {
     compile 'com.android.support:support-v4:23.2.0'
     compile 'com.android.support:recyclerview-v7:23.2.0'
     compile 'com.google.android.gms:play-services-auth:8.4.0'
+    compile 'com.google.code.gson:gson:2.2.4'
+//    compile 'com.google.apis:google-api-services-youtube:v3-rev180-1.22.0'
     compile project(':youtubeExtractor')
     compile files('libs/nineoldandroids-2.4.0.jar')
     compile files('libs/listviewanimations_lib-core-slh_3.1.0.jar')
@@ -88,5 +83,5 @@ dependencies {
     compile files('libs/jsr305-1.3.9.jar')
     compile files('libs/picasso-2.5.2.jar')
     compile files('libs/okhttp-3.2.0.jar') //used for picasso caching
-    //compile files('libs/youtubeExtractor.jar')
+//    compile files('libs/youtubeExtractor.jar')
 }
