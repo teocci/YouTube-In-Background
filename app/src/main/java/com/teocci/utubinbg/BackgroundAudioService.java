@@ -32,6 +32,8 @@ import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.app.NotificationCompat;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -98,12 +100,36 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
         mMediaPlayer.setOnCompletionListener(this);
         mMediaPlayer.setOnPreparedListener(this);
         initMediaSessions();
+        initPhoneCallListener();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         handleIntent(intent);
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void initPhoneCallListener(){
+        PhoneStateListener phoneStateListener = new PhoneStateListener() {
+            @Override
+            public void onCallStateChanged(int state, String incomingNumber) {
+                if (state == TelephonyManager.CALL_STATE_RINGING) {
+                    //Incoming call: Pause music
+                    pauseVideo();
+                } else if(state == TelephonyManager.CALL_STATE_IDLE) {
+                    //Not in call: Play music
+                    resumeVideo();
+                } else if(state == TelephonyManager.CALL_STATE_OFFHOOK) {
+                    //A call is dialing, active or on hold
+                }
+                super.onCallStateChanged(state, incomingNumber);
+            }
+        };
+
+        TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        if(mgr != null) {
+            mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+        }
     }
 
     /**
@@ -401,6 +427,15 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     }
 
     /**
+     * Resumes video
+     */
+    private void resumeVideo() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.start();
+        }
+    }
+
+    /**
      * Restarts video
      */
     private void restartVideo() {
@@ -425,9 +460,27 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     }
 
     /**
+     * Get the best available audio stream
+     *
+     * @param ytFiles Array of available streams
+     * @return Audio stream with highest bitrate
+     */
+    private YtFile getBestStream(SparseArray<YtFile> ytFiles) {
+        if (ytFiles.get(141) != null) {
+            return ytFiles.get(141); //mp4a - stereo, 44.1 KHz 256 Kbps
+        } else if (ytFiles.get(251) != null) {
+            return ytFiles.get(251); //webm - stereo, 48 KHz 160 Kbps
+        } else if (ytFiles.get(140) != null) {
+            return ytFiles.get(140);  //mp4a - stereo, 44.1 KHz 128 Kbps
+        }
+        return ytFiles.get(17); //mp4 - stereo, 44.1 KHz 96-100 Kbps
+    }
+
+    /**
      * Extracts link from youtube video ID, so mediaPlayer can play it
      */
     private void extractUrlAndPlay() {
+        Log.d(TAG, "extractUrlAndPlay: extract url for video id=" + videoItem.getId());
         final String youtubeLink = "http://youtube.com/watch?v=" + videoItem.getId();
 
         Log.e(TAG, youtubeLink);
@@ -436,10 +489,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
             @Override
             public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
                 if (ytFiles != null) {
-                    YtFile ytFile = ytFiles.get(YOUTUBE_ITAG_140);
-                    if (ytFile == null) {
-                        ytFile = ytFiles.get(YOUTUBE_ITAG_18);
-                    }
+                    YtFile ytFile = getBestStream(ytFiles);
                     try {
                         Log.e(TAG, ytFile.getUrl());
                         Log.d(TAG, "Start playback");
@@ -457,8 +507,8 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
             }
         };
         // Ignore the webm container format
-        ytEx.setIncludeWebM(false);
-        ytEx.setParseDashManifest(true);
+        // ytEx.setIncludeWebM(false);
+        // ytEx.setParseDashManifest(true);
         // Lets execute the request
         ytEx.execute(youtubeLink);
     }

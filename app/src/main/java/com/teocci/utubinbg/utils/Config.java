@@ -18,7 +18,7 @@ public final class Config {
     public static final String YOUTUBE_TYPE_PLAYLIST= "YT_PLAYLIST";
     public static final String YOUTUBE_TYPE_PLAYLIST_VIDEO_POS = "YT_PLAYLIST_VIDEO_POS";
 
-     public static final String YOUTUBE_API_KEY = "AIzaSyBKUw2-bvYNfO3mvWBED-VHVFkgr_JD8aY";
+     public static final String YOUTUBE_API_KEY = "AIzaSyB0sRW9CkBlIX11JJ3V8RyD0O2InzSgf8w";
 
     public static final long NUMBER_OF_VIDEOS_RETURNED = 50; //due to YouTube API rules - MAX 50
 

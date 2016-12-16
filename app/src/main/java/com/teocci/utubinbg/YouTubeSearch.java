@@ -62,6 +62,7 @@ import java.util.List;
 public class YouTubeSearch {
 
     private static final String TAG = "UTUBINBG SEARCH CLASS";
+
     private String appName;
 
     private Handler handler;
@@ -71,7 +72,7 @@ public class YouTubeSearch {
 
     private Fragment playlistFragment;
 
-    private String mChosenAccountName;
+    private String chosenAccountName;
 
     private YouTubeVideosReceiver youTubeVideosReceiver;
     private YouTubePlaylistsReceiver youTubePlaylistsReceiver;
@@ -84,6 +85,7 @@ public class YouTubeSearch {
         this.playlistFragment = playlistFragment;
         handler = new Handler();
         credential = GoogleAccountCredential.usingOAuth2(activity.getApplicationContext(), Arrays.asList(Auth.SCOPES));
+        // set exponential backoff policy
         credential.setBackOff(new ExponentialBackOff());
         appName = activity.getResources().getString(R.string.app_name);
     }
@@ -102,8 +104,8 @@ public class YouTubeSearch {
      * @param authSelectedAccountName
      */
     public void setAuthSelectedAccountName(String authSelectedAccountName) {
-        this.mChosenAccountName = authSelectedAccountName;
-        credential.setSelectedAccountName(mChosenAccountName);
+        this.chosenAccountName = authSelectedAccountName;
+        credential.setSelectedAccountName(chosenAccountName);
     }
 
     /**
@@ -206,6 +208,7 @@ public class YouTubeSearch {
     public void searchPlaylists() {
         new Thread() {
             public void run() {
+                credential.setSelectedAccountName(chosenAccountName);
                 youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), credential)
                         .setApplicationName(appName).build();
                 try {
@@ -252,8 +255,17 @@ public class YouTubeSearch {
                     }
                 } catch (UserRecoverableAuthIOException e) {
                     playlistFragment.startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
-                } catch (IOException e) {
                     e.printStackTrace();
+                } catch (GoogleJsonResponseException e) {
+                    Log.e(TAG, "GoogleJsonResponseException code: " + e.getDetails().getCode()
+                            + " : " + e.getDetails().getMessage());
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    Log.e(TAG, "IOException: " + e.getMessage());
+                    e.printStackTrace();
+                } catch (Throwable t) {
+                    Log.e(TAG, "Throwable: " + t.getMessage());
+                    t.printStackTrace();
                 }
             }
         }.start();
@@ -272,8 +284,8 @@ public class YouTubeSearch {
             @Override
             public void run() {
 
-                Log.e(TAG, "Chosen name: " + mChosenAccountName);
-                credential.setSelectedAccountName(mChosenAccountName);
+                Log.e(TAG, "Chosen name: " + chosenAccountName);
+                credential.setSelectedAccountName(chosenAccountName);
 
                 youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), credential)
                         .setApplicationName(appName).build();

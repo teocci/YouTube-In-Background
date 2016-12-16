@@ -57,7 +57,7 @@ import java.util.ArrayList;
  */
 public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver, YouTubePlaylistsReceiver {
 
-    private static final String TAG = "TEOCCI Playlists Fragmet";
+    private static final String TAG = "PlaylistsFragmet";
 
     private ArrayList<YouTubePlaylist> playlists;
     private DynamicListView playlistsListView;
@@ -65,7 +65,7 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
     private PlaylistAdapter playlistsAdapter;
 
     public static final String ACCOUNT_KEY = "accountName";
-    private String mChosenAccountName;
+    private String chosenAccountName;
 
     private static final int REQUEST_ACCOUNT_PICKER = 2;
     private static final int REQUEST_AUTHORIZATION = 3;
@@ -106,10 +106,10 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
         setupListViewAndAdapter();
 
         if (savedInstanceState != null) {
-            mChosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
-            youTubeSearch.setAuthSelectedAccountName(mChosenAccountName);
-            userNameTextView.setText(extractUserName(mChosenAccountName));
-            Toast.makeText(getContext(), "Hi " + extractUserName(mChosenAccountName), Toast.LENGTH_SHORT).show();
+            chosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
+            youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
+            userNameTextView.setText(extractUserName(chosenAccountName));
+            Toast.makeText(getContext(), "Hi " + extractUserName(chosenAccountName), Toast.LENGTH_SHORT).show();
         } else {
             loadAccount();
         }
@@ -123,12 +123,12 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
     private void loadAccount() {
         SharedPreferences sp = PreferenceManager
                 .getDefaultSharedPreferences(getActivity());
-        mChosenAccountName = sp.getString(ACCOUNT_KEY, null);
+        chosenAccountName = sp.getString(ACCOUNT_KEY, null);
 
-        if (mChosenAccountName != null) {
-            youTubeSearch.setAuthSelectedAccountName(mChosenAccountName);
-            userNameTextView.setText(extractUserName(mChosenAccountName));
-            Toast.makeText(getContext(), "Hi " + extractUserName(mChosenAccountName), Toast.LENGTH_SHORT).show();
+        if (chosenAccountName != null) {
+            youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
+            userNameTextView.setText(extractUserName(chosenAccountName));
+            Toast.makeText(getContext(), "Hi " + extractUserName(chosenAccountName), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -136,10 +136,10 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
      * Save account in preferences for future usages
      */
     private void saveAccount() {
-        Log.d(TAG, "Saving account name... " + mChosenAccountName);
+        Log.e(TAG, "Saving account name... " + chosenAccountName);
         SharedPreferences sp = PreferenceManager
                 .getDefaultSharedPreferences(getActivity());
-        sp.edit().putString(ACCOUNT_KEY, mChosenAccountName).commit();
+        sp.edit().putString(ACCOUNT_KEY, chosenAccountName).apply();
     }
 
     @Override
@@ -191,10 +191,10 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
                     String accountName = data.getExtras().getString(
                             AccountManager.KEY_ACCOUNT_NAME);
                     if (accountName != null) {
-                        mChosenAccountName = accountName;
+                        chosenAccountName = accountName;
                         youTubeSearch.setAuthSelectedAccountName(accountName);
-                        userNameTextView.setText(extractUserName(mChosenAccountName));
-                        Toast.makeText(getContext(), "Hi " + extractUserName(mChosenAccountName), Toast.LENGTH_SHORT).show();
+                        userNameTextView.setText(extractUserName(chosenAccountName));
+                        Toast.makeText(getContext(), "Hi " + extractUserName(chosenAccountName), Toast.LENGTH_SHORT).show();
                         saveAccount();
                     }
 
@@ -239,9 +239,10 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
             @Override
             public void onRefresh() {
                 if (networkConf.isNetworkAvailable()) {
-                    if (mChosenAccountName == null) {
+                    if (chosenAccountName == null) {
                         chooseAccount();
                     } else {
+                        youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
                         youTubeSearch.searchPlaylists();
                     }
                 } else {
@@ -302,6 +303,7 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
 
     /**
      * Remove playlist with specific ID from DB and list
+     *
      * @param playlistId
      */
     private void removePlaylist(final String playlistId) {
@@ -350,11 +352,15 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
      * @return
      */
     private String extractUserName(String emailAddress) {
-        String[] parts = emailAddress.split("@");
-        if (parts.length > 0 && parts[0] != null)
-            return parts[0];
-        else
-            return "";
+        if (emailAddress != null) {
+            String[] parts = emailAddress.split("@");
+            if (parts.length > 0) {
+                if (parts[0] != null) {
+                    return parts[0];
+                }
+            }
+        }
+        return "";
     }
 
     /**

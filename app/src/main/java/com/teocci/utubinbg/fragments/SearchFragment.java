@@ -40,6 +40,7 @@ import com.teocci.utubinbg.utils.Config;
 import com.teocci.utubinbg.utils.NetworkConf;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class that handles list of the videos searched on YouTube
@@ -198,6 +199,8 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
      */
     @Override
     public void onVideosReceived(ArrayList<YouTubeVideo> youTubeVideos) {
+
+        videosFoundListView.smoothScrollToPosition(0);
         searchResultsList.clear();
         scrollResultsList.clear();
         scrollResultsList.addAll(youTubeVideos);
@@ -214,6 +217,7 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
     /**
      * Called when playlist cannot be found
      * NOT USED in this fragment
+     *
      * @param playlistId
      * @param errorCode
      */
@@ -225,17 +229,30 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
     /**
      * Adds 10 items at the bottom of the list when list is scrolled to the end (10th element)
      * 50 is max number of videos
+     * If number is between, so no full step is available (step is 10), add elements:
+     * scrollResultsList.size() % 10
      */
     private void addMoreData() {
 
-        searchResultsList.addAll(scrollResultsList.subList(10 * onScrollIndex, onScrollIndex * 10 + 10));
-        onScrollIndex++;
-        handler.post(new Runnable() {
-            public void run() {
-                if (videoListAdapter != null) {
-                    videoListAdapter.notifyDataSetChanged();
+        List<YouTubeVideo> subList;
+        if (scrollResultsList.size() < (onScrollIndex + 10)) {
+            subList = scrollResultsList.subList(onScrollIndex, scrollResultsList.size());
+            onScrollIndex += (scrollResultsList.size() % 10);
+        } else {
+            subList = scrollResultsList.subList(onScrollIndex, onScrollIndex + 10);
+            onScrollIndex += 10;
+        }
+
+        if (!subList.isEmpty()) {
+            searchResultsList.addAll(subList);
+            handler.post(new Runnable() {
+                public void run() {
+                    if (videoListAdapter != null) {
+                        videoListAdapter.notifyDataSetChanged();
+                    }
                 }
-            }
-        });
+            });
+        }
     }
+
 }
