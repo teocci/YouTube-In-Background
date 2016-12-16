@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2016 SMedic
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.teocci.utubinbg.fragments;
+package com.teocci.ytinbg.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -27,13 +12,13 @@ import android.widget.Toast;
 
 import com.nhaarman.listviewanimations.appearance.simple.SwingBottomInAnimationAdapter;
 import com.nhaarman.listviewanimations.itemmanipulation.DynamicListView;
-import com.teocci.utubinbg.BackgroundAudioService;
-import com.teocci.utubinbg.R;
-import com.teocci.utubinbg.VideosAdapter;
-import com.teocci.utubinbg.YouTubeVideo;
-import com.teocci.utubinbg.database.YouTubeSqlDb;
-import com.teocci.utubinbg.utils.Config;
-import com.teocci.utubinbg.utils.NetworkConf;
+import com.teocci.ytinbg.BackgroundAudioService;
+import com.teocci.ytinbg.R;
+import com.teocci.ytinbg.VideosAdapter;
+import com.teocci.ytinbg.YouTubeVideo;
+import com.teocci.ytinbg.database.YouTubeSqlDb;
+import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.NetworkConf;
 
 import java.util.ArrayList;
 
@@ -41,7 +26,7 @@ import java.util.ArrayList;
  * Created by Teocci on 21.3.16..
  */
 public class FavoritesFragment extends Fragment {
-    private static final String TAG = "TEOCCI Favorites Fragmet";
+    private static final String TAG = "FavoritesFragment";
 
     private ArrayList<YouTubeVideo> favoriteVideos;
 

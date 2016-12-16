@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2016 SMedic
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.teocci.utubinbg.fragments;
+package com.teocci.ytinbg.fragments;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -37,35 +22,35 @@ import android.widget.Toast;
 import com.nhaarman.listviewanimations.appearance.simple.SwingBottomInAnimationAdapter;
 import com.nhaarman.listviewanimations.itemmanipulation.DynamicListView;
 import com.nhaarman.listviewanimations.util.Swappable;
-import com.teocci.utubinbg.BackgroundAudioService;
-import com.teocci.utubinbg.R;
-import com.teocci.utubinbg.YouTubePlaylist;
-import com.teocci.utubinbg.YouTubeSearch;
-import com.teocci.utubinbg.YouTubeVideo;
-import com.teocci.utubinbg.database.YouTubeSqlDb;
-import com.teocci.utubinbg.interfaces.YouTubePlaylistsReceiver;
-import com.teocci.utubinbg.interfaces.YouTubeVideosReceiver;
-import com.teocci.utubinbg.utils.Config;
-import com.teocci.utubinbg.utils.NetworkConf;
+import com.teocci.ytinbg.BackgroundAudioService;
+import com.teocci.ytinbg.R;
+import com.teocci.ytinbg.YouTubePlaylist;
+import com.teocci.ytinbg.YouTubeSearch;
+import com.teocci.ytinbg.YouTubeVideo;
+import com.teocci.ytinbg.database.YouTubeSqlDb;
+import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
+import com.teocci.ytinbg.interfaces.YouTubeVideosReceiver;
+import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.NetworkConf;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
 /**
- * Class that handles list of the playlists acquired from YouTube
+ * Class that handles list of the playlistList acquired from YouTube
  * Created by teocci on 7.3.16..
  */
-public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver, YouTubePlaylistsReceiver {
+public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver, YouTubePlaylistReceiver {
 
-    private static final String TAG = "TEOCCI Playlists Fragmet";
+    private static final String TAG = "PlaylistFragment";
 
-    private ArrayList<YouTubePlaylist> playlists;
-    private DynamicListView playlistsListView;
+    private ArrayList<YouTubePlaylist> playlistList;
+    private DynamicListView playlistListView;
     private Handler handler;
-    private PlaylistAdapter playlistsAdapter;
+    private PlaylistAdapter playlistAdapter;
 
     public static final String ACCOUNT_KEY = "accountName";
-    private String mChosenAccountName;
+    private String chosenAccountName;
 
     private static final int REQUEST_ACCOUNT_PICKER = 2;
     private static final int REQUEST_AUTHORIZATION = 3;
@@ -75,7 +60,7 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
     private NetworkConf networkConf;
     private SwipeRefreshLayout swipeToRefresh;
 
-    public PlaylistsFragment() {
+    public PlaylistFragment() {
         // Required empty public constructor
     }
 
@@ -84,10 +69,10 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
         super.onCreate(savedInstanceState);
 
         handler = new Handler();
-        playlists = new ArrayList<>();
+        playlistList = new ArrayList<>();
 
         youTubeSearch = new YouTubeSearch(getActivity(), this);
-        youTubeSearch.setYouTubePlaylistsReceiver(this);
+        youTubeSearch.setYouTubePlaylistReceiver(this);
         youTubeSearch.setYouTubeVideosReceiver(this);
 
         networkConf = new NetworkConf(getActivity());
@@ -99,17 +84,17 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
         View v = inflater.inflate(R.layout.fragment_playlists, container, false);
 
         /* Setup the ListView */
-        playlistsListView = (DynamicListView) v.findViewById(R.id.playlists);
+        playlistListView = (DynamicListView) v.findViewById(R.id.playlists);
         userNameTextView = (TextView) v.findViewById(R.id.user_name);
         swipeToRefresh = (SwipeRefreshLayout) v.findViewById(R.id.swipeToRefresh);
 
         setupListViewAndAdapter();
 
         if (savedInstanceState != null) {
-            mChosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
-            youTubeSearch.setAuthSelectedAccountName(mChosenAccountName);
-            userNameTextView.setText(extractUserName(mChosenAccountName));
-            Toast.makeText(getContext(), "Hi " + extractUserName(mChosenAccountName), Toast.LENGTH_SHORT).show();
+            chosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
+            youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
+            userNameTextView.setText(extractUserName(chosenAccountName));
+            Toast.makeText(getContext(), "Hi " + extractUserName(chosenAccountName), Toast.LENGTH_SHORT).show();
         } else {
             loadAccount();
         }
@@ -123,12 +108,12 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
     private void loadAccount() {
         SharedPreferences sp = PreferenceManager
                 .getDefaultSharedPreferences(getActivity());
-        mChosenAccountName = sp.getString(ACCOUNT_KEY, null);
+        chosenAccountName = sp.getString(ACCOUNT_KEY, null);
 
-        if (mChosenAccountName != null) {
-            youTubeSearch.setAuthSelectedAccountName(mChosenAccountName);
-            userNameTextView.setText(extractUserName(mChosenAccountName));
-            Toast.makeText(getContext(), "Hi " + extractUserName(mChosenAccountName), Toast.LENGTH_SHORT).show();
+        if (chosenAccountName != null) {
+            youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
+            userNameTextView.setText(extractUserName(chosenAccountName));
+            Toast.makeText(getContext(), "Hi " + extractUserName(chosenAccountName), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -136,10 +121,9 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
      * Save account in preferences for future usages
      */
     private void saveAccount() {
-        Log.d(TAG, "Saving account name... " + mChosenAccountName);
-        SharedPreferences sp = PreferenceManager
-                .getDefaultSharedPreferences(getActivity());
-        sp.edit().putString(ACCOUNT_KEY, mChosenAccountName).commit();
+        Log.e(TAG, "Saving account name... " + chosenAccountName);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        sp.edit().putString(ACCOUNT_KEY, chosenAccountName).apply();
     }
 
     @Override
@@ -150,9 +134,9 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
             //do nothing for now
         }
 
-        playlists.clear();
-        playlists.addAll(YouTubeSqlDb.getInstance().playlists().readAll());
-        playlistsAdapter.notifyDataSetChanged();
+        playlistList.clear();
+        playlistList.addAll(YouTubeSqlDb.getInstance().playlists().readAll());
+        playlistAdapter.notifyDataSetChanged();
     }
 
 
@@ -161,7 +145,7 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
         super.setUserVisibleHint(visible);
 
         if (visible && isResumed()) {
-            //Log.d(TAG, "PlaylistsFragment visible and resumed");
+            //Log.d(TAG, "PlaylistFragment visible and resumed");
             //Only manually call onResume if fragment is already visible
             //Otherwise allow natural fragment lifecycle to call onResume
             onResume();
@@ -191,10 +175,10 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
                     String accountName = data.getExtras().getString(
                             AccountManager.KEY_ACCOUNT_NAME);
                     if (accountName != null) {
-                        mChosenAccountName = accountName;
+                        chosenAccountName = accountName;
                         youTubeSearch.setAuthSelectedAccountName(accountName);
-                        userNameTextView.setText(extractUserName(mChosenAccountName));
-                        Toast.makeText(getContext(), "Hi " + extractUserName(mChosenAccountName), Toast.LENGTH_SHORT).show();
+                        userNameTextView.setText(extractUserName(chosenAccountName));
+                        Toast.makeText(getContext(), "Hi " + extractUserName(chosenAccountName), Toast.LENGTH_SHORT).show();
                         saveAccount();
                     }
 
@@ -206,7 +190,7 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
 
     /**
      * Choose Google account if OAuth 2.0 choosing is necessary
-     * acquiring YouTube private playlists requires OAuth 2.0 authorization
+     * acquiring YouTube private playlistList requires OAuth 2.0 authorization
      */
     private void chooseAccount() {
         startActivityForResult(youTubeSearch.getCredential().newChooseAccountIntent(),
@@ -214,22 +198,22 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
     }
 
     /**
-     * Setups list view and adapter for storing YouTube playlists
+     * Setups list view and adapter for storing YouTube playlistList
      */
     public void setupListViewAndAdapter() {
-        playlistsAdapter = new PlaylistAdapter(getActivity());
-        SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter(playlistsAdapter);
-        animationAdapter.setAbsListView(playlistsListView);
-        playlistsListView.setAdapter(animationAdapter);
+        playlistAdapter = new PlaylistAdapter(getActivity());
+        SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter(playlistAdapter);
+        animationAdapter.setAbsListView(playlistListView);
+        playlistListView.setAdapter(animationAdapter);
 
         /* Enable drag and drop functionality */
-        playlistsListView.enableDragAndDrop();
-        playlistsListView.setOnItemLongClickListener(
+        playlistListView.enableDragAndDrop();
+        playlistListView.setOnItemLongClickListener(
                 new AdapterView.OnItemLongClickListener() {
                     @Override
                     public boolean onItemLongClick(final AdapterView<?> parent, final View view,
                                                    final int position, final long id) {
-                        playlistsListView.startDragging(position);
+                        playlistListView.startDragging(position);
                         return true;
                     }
                 }
@@ -239,9 +223,10 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
             @Override
             public void onRefresh() {
                 if (networkConf.isNetworkAvailable()) {
-                    if (mChosenAccountName == null) {
+                    if (chosenAccountName == null) {
                         chooseAccount();
                     } else {
+                        youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
                         youTubeSearch.searchPlaylists();
                     }
                 } else {
@@ -250,7 +235,7 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
             }
         });
 
-        playlistsListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        playlistListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> av, View v, int pos,
@@ -260,20 +245,20 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
                     networkConf.createNetErrorDialog();
                     return;
                 }
-                youTubeSearch.acquirePlaylistVideos(playlists.get(pos).getId()); //results are in onVideosReceived callback method
+                youTubeSearch.acquirePlaylistVideos(playlistList.get(pos).getId()); //results are in onVideosReceived callback method
             }
         });
 
     }
 
     /**
-     * Called when playlist video items are received
+     * Called when playlistList video items are received
      *
      * @param youTubeVideos - list to be played in background service
      */
     @Override
     public void onVideosReceived(ArrayList<YouTubeVideo> youTubeVideos) {
-        //if playlist is empty, do not start service
+        //if playlistList is empty, do not start service
         if (youTubeVideos.isEmpty()) {
             getActivity().runOnUiThread(new Runnable() {
                 public void run() {
@@ -301,42 +286,43 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
     }
 
     /**
-     * Remove playlist with specific ID from DB and list
+     * Remove playlistList with specific ID from DB and list
+     *
      * @param playlistId
      */
     private void removePlaylist(final String playlistId) {
         YouTubeSqlDb.getInstance().playlists().delete(playlistId);
 
-        for (YouTubePlaylist playlist : playlists) {
+        for (YouTubePlaylist playlist : this.playlistList) {
             if (playlist.getId().equals(playlistId)) {
-                playlists.remove(playlist);
+                this.playlistList.remove(playlist);
                 break;
             }
         }
 
-        playlistsAdapter.notifyDataSetChanged();
+        playlistAdapter.notifyDataSetChanged();
     }
 
     /**
-     * Called when playlists are received
+     * Called when playlistList are received
      *
-     * @param youTubePlaylists - list of playlists to be shown in list view
+     * @param youTubePlaylistList - list of playlistList to be shown in list view
      */
     @Override
-    public void onPlaylistsReceived(ArrayList<YouTubePlaylist> youTubePlaylists) {
+    public void onPlaylistReceived(ArrayList<YouTubePlaylist> youTubePlaylistList) {
 
-        //refresh playlists in database
+        //refresh playlistList in database
         YouTubeSqlDb.getInstance().playlists().deleteAll();
-        for (YouTubePlaylist playlist : youTubePlaylists) {
+        for (YouTubePlaylist playlist : youTubePlaylistList) {
             YouTubeSqlDb.getInstance().playlists().create(playlist);
         }
 
-        playlists.clear();
-        playlists.addAll(youTubePlaylists);
+        playlistList.clear();
+        playlistList.addAll(youTubePlaylistList);
         handler.post(new Runnable() {
             public void run() {
-                if (playlistsAdapter != null) {
-                    playlistsAdapter.notifyDataSetChanged();
+                if (playlistAdapter != null) {
+                    playlistAdapter.notifyDataSetChanged();
                     swipeToRefresh.setRefreshing(false);
                 }
             }
@@ -350,11 +336,15 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
      * @return
      */
     private String extractUserName(String emailAddress) {
-        String[] parts = emailAddress.split("@");
-        if (parts.length > 0 && parts[0] != null)
-            return parts[0];
-        else
-            return "";
+        if (emailAddress != null) {
+            String[] parts = emailAddress.split("@");
+            if (parts.length > 0) {
+                if (parts[0] != null) {
+                    return parts[0];
+                }
+            }
+        }
+        return "";
     }
 
     /**
@@ -363,7 +353,7 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
     public class PlaylistAdapter extends ArrayAdapter<YouTubePlaylist> implements Swappable {
 
         public PlaylistAdapter(Activity context) {
-            super(context, R.layout.video_item, playlists);
+            super(context, R.layout.video_item, playlistList);
         }
 
         @Override
@@ -377,7 +367,7 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
             TextView videosNumber = (TextView) convertView.findViewById(R.id.videos_number);
             TextView privacy = (TextView) convertView.findViewById(R.id.privacy);
 
-            YouTubePlaylist searchResult = playlists.get(position);
+            YouTubePlaylist searchResult = playlistList.get(position);
 
             Picasso.with(getContext()).load(searchResult.getThumbnailURL()).into(thumbnail);
             title.setText(searchResult.getTitle());
@@ -403,8 +393,8 @@ public class PlaylistsFragment extends Fragment implements YouTubeVideosReceiver
         public void swapItems(int i, int i1) {
             YouTubePlaylist firstItem = getItem(i);
 
-            playlists.set(i, getItem(i1));
-            playlists.set(i1, firstItem);
+            playlistList.set(i, getItem(i1));
+            playlistList.set(i1, firstItem);
 
             notifyDataSetChanged();
         }

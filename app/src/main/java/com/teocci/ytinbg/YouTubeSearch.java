@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2016 SMedic
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.teocci.utubinbg;
+package com.teocci.ytinbg;
 
 import android.app.Activity;
 import android.os.Handler;
@@ -21,11 +6,13 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
@@ -40,11 +27,11 @@ import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.SearchResult;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
-import com.teocci.utubinbg.interfaces.YouTubePlaylistsReceiver;
-import com.teocci.utubinbg.interfaces.YouTubeVideosReceiver;
-import com.teocci.utubinbg.utils.Auth;
-import com.teocci.utubinbg.utils.Config;
-import com.teocci.utubinbg.utils.Utils;
+import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
+import com.teocci.ytinbg.interfaces.YouTubeVideosReceiver;
+import com.teocci.ytinbg.utils.Auth;
+import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.Utils;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -61,20 +48,24 @@ import java.util.List;
  */
 public class YouTubeSearch {
 
-    private static final String TAG = "UTUBINBG SEARCH CLASS";
+    private static final String TAG = "YouTubeSearch";
+
     private String appName;
 
     private Handler handler;
     private Activity activity;
 
+    final HttpTransport transport = AndroidHttp.newCompatibleTransport();
+    final JacksonFactory jsonFactory = new JacksonFactory();
+
     private YouTube youtube;
 
     private Fragment playlistFragment;
 
-    private String mChosenAccountName;
+    private String chosenAccountName;
 
     private YouTubeVideosReceiver youTubeVideosReceiver;
-    private YouTubePlaylistsReceiver youTubePlaylistsReceiver;
+    private YouTubePlaylistReceiver youTubePlaylistReceiver;
 
     private static final int REQUEST_AUTHORIZATION = 3;
     private GoogleAccountCredential credential;
@@ -84,6 +75,8 @@ public class YouTubeSearch {
         this.playlistFragment = playlistFragment;
         handler = new Handler();
         credential = GoogleAccountCredential.usingOAuth2(activity.getApplicationContext(), Arrays.asList(Auth.SCOPES));
+
+        // set exponential backoff policy
         credential.setBackOff(new ExponentialBackOff());
         appName = activity.getResources().getString(R.string.app_name);
     }
@@ -92,8 +85,8 @@ public class YouTubeSearch {
         this.youTubeVideosReceiver = youTubeVideosReceiver;
     }
 
-    public void setYouTubePlaylistsReceiver(YouTubePlaylistsReceiver youTubePlaylistsReceiver) {
-        this.youTubePlaylistsReceiver = youTubePlaylistsReceiver;
+    public void setYouTubePlaylistReceiver(YouTubePlaylistReceiver youTubePlaylistReceiver) {
+        this.youTubePlaylistReceiver = youTubePlaylistReceiver;
     }
 
     /**
@@ -102,8 +95,8 @@ public class YouTubeSearch {
      * @param authSelectedAccountName
      */
     public void setAuthSelectedAccountName(String authSelectedAccountName) {
-        this.mChosenAccountName = authSelectedAccountName;
-        credential.setSelectedAccountName(mChosenAccountName);
+        this.chosenAccountName = authSelectedAccountName;
+        credential.setSelectedAccountName(chosenAccountName);
     }
 
     /**
@@ -204,9 +197,14 @@ public class YouTubeSearch {
      * Search playlists for a current user
      */
     public void searchPlaylists() {
+        if (chosenAccountName == null) {
+            return;
+        }
+        credential.setSelectedAccountName(chosenAccountName);
+
         new Thread() {
             public void run() {
-                youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), credential)
+                youtube = new YouTube.Builder(transport, jsonFactory, credential)
                         .setApplicationName(appName).build();
                 try {
                     ChannelListResponse channelListResponse = youtube.channels().list("snippet").setMine(true).execute();
@@ -220,7 +218,7 @@ public class YouTubeSearch {
                     YouTube.Playlists.List searchList = youtube.playlists().list("id,snippet,contentDetails,status").setKey(Config.YOUTUBE_API_KEY);
 
                     searchList.setChannelId(channel.getId());
-                    searchList.setFields("items(id,snippet/title,snippet/thumbnails/default/url,contentDetails/itemCount,status,contentDetails/videoId)");
+                    searchList.setFields("items(id,snippet/title,snippet/thumbnails/default/url,contentDetails/itemCount,status)");
                     searchList.setMaxResults((long) 50);
 
                     PlaylistListResponse playListResponse = searchList.execute();
@@ -248,12 +246,21 @@ public class YouTubeSearch {
                             youTubePlaylistList.add(playlistItem);
                         }
 
-                        youTubePlaylistsReceiver.onPlaylistsReceived(youTubePlaylistList);
+                        youTubePlaylistReceiver.onPlaylistReceived(youTubePlaylistList);
                     }
                 } catch (UserRecoverableAuthIOException e) {
                     playlistFragment.startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
-                } catch (IOException e) {
                     e.printStackTrace();
+                } catch (GoogleJsonResponseException e) {
+                    Log.e(TAG, "GoogleJsonResponseException code: " + e.getDetails().getCode()
+                            + " : " + e.getDetails().getMessage());
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    Log.e(TAG, "IOException: " + e.getMessage());
+                    e.printStackTrace();
+                } catch (Throwable t) {
+                    Log.e(TAG, "Throwable: " + t.getMessage());
+                    t.printStackTrace();
                 }
             }
         }.start();
@@ -272,10 +279,10 @@ public class YouTubeSearch {
             @Override
             public void run() {
 
-                Log.e(TAG, "Chosen name: " + mChosenAccountName);
-                credential.setSelectedAccountName(mChosenAccountName);
+                Log.e(TAG, "Chosen name: " + chosenAccountName);
+                credential.setSelectedAccountName(chosenAccountName);
 
-                youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), credential)
+                youtube = new YouTube.Builder(transport, jsonFactory, credential)
                         .setApplicationName(appName).build();
 
                 ArrayList<PlaylistItem> playlistItemList = new ArrayList<PlaylistItem>();

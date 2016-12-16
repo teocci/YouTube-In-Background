@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2016 SMedic
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.teocci.utubinbg;
+package com.teocci.ytinbg;
 
 import android.app.SearchManager;
 import android.content.Context;
@@ -40,12 +25,12 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.teocci.utubinbg.database.YouTubeSqlDb;
-import com.teocci.utubinbg.fragments.FavoritesFragment;
-import com.teocci.utubinbg.fragments.PlaylistsFragment;
-import com.teocci.utubinbg.fragments.RecentlyWatchedFragment;
-import com.teocci.utubinbg.fragments.SearchFragment;
-import com.teocci.utubinbg.utils.NetworkConf;
+import com.teocci.ytinbg.database.YouTubeSqlDb;
+import com.teocci.ytinbg.fragments.FavoritesFragment;
+import com.teocci.ytinbg.fragments.PlaylistFragment;
+import com.teocci.ytinbg.fragments.RecentlyWatchedFragment;
+import com.teocci.ytinbg.fragments.SearchFragment;
+import com.teocci.ytinbg.utils.NetworkConf;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +40,7 @@ import java.util.List;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = "UTUBINBG";
+    private static final String TAG = "YTinBGMainActivity";
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private ViewPager viewPager;
@@ -157,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
         adapter.addFragment(new FavoritesFragment(), "Favorites");
         adapter.addFragment(recentlyPlayedFragment, "Recently watched");
         adapter.addFragment(searchFragment, "Search");
-        adapter.addFragment(new PlaylistsFragment(), "Playlists");
+        adapter.addFragment(new PlaylistFragment(), "Playlists");
         viewPager.setAdapter(adapter);
     }
 

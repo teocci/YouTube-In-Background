@@ -1,8 +1,8 @@
-package com.teocci.utubinbg.utils;
+package com.teocci.ytinbg.utils;
 
 import android.util.Log;
 
-import com.teocci.utubinbg.YouTubeVideo;
+import com.teocci.ytinbg.YouTubeVideo;
 
 import java.util.Iterator;
 import java.util.List;

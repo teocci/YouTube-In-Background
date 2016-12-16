@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2016 SMedic
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.teocci.utubinbg;
+package com.teocci.ytinbg;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -32,13 +17,15 @@ import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.app.NotificationCompat;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.SparseArray;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
-import com.teocci.utubinbg.receivers.MediaButtonIntentReceiver;
-import com.teocci.utubinbg.utils.Config;
+import com.teocci.ytinbg.receivers.MediaButtonIntentReceiver;
+import com.teocci.ytinbg.utils.Config;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,12 +41,12 @@ import at.huber.youtubeExtractor.YtFile;
 public class BackgroundAudioService extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener {
 
-    private static final String TAG = "UTUBINBG SERVICE CLASS";
+    private static final String TAG = "BackgroundAudioService";
 
-    private static final int YOUTUBE_ITAG_140 = 140; //mp4a - stereo, 44.1 KHz 128 Kbps
-    private static final int YOUTUBE_ITAG_22 = 22; //mp4 - stereo, 44.1 KHz 96-100 Kbps
-    private static final int YOUTUBE_ITAG_18 = 18; //mp4 - stereo, 44.1 KHz 96-100 Kbps
-    private static final int YOUTUBE_ITAG_17 = 17;
+    private static final int YOUTUBE_ITAG_251 = 251;    // webm - stereo, 48 KHz 160 Kbps
+    private static final int YOUTUBE_ITAG_141 = 141;    // mp4a - stereo, 44.1 KHz 256 Kbps
+    private static final int YOUTUBE_ITAG_140 = 140;    // mp4a - stereo, 44.1 KHz 128 Kbps
+    private static final int YOUTUBE_ITAG_17 = 17;      // mp4 - stereo, 44.1 KHz 96-100 Kbps
 
     public static final String ACTION_PLAY = "action_play";
     public static final String ACTION_PAUSE = "action_pause";
@@ -98,12 +85,36 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
         mMediaPlayer.setOnCompletionListener(this);
         mMediaPlayer.setOnPreparedListener(this);
         initMediaSessions();
+        initPhoneCallListener();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         handleIntent(intent);
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void initPhoneCallListener() {
+        PhoneStateListener phoneStateListener = new PhoneStateListener() {
+            @Override
+            public void onCallStateChanged(int state, String incomingNumber) {
+                if (state == TelephonyManager.CALL_STATE_RINGING) {
+                    //Incoming call: Pause music
+                    pauseVideo();
+                } else if (state == TelephonyManager.CALL_STATE_IDLE) {
+                    //Not in call: Play music
+                    resumeVideo();
+                } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
+                    //A call is dialing, active or on hold
+                }
+                super.onCallStateChanged(state, incomingNumber);
+            }
+        };
+
+        TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        if (mgr != null) {
+            mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
+        }
     }
 
     /**
@@ -401,6 +412,15 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     }
 
     /**
+     * Resumes video
+     */
+    private void resumeVideo() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.start();
+        }
+    }
+
+    /**
      * Restarts video
      */
     private void restartVideo() {
@@ -425,9 +445,28 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     }
 
     /**
+     * Get the best available audio stream
+     *
+     * @param ytFiles Array of available streams
+     * @return Audio stream with highest bitrate
+     */
+    private YtFile getBestStream(SparseArray<YtFile> ytFiles) {
+        if (ytFiles.get(YOUTUBE_ITAG_141) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_141);
+        } else if (ytFiles.get(YOUTUBE_ITAG_251) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_251);
+        } else if (ytFiles.get(YOUTUBE_ITAG_140) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_140);
+        }
+
+        return ytFiles.get(YOUTUBE_ITAG_17);
+    }
+
+    /**
      * Extracts link from youtube video ID, so mediaPlayer can play it
      */
     private void extractUrlAndPlay() {
+        Log.d(TAG, "extractUrlAndPlay: extract url for video id=" + videoItem.getId());
         final String youtubeLink = "http://youtube.com/watch?v=" + videoItem.getId();
 
         Log.e(TAG, youtubeLink);
@@ -436,10 +475,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
             @Override
             public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
                 if (ytFiles != null) {
-                    YtFile ytFile = ytFiles.get(YOUTUBE_ITAG_140);
-                    if (ytFile == null) {
-                        ytFile = ytFiles.get(YOUTUBE_ITAG_18);
-                    }
+                    YtFile ytFile = getBestStream(ytFiles);
                     try {
                         Log.e(TAG, ytFile.getUrl());
                         Log.d(TAG, "Start playback");
@@ -457,8 +493,8 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
             }
         };
         // Ignore the webm container format
-        ytEx.setIncludeWebM(false);
-        ytEx.setParseDashManifest(true);
+        // ytEx.setIncludeWebM(false);
+        // ytEx.setParseDashManifest(true);
         // Lets execute the request
         ytEx.execute(youtubeLink);
     }
