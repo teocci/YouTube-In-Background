@@ -44,9 +44,14 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     private static final String TAG = "BackgroundAudioService";
 
     private static final int YOUTUBE_ITAG_251 = 251;    // webm - stereo, 48 KHz 160 Kbps
+    private static final int YOUTUBE_ITAG_250 = 250;    // webm - stereo, 48 KHz 64 Kbps
+    private static final int YOUTUBE_ITAG_249 = 249;    // webm - stereo, 48 KHz 48 Kbps
+    private static final int YOUTUBE_ITAG_171 = 171;    // webm - stereo, 48 KHz 128 Kbps
     private static final int YOUTUBE_ITAG_141 = 141;    // mp4a - stereo, 44.1 KHz 256 Kbps
     private static final int YOUTUBE_ITAG_140 = 140;    // mp4a - stereo, 44.1 KHz 128 Kbps
-    private static final int YOUTUBE_ITAG_17 = 17;      // mp4 - stereo, 44.1 KHz 96-100 Kbps
+    private static final int YOUTUBE_ITAG_22 = 22;      // mp4 - stereo, 44.1 KHz 192 Kbps
+    private static final int YOUTUBE_ITAG_18 = 18;      // mp4 - stereo, 44.1 KHz 96 Kbps
+    private static final int YOUTUBE_ITAG_17 = 17;      // mp4 - stereo, 44.1 KHz 24 Kbps
 
     public static final String ACTION_PLAY = "action_play";
     public static final String ACTION_PAUSE = "action_pause";
@@ -453,10 +458,20 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     private YtFile getBestStream(SparseArray<YtFile> ytFiles) {
         if (ytFiles.get(YOUTUBE_ITAG_141) != null) {
             return ytFiles.get(YOUTUBE_ITAG_141);
-        } else if (ytFiles.get(YOUTUBE_ITAG_251) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_251);
         } else if (ytFiles.get(YOUTUBE_ITAG_140) != null) {
             return ytFiles.get(YOUTUBE_ITAG_140);
+        } else if (ytFiles.get(YOUTUBE_ITAG_251) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_251);
+        } else if (ytFiles.get(YOUTUBE_ITAG_250) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_250);
+        } else if (ytFiles.get(YOUTUBE_ITAG_249) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_249);
+        } else if (ytFiles.get(YOUTUBE_ITAG_171) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_171);
+        } else if (ytFiles.get(YOUTUBE_ITAG_18) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_18);
+        } else if (ytFiles.get(YOUTUBE_ITAG_22) != null) {
+            return ytFiles.get(YOUTUBE_ITAG_22);
         }
 
         return ytFiles.get(YOUTUBE_ITAG_17);
