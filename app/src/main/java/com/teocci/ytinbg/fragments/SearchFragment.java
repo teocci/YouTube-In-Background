@@ -29,7 +29,7 @@ import java.util.List;
 
 /**
  * Class that handles list of the videos searched on YouTube
- * Created by teocci on 7.3.16..
+ * Created by Teocci on 7.3.16..
  */
 public class SearchFragment extends ListFragment implements YouTubeVideosReceiver {
 
@@ -75,8 +75,8 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
         super.setUserVisibleHint(visible);
 
         if (visible && isResumed()) {
-            //Only manually call onResume if fragment is already visible
-            //Otherwise allow natural fragment lifecycle to call onResume
+            // Only manually call onResume if fragment is already visible
+            // Otherwise allow natural fragment lifecycle to call onResume
             onResume();
         }
     }
@@ -86,9 +86,9 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
         super.onResume();
 
         if (!getUserVisibleHint()) {
-            //do nothing for now
+            // Do nothing for now
         }
-        //4th parameter is null, because playlists are not needed to this fragment
+        // 4th parameter is null, because playlist are not needed to this fragment
 
         youTubeSearch = new YouTubeSearch(getActivity(), this);
         youTubeSearch.setYouTubeVideosReceiver(this);
@@ -139,13 +139,17 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
             @Override
             public void onItemClick(AdapterView<?> av, View v, int pos,
                                     long id) {
-                //check network connectivity
+                // Check network connectivity
                 if (!networkConf.isNetworkAvailable()) {
                     networkConf.createNetErrorDialog();
                     return;
                 }
 
-                Toast.makeText(getContext(), "Playing: " + searchResultsList.get(pos).getTitle(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(
+                        getContext(),
+                        getResources().getString(R.string.toast_message_playing) + searchResultsList.get(pos).getTitle(),
+                        Toast.LENGTH_SHORT
+                ).show();
 
                 YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).create(searchResultsList.get(pos));
 
@@ -168,7 +172,9 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
 
                 //if specified number of videos is added, do not load more
                 if (totalItemCount < Config.NUMBER_OF_VIDEOS_RETURNED) {
-                    if (view.getAdapter() != null && ((firstVisibleItem + visibleItemCount) >= totalItemCount) && totalItemCount != mPrevTotalItemCount) {
+                    if (view.getAdapter() != null &&
+                            ((firstVisibleItem + visibleItemCount) >= totalItemCount) &&
+                            totalItemCount != mPrevTotalItemCount) {
                         mPrevTotalItemCount = totalItemCount;
                         addMoreData();
                     }
@@ -239,5 +245,4 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
             });
         }
     }
-
 }

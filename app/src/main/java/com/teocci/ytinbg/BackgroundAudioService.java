@@ -59,9 +59,9 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     public static final String ACTION_PREVIOUS = "action_previous";
     public static final String ACTION_STOP = "action_stop";
 
-    private MediaPlayer mMediaPlayer;
-    private MediaSessionCompat mSession;
-    private MediaControllerCompat mController;
+    private MediaPlayer mediaPlayer;
+    private MediaSessionCompat mediaSession;
+    private MediaControllerCompat mediaController;
 
     private int mediaType = Config.YOUTUBE_MEDIA_NO_NEW_REQUEST;
 
@@ -86,9 +86,9 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     public void onCreate() {
         super.onCreate();
         videoItem = new YouTubeVideo();
-        mMediaPlayer = new MediaPlayer();
-        mMediaPlayer.setOnCompletionListener(this);
-        mMediaPlayer.setOnPreparedListener(this);
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnCompletionListener(this);
+        mediaPlayer.setOnPreparedListener(this);
         initMediaSessions();
         initPhoneCallListener();
     }
@@ -133,15 +133,15 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
         String action = intent.getAction();
         if (action.equalsIgnoreCase(ACTION_PLAY)) {
             handleMedia(intent);
-            mController.getTransportControls().play();
+            mediaController.getTransportControls().play();
         } else if (action.equalsIgnoreCase(ACTION_PAUSE)) {
-            mController.getTransportControls().pause();
+            mediaController.getTransportControls().pause();
         } else if (action.equalsIgnoreCase(ACTION_PREVIOUS)) {
-            mController.getTransportControls().skipToPrevious();
+            mediaController.getTransportControls().skipToPrevious();
         } else if (action.equalsIgnoreCase(ACTION_NEXT)) {
-            mController.getTransportControls().skipToNext();
+            mediaController.getTransportControls().skipToNext();
         } else if (action.equalsIgnoreCase(ACTION_STOP)) {
-            mController.getTransportControls().stop();
+            mediaController.getTransportControls().stop();
         }
     }
 
@@ -154,7 +154,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
         int intentMediaType = intent.getIntExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_NO_NEW_REQUEST);
         switch (intentMediaType) {
             case Config.YOUTUBE_MEDIA_NO_NEW_REQUEST: //video is paused,so no new playback requests should be processed
-                mMediaPlayer.start();
+                mediaPlayer.start();
                 break;
             case Config.YOUTUBE_MEDIA_TYPE_VIDEO:
                 mediaType = Config.YOUTUBE_MEDIA_TYPE_VIDEO;
@@ -185,7 +185,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
         //
         // Remember that to use this, we have to declare the android.permission.WAKE_LOCK
         // permission in AndroidManifest.xml.
-        mMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
         ComponentName eventReceiver = new ComponentName(getApplicationContext().getPackageName(),
                 MediaButtonIntentReceiver.class.getName());
@@ -196,18 +196,26 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
                 PendingIntent.FLAG_UPDATE_CURRENT
         );
 
-        mSession = new MediaSessionCompat(getApplicationContext(), "simple player session",
-                eventReceiver, buttonReceiverIntent);
+        mediaSession = new MediaSessionCompat(
+                getApplicationContext(),
+                TAG,
+                eventReceiver,
+                buttonReceiverIntent
+        );
 
         try {
-            mController = new MediaControllerCompat(getApplicationContext(), mSession.getSessionToken());
+            mediaController = new MediaControllerCompat(getApplicationContext(), mediaSession.getSessionToken());
 
-            mSession.setCallback(
+            mediaSession.setCallback(
                     new MediaSessionCompat.Callback() {
                         @Override
                         public void onPlay() {
                             super.onPlay();
-                            buildNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
+                            buildNotification(generateAction(
+                                    android.R.drawable.ic_media_pause,
+                                    getString(R.string.action_pause),
+                                    ACTION_PAUSE
+                            ));
                         }
 
                         @Override
@@ -215,7 +223,11 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
 
                             super.onPause();
                             pauseVideo();
-                            buildNotification(generateAction(android.R.drawable.ic_media_play, "Play", ACTION_PLAY));
+                            buildNotification(generateAction(
+                                    android.R.drawable.ic_media_play,
+                                    getString(R.string.action_play),
+                                    ACTION_PLAY
+                            ));
                         }
 
                         @Override
@@ -224,7 +236,11 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
                             if (!isStarting) {
                                 playNext();
                             }
-                            buildNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
+                            buildNotification(generateAction(
+                                    android.R.drawable.ic_media_pause,
+                                    getString(R.string.action_pause),
+                                    ACTION_PAUSE
+                            ));
                         }
 
                         @Override
@@ -233,7 +249,11 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
                             if (!isStarting) {
                                 playPrevious();
                             }
-                            buildNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
+                            buildNotification(generateAction(
+                                    android.R.drawable.ic_media_pause,
+                                    getString(R.string.action_pause),
+                                    ACTION_PAUSE
+                            ));
                         }
 
                         @Override
@@ -295,9 +315,9 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
                     .into(target);
         }
 
-        builder.addAction(generateAction(android.R.drawable.ic_media_previous, "Previous", ACTION_PREVIOUS));
+        builder.addAction(generateAction(android.R.drawable.ic_media_previous, getApplicationContext().getString(R.string.action_previous), ACTION_PREVIOUS));
         builder.addAction(action);
-        builder.addAction(generateAction(android.R.drawable.ic_media_next, "Next", ACTION_NEXT));
+        builder.addAction(generateAction(android.R.drawable.ic_media_next, getApplicationContext().getString(R.string.action_next), ACTION_NEXT));
         style.setShowActionsInCompactView(0, 1, 2);
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -327,7 +347,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     /**
      * Updates only large icon in notification panel when bitmap is decoded
      *
-     * @param bitmap
+     * @param bitmap the large icon in the notification panel
      */
     private void updateNotificationLargeIcon(Bitmap bitmap) {
         builder.setLargeIcon(bitmap);
@@ -338,9 +358,9 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     /**
      * Generates specific action with parameters below
      *
-     * @param icon
-     * @param title
-     * @param intentAction
+     * @param icon the icon number
+     * @param title the title of the notification
+     * @param intentAction the action
      * @return
      */
     private NotificationCompat.Action generateAction(int icon, String title, String intentAction) {
@@ -411,8 +431,8 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
      * Pauses video
      */
     private void pauseVideo() {
-        if (mMediaPlayer.isPlaying()) {
-            mMediaPlayer.pause();
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
         }
     }
 
@@ -420,8 +440,8 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
      * Resumes video
      */
     private void resumeVideo() {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.start();
+        if (mediaPlayer != null) {
+            mediaPlayer.start();
         }
     }
 
@@ -429,24 +449,24 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
      * Restarts video
      */
     private void restartVideo() {
-        mMediaPlayer.start();
+        mediaPlayer.start();
     }
 
     /**
      * Seeks to specific time
      *
-     * @param seekTo
+     * @param seekTo specific time
      */
     private void seekVideo(int seekTo) {
-        mMediaPlayer.seekTo(seekTo);
+        mediaPlayer.seekTo(seekTo);
     }
 
     /**
      * Stops video
      */
     private void stopPlayer() {
-        mMediaPlayer.stop();
-        mMediaPlayer.release();
+        mediaPlayer.stop();
+        mediaPlayer.release();
     }
 
     /**
@@ -481,7 +501,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
      * Extracts link from youtube video ID, so mediaPlayer can play it
      */
     private void extractUrlAndPlay() {
-        Log.d(TAG, "extractUrlAndPlay: extract url for video id=" + videoItem.getId());
+        Log.e(TAG, "extractUrlAndPlay: extract url for video id=" + videoItem.getId());
         final String youtubeLink = "http://youtube.com/watch?v=" + videoItem.getId();
 
         Log.e(TAG, youtubeLink);
@@ -494,12 +514,12 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
                     try {
                         Log.e(TAG, ytFile.getUrl());
                         Log.d(TAG, "Start playback");
-                        if (mMediaPlayer != null) {
-                            mMediaPlayer.reset();
-                            mMediaPlayer.setDataSource(ytFile.getUrl());
-                            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                            mMediaPlayer.prepare();
-                            mMediaPlayer.start();
+                        if (mediaPlayer != null) {
+                            mediaPlayer.reset();
+                            mediaPlayer.setDataSource(ytFile.getUrl());
+                            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                            mediaPlayer.prepare();
+                            mediaPlayer.start();
                         }
                     } catch (IOException io) {
                         io.printStackTrace();

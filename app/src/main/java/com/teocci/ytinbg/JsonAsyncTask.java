@@ -22,7 +22,7 @@ import java.util.ArrayList;
  */
 public class JsonAsyncTask extends AsyncTask<String, Void, ArrayList<String>> {
 
-    private static final String TAG = "UTUBINBG JSON CLASS";
+    private static final String TAG = "JsonAsyncTask";
 
     private final int JSON_ERROR = 0;
     private final int JSON_ARRAY = 1;

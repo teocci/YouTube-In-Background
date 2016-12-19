@@ -44,7 +44,7 @@ import java.util.List;
 
 /**
  * Class for sending YouTube DATA API V3 request and receiving data from it
- * Created by teocci on 18.2.16..
+ * Created by Teocci on 18.2.16..
  */
 public class YouTubeSearch {
 
@@ -127,9 +127,17 @@ public class YouTubeSearch {
                     YouTube.Search.List searchList;
                     YouTube.Videos.List videosList;
 
+                    // Define the API request for retrieving search results.
                     searchList = youtube.search().list("id,snippet");
                     searchList.setKey(Config.YOUTUBE_API_KEY);
-                    searchList.setType("video"); //TODO ADD PLAYLISTS SEARCH
+                    searchList.setQ(keywords);
+
+                    // Restrict the search results to only include videos. See:
+                    // https://developers.google.com/youtube/v3/docs/search/list#type
+                    searchList.setType("video");
+
+                    // As a best practice, only retrieve the fields that the
+                    // application uses.
                     searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
                     searchList.setFields("items(id/videoId,snippet/title,snippet/thumbnails/default/url)");
 
@@ -137,12 +145,11 @@ public class YouTubeSearch {
                     videosList.setKey(Config.YOUTUBE_API_KEY);
                     videosList.setFields("items(contentDetails/duration,statistics/viewCount)");
 
-                    //search
-                    searchList.setQ(keywords);
+                    // search Response
                     SearchListResponse searchListResponse = searchList.execute();
                     List<SearchResult> searchResults = searchListResponse.getItems();
 
-                    //save all ids from searchList list in order to find video list
+                    // Save all ids from searchList list in order to find video list
                     StringBuilder contentDetails = new StringBuilder();
 
                     int ii = 0;
@@ -153,19 +160,21 @@ public class YouTubeSearch {
                         ii++;
                     }
 
-                    //find video list
+                    // Find video list
                     videosList.setId(contentDetails.toString());
                     VideoListResponse resp = videosList.execute();
                     List<Video> videoResults = resp.getItems();
-                    //make items for displaying in listView
+
+                    // Make items for displaying in listView
                     ArrayList<YouTubeVideo> items = new ArrayList<>();
                     for (int i = 0; i < searchResults.size(); i++) {
                         YouTubeVideo item = new YouTubeVideo();
-                        //searchList list info
+
+                        // SearchList list info
                         item.setTitle(searchResults.get(i).getSnippet().getTitle());
                         item.setThumbnailURL(searchResults.get(i).getSnippet().getThumbnails().getDefault().getUrl());
                         item.setId(searchResults.get(i).getId().getVideoId());
-                        //video info
+                        // Video info
                         if (videoResults.get(i) != null) {
                             BigInteger viewsNumber = videoResults.get(i).getStatistics().getViewCount();
                             String viewsFormatted = NumberFormat.getIntegerInstance().format(viewsNumber) + " views";
@@ -177,7 +186,7 @@ public class YouTubeSearch {
                             item.setDuration("NA");
                         }
 
-                        //add to the list
+                        // Add to the list
                         items.add(item);
                     }
 
@@ -211,7 +220,7 @@ public class YouTubeSearch {
 
                     List<Channel> channelList = channelListResponse.getItems();
                     if (channelList.isEmpty()) {
-                        Log.d(TAG, "Can't find user channel");
+                        Log.e(TAG, "Can't find user channel");
                     }
                     Channel channel = channelList.get(0);
 
@@ -222,11 +231,11 @@ public class YouTubeSearch {
                     searchList.setMaxResults((long) 50);
 
                     PlaylistListResponse playListResponse = searchList.execute();
-                    List<Playlist> playlists = playListResponse.getItems();
+                    List<Playlist> playlistList = playListResponse.getItems();
 
-                    if (playlists != null) {
+                    if (playlistList != null) {
 
-                        Iterator<Playlist> iteratorPlaylistResults = playlists.iterator();
+                        Iterator<Playlist> iteratorPlaylistResults = playlistList.iterator();
 
                         if (!iteratorPlaylistResults.hasNext()) {
                             Log.d(TAG, " There aren't any results for your query.");

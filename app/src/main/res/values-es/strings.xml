@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">YTInBG</string>
+    <string name="action_about">Acerca de mi</string>
+    <string name="recently_watched_tab">Recien vistos</string>
+    <string name="search_tab">Buscar en YouTube</string>
+    <string name="playlist_tab">Buscar Playlist</string>
+
+    <string name="search_hint">Buscar en YouTube</string>
+
+    <string name="action_search">Buscar</string>
+    <string name="drawer_open">Abrir</string>
+    <string name="drawer_close">Cerrar</string>
+
+    <!-- action labels  -->
+    <string name="action_next">Siguiente</string>
+    <string name="action_pause">Pausar</string>
+    <string name="action_play">Reproducir</string>
+    <string name="action_previous">Anterior</string>
+
+    <!-- fragments -->
+    <string name="fragment_tab_favorites">Favoritos</string>
+    <string name="fragment_tab_playlist">Mis Playlist</string>
+    <string name="fragment_tab_search">Buscar</string>
+    <string name="fragment_tab_recently_watched">Reproducidos</string>
+
+    <string name="fragment_title_favorite">Mis videos favoritos</string>
+    <string name="fragment_title_playlist">Mis videos en Playlist</string>
+    <string name="fragment_title_recently_watched">Videos reproducidos</string>
+    <string name="fragment_title_search">Videos Encontrados</string>
+
+    <!-- toast messages -->
+    <string name="toast_message_hello">"Hola "</string>
+    <string name="toast_message_playing">"Playing: "</string>
+    <string name="toast_message_playlist_empty">El Playlist esta vacio!</string>
+    <string name="toast_message_playlist_not_exist">El Playlist no existe!</string>
+    <string name="toast_message_removed_position">Eliminado</string>
+
+    <!-- Playlist Description -->
+    <string name="playlist_number_videos">Numero de Videos: %1$d</string>
+    <string name="playlist_status">Estatus: %1$s</string>
+
+
+    <string name="removed_positions">Eliminado</string>
+    <string name="user_playlist">Playlists</string>
+    <string name="clear_list">Vaciar lista de reproducción</string>
+    <string name="tap_to_undo">Tap para deshacer</string>
+    <string name="load_playlist">Cargar</string>
+    <string name="item_deleted">Iten borrado</string>
+    <string name="video_thumbnail">Video Thumbnail</string>
+</resources>

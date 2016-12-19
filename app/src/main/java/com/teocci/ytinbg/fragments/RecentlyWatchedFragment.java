@@ -23,7 +23,6 @@ import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.NetworkConf;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
@@ -33,7 +32,7 @@ import javax.annotation.Nullable;
  */
 public class RecentlyWatchedFragment extends Fragment {
 
-    private static final String TAG = "TEOCCI RecentlyWatched Fragmet";
+    private static final String TAG = "RecentlyWatchedFragment";
 
     private ArrayList<YouTubeVideo> recentlyPlayedVideos;
 
@@ -71,7 +70,7 @@ public class RecentlyWatchedFragment extends Fragment {
         super.onResume();
 
         if (!getUserVisibleHint()) {
-            //do nothing for now
+            // Do nothing for now
         }
 
         recentlyPlayedVideos.clear();
@@ -97,16 +96,16 @@ public class RecentlyWatchedFragment extends Fragment {
      */
     private void setupListViewAndAdapter() {
 
-        /* Setup the adapter */
+        // Setup the adapter
         videoListAdapter = new VideosAdapter(getActivity(), recentlyPlayedVideos, false);
         SimpleSwipeUndoAdapter simpleSwipeUndoAdapter = new SimpleSwipeUndoAdapter(videoListAdapter, getContext(), new MyOnDismissCallback());
         SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter(simpleSwipeUndoAdapter);
         animationAdapter.setAbsListView(recentlyPlayedListView);
         recentlyPlayedListView.setAdapter(animationAdapter);
 
-        /* Enable drag and drop functionality */
+        // Enable drag and drop functionality
         recentlyPlayedListView.enableDragAndDrop();
-        //recentlyPlayedListView.setDraggableManager(new TouchViewDraggableManager(R.id.row_item));
+//        recentlyPlayedListView.setDraggableManager(new TouchViewDraggableManager(R.id.row_item));
         recentlyPlayedListView.setOnItemLongClickListener(
                 new AdapterView.OnItemLongClickListener() {
                     @Override
@@ -118,7 +117,7 @@ public class RecentlyWatchedFragment extends Fragment {
                 }
         );
 
-        /* Enable swipe to dismiss with Undo */
+        // Enable swipe to dismiss with Undo
         recentlyPlayedListView.enableSimpleSwipeUndo();
 
         addListeners();
@@ -134,8 +133,11 @@ public class RecentlyWatchedFragment extends Fragment {
             public void onItemClick(AdapterView<?> av, View v, final int pos,
                                     long id) {
                 if (conf.isNetworkAvailable()) {
-
-                    Toast.makeText(getContext(), "Playing: " + recentlyPlayedVideos.get(pos).getTitle(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(
+                            getContext(),
+                            getResources().getString(R.string.toast_message_playing) + recentlyPlayedVideos.get(pos).getTitle(),
+                            Toast.LENGTH_SHORT
+                    ).show();
 
                     YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).create(recentlyPlayedVideos.get(pos));
 
@@ -157,7 +159,7 @@ public class RecentlyWatchedFragment extends Fragment {
     private class MyOnDismissCallback implements OnDismissCallback {
 
         @Nullable
-        private Toast mToast;
+        private Toast callbackToast;
 
         @Override
         public void onDismiss(@NonNull final ViewGroup listView, @NonNull final int[] reverseSortedPositions) {
@@ -168,15 +170,15 @@ public class RecentlyWatchedFragment extends Fragment {
                 videoListAdapter.notifyDataSetChanged();
             }
 
-            if (mToast != null) {
-                mToast.cancel();
+            if (callbackToast != null) {
+                callbackToast.cancel();
             }
-            mToast = Toast.makeText(
+            callbackToast = Toast.makeText(
                     getActivity(),
-                    getString(R.string.removed_positions, Arrays.toString(reverseSortedPositions)),
+                    getResources().getString(R.string.toast_message_removed_position),
                     Toast.LENGTH_LONG
             );
-            mToast.show();
+            callbackToast.show();
         }
     }
 

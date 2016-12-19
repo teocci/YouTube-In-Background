@@ -194,7 +194,7 @@ public abstract class YouTubeUriExtractor extends AsyncTask<String, Void, Sparse
         SparseArray<String> encSignatures = null;
 
         // Some videos are using a ciphered signature we need to get the
-        // deciphering js-file from the youtubepage.
+        // deciphering js-file from the youtube page.
         if (streamMap == null || !streamMap.contains("use_cipher_signature=False")) {
             // Get the video directly from the youtubepage
             if (CACHING
@@ -333,7 +333,7 @@ public abstract class YouTubeUriExtractor extends AsyncTask<String, Void, Sparse
                 for (int i = 0; i < encSignatures.size() && i < sigs.length; i++) {
                     int key = encSignatures.keyAt(i);
                     if (key == 0) {
-                        dashMpdUrl = dashMpdUrl.replace("/s/" + encSignatures.get(key), "/signature/" + sigs[i]);
+                        dashMpdUrl = dashMpdUrl != null ? dashMpdUrl.replace("/s/" + encSignatures.get(key), "/signature/" + sigs[i]) : null;
                     } else {
                         String url = ytFiles.get(key).getUrl();
                         url += "&signature=" + sigs[i];
@@ -347,7 +347,7 @@ public abstract class YouTubeUriExtractor extends AsyncTask<String, Void, Sparse
         if (parseDashManifest && dashMpdUrl != null) {
             for (int i = 0; i < DASH_PARSE_RETRIES; i++) {
                 try {
-                    // It sometimes failes to connect for no apparent reason. We just retry.
+                    // It sometimes fails to connect for no apparent reason. We just retry.
                     parseDashManifest(dashMpdUrl, ytFiles);
                     break;
                 } catch (IOException io) {

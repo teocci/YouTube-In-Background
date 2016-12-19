@@ -22,6 +22,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -32,7 +33,10 @@ import com.teocci.ytinbg.fragments.RecentlyWatchedFragment;
 import com.teocci.ytinbg.fragments.SearchFragment;
 import com.teocci.ytinbg.utils.NetworkConf;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -45,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
-    private int initialColor = 0xffff0040;
     private int initialColors[] = new int[2];
 
     private SearchFragment searchFragment;
@@ -103,14 +106,15 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Handle search intent and queries YouTube for videos
      *
-     * @param intent
+     * @param intent search intent and queries
      */
     private void handleIntent(Intent intent) {
 
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
 
-            viewPager.setCurrentItem(2, true); //switch to search fragment
+            // Switch to search fragment
+            viewPager.setCurrentItem(2, true);
 
             if (searchFragment != null) {
                 searchFragment.searchQuery(query);
@@ -119,19 +123,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Setups icons for 3 tabs
+     * Setups icons for four tabs
      */
     private void setupTabIcons() {
-        tabLayout.getTabAt(0).setIcon(tabIcons[0]);
-        tabLayout.getTabAt(1).setIcon(tabIcons[1]);
-        tabLayout.getTabAt(2).setIcon(tabIcons[2]);
-        tabLayout.getTabAt(3).setIcon(tabIcons[3]);
+        try {
+            tabLayout.getTabAt(0).setIcon(tabIcons[0]);
+            tabLayout.getTabAt(1).setIcon(tabIcons[1]);
+            tabLayout.getTabAt(2).setIcon(tabIcons[2]);
+            tabLayout.getTabAt(3).setIcon(tabIcons[3]);
+        } catch (NullPointerException e) {
+            Log.e(TAG, "setupTabIcons are not found - Null");
+        }
     }
 
     /**
      * Setups viewPager for switching between pages according to the selected tab
      *
-     * @param viewPager
+     * @param viewPager for switching between pages
      */
     private void setupViewPager(ViewPager viewPager) {
 
@@ -139,10 +147,10 @@ public class MainActivity extends AppCompatActivity {
 
         searchFragment = new SearchFragment();
         recentlyPlayedFragment = new RecentlyWatchedFragment();
-        adapter.addFragment(new FavoritesFragment(), "Favorites");
-        adapter.addFragment(recentlyPlayedFragment, "Recently watched");
-        adapter.addFragment(searchFragment, "Search");
-        adapter.addFragment(new PlaylistFragment(), "Playlists");
+        adapter.addFragment(new FavoritesFragment(), getString(R.string.fragment_tab_favorites));
+        adapter.addFragment(recentlyPlayedFragment, getString(R.string.fragment_tab_recently_watched));
+        adapter.addFragment(searchFragment, getString(R.string.fragment_tab_search));
+        adapter.addFragment(new PlaylistFragment(), getString(R.string.fragment_tab_playlist));
         viewPager.setAdapter(adapter);
     }
 
@@ -150,39 +158,39 @@ public class MainActivity extends AppCompatActivity {
      * Class which provides adapter for fragment pager
      */
     class ViewPagerAdapter extends FragmentPagerAdapter {
-        private final List<Fragment> mFragmentList = new ArrayList<>();
-        private final List<String> mFragmentTitleList = new ArrayList<>();
+        private final List<Fragment> fragmentList = new ArrayList<>();
+        private final List<String> fragmentTitleList = new ArrayList<>();
 
-        public ViewPagerAdapter(FragmentManager manager) {
+        ViewPagerAdapter(FragmentManager manager) {
             super(manager);
         }
 
         @Override
         public Fragment getItem(int position) {
-            return mFragmentList.get(position);
+            return fragmentList.get(position);
         }
 
         @Override
         public int getCount() {
-            return mFragmentList.size();
+            return fragmentList.size();
         }
 
-        public void addFragment(Fragment fragment, String title) {
-            mFragmentList.add(fragment);
-            mFragmentTitleList.add(title);
+        void addFragment(Fragment fragment, String title) {
+            fragmentList.add(fragment);
+            fragmentTitleList.add(title);
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
-            return mFragmentTitleList.get(position);
+            return fragmentTitleList.get(position);
         }
     }
 
     /**
      * Options menu in action bar
      *
-     * @param menu
-     * @return
+     * @param menu Menu options in the action bar
+     * @return boolean
      */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -197,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         }
 
-        //suggestions
+        // Suggestions
         final CursorAdapter suggestionAdapter = new SimpleCursorAdapter(this,
                 R.layout.dropdown_menu,
                 null,
@@ -230,13 +238,13 @@ public class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
-                return false; //if true, no new intent is started
+                return false; // Whenever is true, no new intent will be started
             }
 
             @Override
             public boolean onQueryTextChange(String suggestion) {
-                // check network connection. If not available, do not query.
-                // this also disables onSuggestionClick triggering
+                // Check network connection. If not available, do not query.
+                // This also disables onSuggestionClick triggering
                 if (suggestion.length() > 2) { //make suggestions after 3rd letter
 
                     if (networkConf.isNetworkAvailable()) {
@@ -285,11 +293,15 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_about) {
+            DateFormat monthFormat = new SimpleDateFormat("MMMM");
+            DateFormat yearFormat = new SimpleDateFormat("yyyy");
+            Date date = new Date();
 
             AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
             alertDialog.setTitle("Teocci");
             alertDialog.setIcon(R.mipmap.ic_launcher);
-            alertDialog.setMessage("YTinBG v1.01\n\nteocci@naver.com\n\nMarch 2016.\n");
+            alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@naver.com\n\n" +
+                    monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
             alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
@@ -341,8 +353,8 @@ public class MainActivity extends AppCompatActivity {
         tabs.setTabTextColors(textColor, textColor);
         SharedPreferences sp = PreferenceManager
                 .getDefaultSharedPreferences(this);
-        sp.edit().putInt("BACKGROUND_COLOR", backgroundColor).commit();
-        sp.edit().putInt("TEXT_COLOR", textColor).commit();
+        sp.edit().putInt("BACKGROUND_COLOR", backgroundColor).apply();
+        sp.edit().putInt("TEXT_COLOR", textColor).apply();
 
         initialColors[0] = backgroundColor;
         initialColors[1] = textColor;

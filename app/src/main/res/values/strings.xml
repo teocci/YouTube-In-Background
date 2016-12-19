@@ -1,10 +1,9 @@
 <resources>
     <string name="app_name">YTInBG</string>
     <string name="action_about">About me</string>
-    <string name="section_format">Hello World from section: %1$d</string>
     <string name="recently_watched_tab">Recently watched</string>
     <string name="search_tab">Search YouTube</string>
-    <string name="playlists_tab">Search Playlists</string>
+    <string name="playlist_tab">Search Playlist</string>
 
     <string name="search_hint">Search YouTube</string>
 
@@ -12,25 +11,40 @@
     <string name="drawer_open">Open</string>
     <string name="drawer_close">Close</string>
 
-    <string name="nav_item_home">Home</string>
-    <string name="nav_item_friends">Friends</string>
-    <string name="nav_item_notifications">Messages</string>
+    <!-- action labels  -->
+    <string name="action_play">Play</string>
+    <string name="action_pause">Pause</string>
+    <string name="action_previous">Previous</string>
+    <string name="action_next">Next</string>
 
-    <!-- navigation drawer item labels  -->
-    <string-array name="nav_drawer_labels">
-        <item>@string/nav_item_home</item>
-        <item>@string/nav_item_friends</item>
-        <item>@string/nav_item_notifications</item>
-    </string-array>
+    <!-- fragments -->
+    <string name="fragment_tab_favorites">Favorites</string>
+    <string name="fragment_tab_recently_watched">Watched</string>
+    <string name="fragment_tab_search">Search</string>
+    <string name="fragment_tab_playlist">Playlist</string>
 
-    <string name="title_messages">Messages</string>
-    <string name="title_friends">Friends</string>
-    <string name="title_home">Home</string>
+    <string name="fragment_title_favorite">My favorite videos</string>
+    <string name="fragment_title_recently_watched">Recently watched videos</string>
+    <string name="fragment_title_search">Searched videos</string>
+    <string name="fragment_title_playlist">My playlist videos</string>
+
+    <!-- toast messages -->
+    <string name="toast_message_playing">"Playing: "</string>
+    <string name="toast_message_hello">"Hi "</string>
+    <string name="toast_message_playlist_empty">Playlist is empty!</string>
+    <string name="toast_message_playlist_not_exist">Playlist does not exist!</string>
+    <string name="toast_message_removed_position">Removed</string>
+
+    <!-- Playlist Description -->
+    <string name="playlist_number_videos">Number of videos: %1$d</string>
+    <string name="playlist_status">Status: %1$s</string>
+
 
     <string name="removed_positions">Removed</string>
-    <string name="taptoundo">Tap to undo</string>
-    <string name="itemdeleted">Item deleted</string>
-    <string name="load_playlists">Load</string>
-    <string name="user_playlist">Playlists</string>
+    <string name="tap_to_undo">Tap to undo</string>
+    <string name="item_deleted">Item deleted</string>
+    <string name="load_playlist">Load</string>
+    <string name="user_playlist">Playlist</string>
     <string name="clear_list">Clear recently played list</string>
+    <string name="video_thumbnail">Video Thumbnail</string>
 </resources>

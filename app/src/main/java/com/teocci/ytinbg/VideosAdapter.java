@@ -50,7 +50,7 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
         TextView title = (TextView) convertView.findViewById(R.id.video_title);
         TextView duration = (TextView) convertView.findViewById(R.id.video_duration);
         TextView viewCount = (TextView) convertView.findViewById(R.id.views_number);
-        CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.imageButton);
+        CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.image_button);
 
         final YouTubeVideo searchResult = list.get(position);
 
@@ -126,6 +126,6 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
     @NonNull
     @Override
     public View getUndoClickView(@NonNull View view) {
-        return view.findViewById(R.id.undo_row_undobutton);
+        return view.findViewById(R.id.button_undo_row);
     }
 }

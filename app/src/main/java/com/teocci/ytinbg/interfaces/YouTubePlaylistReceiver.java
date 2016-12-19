@@ -5,7 +5,7 @@ import com.teocci.ytinbg.YouTubePlaylist;
 import java.util.ArrayList;
 
 /**
- * Interface which enables passing playlists to the fragments
+ * Interface which enables passing playlist to the fragments
  * Created by Teocci on 15.3.16..
  */
 public interface YouTubePlaylistReceiver {

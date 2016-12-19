@@ -25,12 +25,12 @@
     tools:ignore="overdraw">
 
     <TextView
-        android:id="@+id/undo_row_texttv"
+        android:id="@+id/text_view_undo_row"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:padding="10dp"
-        android:text="@string/itemdeleted"
+        android:text="@string/item_deleted"
         android:textColor="@android:color/white"
         android:textSize="16sp" />
 
@@ -42,7 +42,7 @@
         tools:ignore="PxUsage" />
 
     <Button
-        android:id="@+id/undo_row_undobutton"
+        android:id="@+id/button_undo_row"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -50,7 +50,7 @@
         android:drawableLeft="@android:drawable/ic_menu_revert"
         android:padding="10dp"
         android:paddingRight="8dp"
-        android:text="@string/taptoundo"
+        android:text="@string/tap_to_undo"
         android:textColor="@android:color/white"
         android:textSize="16sp" />
 

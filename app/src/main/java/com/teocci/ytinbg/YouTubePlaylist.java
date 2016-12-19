@@ -8,7 +8,7 @@ import java.io.Serializable;
  */
 public class YouTubePlaylist implements Serializable {
 
-    private static final String TAG = "UTUBINBG PLAYLIST CLASS";
+    private static final String TAG = "YouTubePlaylist";
     private String title;
     private String thumbnailURL;
     private String id;

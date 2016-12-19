@@ -51,8 +51,8 @@ public class FavoritesFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_recently_watched, container, false);
-        TextView fragmentListTitle = (TextView) v.findViewById(R.id.fragment_title_text_view);
-        fragmentListTitle.setText("Favorites");
+        TextView fragmentListTitle = (TextView) v.findViewById(R.id.text_view_title);
+        fragmentListTitle.setText(getResources().getString(R.string.fragment_title_favorite));
         favoritesListView = (DynamicListView) v.findViewById(R.id.recently_played);
         setupListViewAndAdapter();
         return v;
@@ -106,8 +106,13 @@ public class FavoritesFragment extends Fragment {
             public void onItemClick(AdapterView<?> av, View v, final int pos,
                                     long id) {
                 if (conf.isNetworkAvailable()) {
+                    Toast.makeText(
+                            getContext(),
+                            getResources().getString(R.string.toast_message_playing) +
+                                    favoriteVideos.get(pos).getTitle(),
+                            Toast.LENGTH_SHORT
+                    ).show();
 
-                    Toast.makeText(getContext(), "Playing: " + favoriteVideos.get(pos).getTitle(), Toast.LENGTH_SHORT).show();
                     //add item to recently watched list
                     YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).create(favoriteVideos.get(pos));
 

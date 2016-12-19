@@ -16,11 +16,13 @@ public class NetworkConf {
 
     private Activity activity;
 
-    public NetworkConf(Activity activity){
+    public NetworkConf(Activity activity) {
         this.activity = activity;
     }
+
     /**
      * Checks whether internet connection is available or not
+     *
      * @return
      */
     public boolean isNetworkAvailable() {

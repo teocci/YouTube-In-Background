@@ -44,16 +44,16 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
 
     private static final String TAG = "PlaylistFragment";
 
+    private static final int REQUEST_ACCOUNT_PICKER = 2;
+    private static final int REQUEST_AUTHORIZATION = 3;
+
+    public static final String ACCOUNT_KEY = "accountName";
+
     private ArrayList<YouTubePlaylist> playlistList;
     private DynamicListView playlistListView;
     private Handler handler;
     private PlaylistAdapter playlistAdapter;
-
-    public static final String ACCOUNT_KEY = "accountName";
     private String chosenAccountName;
-
-    private static final int REQUEST_ACCOUNT_PICKER = 2;
-    private static final int REQUEST_AUTHORIZATION = 3;
 
     private YouTubeSearch youTubeSearch;
     private TextView userNameTextView;
@@ -94,7 +94,11 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
             chosenAccountName = savedInstanceState.getString(ACCOUNT_KEY);
             youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
             userNameTextView.setText(extractUserName(chosenAccountName));
-            Toast.makeText(getContext(), "Hi " + extractUserName(chosenAccountName), Toast.LENGTH_SHORT).show();
+            Toast.makeText(
+                    getContext(),
+                    getString(R.string.toast_message_hello) + extractUserName(chosenAccountName),
+                    Toast.LENGTH_SHORT
+            ).show();
         } else {
             loadAccount();
         }
@@ -113,7 +117,11 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
         if (chosenAccountName != null) {
             youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
             userNameTextView.setText(extractUserName(chosenAccountName));
-            Toast.makeText(getContext(), "Hi " + extractUserName(chosenAccountName), Toast.LENGTH_SHORT).show();
+            Toast.makeText(
+                    getContext(),
+                    getResources().getString(R.string.toast_message_hello) + extractUserName(chosenAccountName),
+                    Toast.LENGTH_SHORT
+            ).show();
         }
     }
 
@@ -155,9 +163,10 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
     /**
      * Handles Google OAuth 2.0 authorization or account chosen result
      *
-     * @param requestCode
-     * @param resultCode
-     * @param data
+     * @param requestCode to use when launching the resolution activity
+     * @param resultCode Standard activity result: operation succeeded.
+     * @param data The received Intent includes an extra for KEY_ACCOUNT_NAME, specifying
+     *             the account name (an email address) you must use to acquire the OAuth 2.0 token.
      */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -172,13 +181,16 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
             case REQUEST_ACCOUNT_PICKER:
                 if (resultCode == Activity.RESULT_OK && data != null
                         && data.getExtras() != null) {
-                    String accountName = data.getExtras().getString(
-                            AccountManager.KEY_ACCOUNT_NAME);
+                    String accountName = data.getExtras().getString(AccountManager.KEY_ACCOUNT_NAME);
                     if (accountName != null) {
                         chosenAccountName = accountName;
                         youTubeSearch.setAuthSelectedAccountName(accountName);
                         userNameTextView.setText(extractUserName(chosenAccountName));
-                        Toast.makeText(getContext(), "Hi " + extractUserName(chosenAccountName), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(
+                                getContext(),
+                                getResources().getString(R.string.toast_message_hello) + extractUserName(chosenAccountName),
+                                Toast.LENGTH_SHORT
+                        ).show();
                         saveAccount();
                     }
 
@@ -193,8 +205,10 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
      * acquiring YouTube private playlistList requires OAuth 2.0 authorization
      */
     private void chooseAccount() {
-        startActivityForResult(youTubeSearch.getCredential().newChooseAccountIntent(),
-                REQUEST_ACCOUNT_PICKER);
+        startActivityForResult(
+                youTubeSearch.getCredential().newChooseAccountIntent(),
+                REQUEST_ACCOUNT_PICKER
+        );
     }
 
     /**
@@ -240,12 +254,13 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
             @Override
             public void onItemClick(AdapterView<?> av, View v, int pos,
                                     long id) {
-                //check network connectivity
+                // Check network connectivity
                 if (!networkConf.isNetworkAvailable()) {
                     networkConf.createNetErrorDialog();
                     return;
                 }
-                youTubeSearch.acquirePlaylistVideos(playlistList.get(pos).getId()); //results are in onVideosReceived callback method
+                // Results are in onVideosReceived callback method
+                youTubeSearch.acquirePlaylistVideos(playlistList.get(pos).getId());
             }
         });
 
@@ -258,11 +273,15 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
      */
     @Override
     public void onVideosReceived(ArrayList<YouTubeVideo> youTubeVideos) {
-        //if playlistList is empty, do not start service
+        // Whenever the playlistList is empty, do not start service
         if (youTubeVideos.isEmpty()) {
             getActivity().runOnUiThread(new Runnable() {
                 public void run() {
-                    Toast.makeText(getContext(), "Playlist is empty!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(
+                            getContext(),
+                            getResources().getString(R.string.toast_message_playlist_empty),
+                            Toast.LENGTH_SHORT
+                    ).show();
                 }
             });
         } else {
@@ -279,7 +298,11 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
         Log.e(TAG, "Error 404. Playlist not found!");
         getActivity().runOnUiThread(new Runnable() {
             public void run() {
-                Toast.makeText(getContext(), "Playlist does not exist!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(
+                        getContext(),
+                        getResources().getString(R.string.toast_message_playlist_not_exist),
+                        Toast.LENGTH_SHORT
+                ).show();
                 removePlaylist(playlistId);
             }
         });
@@ -371,8 +394,14 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
 
             Picasso.with(getContext()).load(searchResult.getThumbnailURL()).into(thumbnail);
             title.setText(searchResult.getTitle());
-            videosNumber.setText("Number of videos: " + String.valueOf(searchResult.getNumberOfVideos()));
-            privacy.setText("Status: " + searchResult.getStatus());
+            videosNumber.setText(getResources().getString(
+                    R.string.playlist_number_videos,
+                    searchResult.getNumberOfVideos()
+            ));
+            privacy.setText(getResources().getString(
+                    R.string.playlist_status,
+                    searchResult.getStatus()
+            ));
 
             return convertView;
         }

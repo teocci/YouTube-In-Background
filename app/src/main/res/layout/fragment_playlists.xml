@@ -25,7 +25,7 @@
             android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/user_playlist"
+            android:text="@string/fragment_title_playlist"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:layout_gravity="center_horizontal" />
     </FrameLayout>

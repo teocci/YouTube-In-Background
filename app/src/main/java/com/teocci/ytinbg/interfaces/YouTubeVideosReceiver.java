@@ -10,5 +10,6 @@ import java.util.ArrayList;
  */
 public interface YouTubeVideosReceiver {
     void onVideosReceived(ArrayList<YouTubeVideo> youTubeVideos);
+
     void onPlaylistNotFound(String playlistId, int errorCode);
 }
