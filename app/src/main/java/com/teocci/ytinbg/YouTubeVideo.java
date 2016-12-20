@@ -7,8 +7,8 @@ import java.io.Serializable;
  * Created by teocci on 3.2.16..
  */
 public class YouTubeVideo implements Serializable {
-
     private static final String TAG = "YouTubeVideo";
+    private static final long serialVersionUID = 1L;
     private String id;
     private String title;
     private String thumbnailURL;

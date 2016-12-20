@@ -30,7 +30,7 @@
 
     <!-- toast messages -->
     <string name="toast_message_hello">"Hola "</string>
-    <string name="toast_message_playing">"Playing: "</string>
+    <string name="toast_message_loading">Cargando Audio</string>
     <string name="toast_message_playlist_empty">El Playlist esta vacio!</string>
     <string name="toast_message_playlist_not_exist">El Playlist no existe!</string>
     <string name="toast_message_removed_position">Eliminado</string>
@@ -47,4 +47,5 @@
     <string name="load_playlist">Cargar</string>
     <string name="item_deleted">Iten borrado</string>
     <string name="video_thumbnail">Video Thumbnail</string>
+    <string name="toast_message_playing">Reproduciendo: %1$s</string>
 </resources>

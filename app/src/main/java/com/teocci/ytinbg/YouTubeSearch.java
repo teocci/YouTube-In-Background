@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Class for sending YouTube DATA API V3 request and receiving data from it
@@ -50,7 +51,17 @@ public class YouTubeSearch {
 
     private static final String TAG = "YouTubeSearch";
 
+    // See: https://developers.google.com/youtube/v3/docs/playlistItems/list
+    private static final String YOUTUBE_PLAYLIST_PART = "snippet";
+    private static final String YOUTUBE_PLAYLIST_FIELDS = "pageInfo,nextPageToken,items(id,snippet(resourceId/videoId))";
+    // See: https://developers.google.com/youtube/v3/docs/videos/list
+    private static final String YOUTUBE_VIDEOS_PART = "snippet,contentDetails,statistics"; // video resource properties that the response will include.
+    private static final String YOUTUBE_VIDEOS_FIELDS = "items(id,snippet(title,description,thumbnails/high),contentDetails/duration,statistics)"; // selector specifying which fields to include in a partial response.
+
+
     private String appName;
+
+    private final String language;
 
     private Handler handler;
     private Activity activity;
@@ -79,6 +90,7 @@ public class YouTubeSearch {
         // set exponential backoff policy
         credential.setBackOff(new ExponentialBackOff());
         appName = activity.getResources().getString(R.string.app_name);
+        language = Locale.getDefault().getLanguage();
     }
 
     public void setYouTubeVideosReceiver(YouTubeVideosReceiver youTubeVideosReceiver) {
@@ -141,9 +153,13 @@ public class YouTubeSearch {
                     searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
                     searchList.setFields("items(id/videoId,snippet/title,snippet/thumbnails/default/url)");
 
+                    Log.e(TAG, language);
+                    searchList.set("hl", language);
+
                     videosList = youtube.videos().list("id,contentDetails,statistics");
                     videosList.setKey(Config.YOUTUBE_API_KEY);
                     videosList.setFields("items(contentDetails/duration,statistics/viewCount)");
+                    videosList.set("hl", language);
 
                     // search Response
                     SearchListResponse searchListResponse = searchList.execute();
@@ -203,9 +219,9 @@ public class YouTubeSearch {
 
     /**
      * /**
-     * Search playlists for a current user
+     * Search playlist for a current user
      */
-    public void searchPlaylists() {
+    public void searchPlaylist() {
         if (chosenAccountName == null) {
             return;
         }
@@ -224,17 +240,17 @@ public class YouTubeSearch {
                     }
                     Channel channel = channelList.get(0);
 
-                    YouTube.Playlists.List searchList = youtube.playlists().list("id,snippet,contentDetails,status").setKey(Config.YOUTUBE_API_KEY);
+                    YouTube.Playlists.List searchList = youtube.playlists().list("id,snippet,contentDetails,status");
 
                     searchList.setChannelId(channel.getId());
                     searchList.setFields("items(id,snippet/title,snippet/thumbnails/default/url,contentDetails/itemCount,status)");
                     searchList.setMaxResults((long) 50);
+                    searchList.set("hl", language);
 
                     PlaylistListResponse playListResponse = searchList.execute();
                     List<Playlist> playlistList = playListResponse.getItems();
 
                     if (playlistList != null) {
-
                         Iterator<Playlist> iteratorPlaylistResults = playlistList.iterator();
 
                         if (!iteratorPlaylistResults.hasNext()) {
@@ -261,6 +277,13 @@ public class YouTubeSearch {
                     playlistFragment.startActivityForResult(e.getIntent(), REQUEST_AUTHORIZATION);
                     e.printStackTrace();
                 } catch (GoogleJsonResponseException e) {
+                    if (e.getStatusCode() == 404) {
+                        youTubeVideosReceiver.onPlaylistNotFound("empty", e.getStatusCode());
+                        return;
+                    } else {
+                        e.printStackTrace();
+                    }
+
                     Log.e(TAG, "GoogleJsonResponseException code: " + e.getDetails().getCode()
                             + " : " + e.getDetails().getMessage());
                     e.printStackTrace();
@@ -306,6 +329,7 @@ public class YouTubeSearch {
                     playlistItemRequest.setMaxResults(50l);
                     playlistItemRequest.setFields("items(contentDetails/videoId,snippet/title," +
                             "snippet/thumbnails/default/url),nextPageToken");
+                    playlistItemRequest.set("hl", language);
                     // Call API one or more times to retrieve all items in the list. As long as API
                     // response returns a nextPageToken, there are still more items to retrieve.
                     //do {

@@ -108,8 +108,7 @@ public class FavoritesFragment extends Fragment {
                 if (conf.isNetworkAvailable()) {
                     Toast.makeText(
                             getContext(),
-                            getResources().getString(R.string.toast_message_playing) +
-                                    favoriteVideos.get(pos).getTitle(),
+                            getResources().getString(R.string.toast_message_loading),
                             Toast.LENGTH_SHORT
                     ).show();
 

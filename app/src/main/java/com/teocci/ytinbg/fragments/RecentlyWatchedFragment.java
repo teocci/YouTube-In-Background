@@ -135,7 +135,7 @@ public class RecentlyWatchedFragment extends Fragment {
                 if (conf.isNetworkAvailable()) {
                     Toast.makeText(
                             getContext(),
-                            getResources().getString(R.string.toast_message_playing) + recentlyPlayedVideos.get(pos).getTitle(),
+                            getResources().getString(R.string.toast_message_loading),
                             Toast.LENGTH_SHORT
                     ).show();
 
@@ -189,5 +189,4 @@ public class RecentlyWatchedFragment extends Fragment {
         recentlyPlayedVideos.clear();
         videoListAdapter.notifyDataSetChanged();
     }
-
 }

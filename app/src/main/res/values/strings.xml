@@ -29,8 +29,9 @@
     <string name="fragment_title_playlist">My playlist videos</string>
 
     <!-- toast messages -->
-    <string name="toast_message_playing">"Playing: "</string>
     <string name="toast_message_hello">"Hi "</string>
+    <string name="toast_message_loading">Loading Audio</string>
+    <string name="toast_message_playing">Playing: %1$s</string>
     <string name="toast_message_playlist_empty">Playlist is empty!</string>
     <string name="toast_message_playlist_not_exist">Playlist does not exist!</string>
     <string name="toast_message_removed_position">Removed</string>

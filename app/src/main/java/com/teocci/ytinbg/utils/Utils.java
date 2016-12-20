@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class Utils {
 
-    private static final String TAG = "TEOCCI JSON";
+    private static final String TAG = "Utils";
 
     /**
      * Converting ISO8601 formatted duration to normal readable time

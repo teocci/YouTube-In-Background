@@ -147,7 +147,7 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
 
                 Toast.makeText(
                         getContext(),
-                        getResources().getString(R.string.toast_message_playing) + searchResultsList.get(pos).getTitle(),
+                        getResources().getString(R.string.toast_message_loading),
                         Toast.LENGTH_SHORT
                 ).show();
 

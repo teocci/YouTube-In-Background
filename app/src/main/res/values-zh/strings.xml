@@ -1,0 +1,48 @@
+<resources>
+    <string name="app_name">YTInBG</string>
+    <string name="action_about">关于我们</string>
+    <string name="recently_watched_tab">最近观看</string>
+    <string name="search_tab">搜索 YouTube</string>
+    <string name="playlist_tab">搜索 播放列表</string>
+    <string name="search_hint">搜索 YouTube</string>
+    <string name="action_search">搜索</string>
+    <string name="drawer_open">打开</string>
+    <string name="drawer_close">关闭</string>
+
+    <!-- action labels  -->
+    <string name="action_play">播放</string>
+    <string name="action_pause">暂停</string>
+    <string name="action_previous">之前</string>
+    <string name="action_next">之后</string>
+
+    <!-- fragments -->
+    <string name="fragment_tab_favorites">最爱的</string>
+    <string name="fragment_tab_recently_watched">已观看</string>
+    <string name="fragment_tab_search">搜索</string>
+    <string name="fragment_tab_playlist">播放列表</string>
+
+    <string name="fragment_title_favorite">我最爱的视频</string>
+    <string name="fragment_title_recently_watched">最近观看的视频</string>
+    <string name="fragment_title_search">搜索的视频</string>
+    <string name="fragment_title_playlist">我的播放列表视频</string>
+
+    <!-- toast messages -->
+    <string name="toast_message_playing">播放中: %1$s</string>
+    <string name="toast_message_hello">"你好 "</string>
+    <string name="toast_message_playlist_empty">空的播放列表!</string>
+    <string name="toast_message_playlist_not_exist">播放列表不存在!</string>
+    <string name="toast_message_removed_position">已清除</string>
+
+    <!-- Playlist Description -->
+    <string name="playlist_number_videos">视频数量: %1$d</string>
+    <string name="playlist_status">状态: %1$s</string>
+    <string name="removed_positions">已清除</string>
+    <string name="item_deleted">项目删除</string>
+    <string name="load_playlist">装载</string>
+
+    <string name="user_playlist">播放列表</string>
+    <string name="clear_list">清除最近播放列表</string>
+    <string name="video_thumbnail">视频缩略图</string>
+    <string name="tap_to_undo">点击撤销</string>
+    <string name="toast_message_loading">正在加载音频</string>
+</resources>

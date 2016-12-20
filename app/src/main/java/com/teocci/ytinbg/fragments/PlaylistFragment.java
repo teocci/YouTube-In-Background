@@ -164,9 +164,9 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
      * Handles Google OAuth 2.0 authorization or account chosen result
      *
      * @param requestCode to use when launching the resolution activity
-     * @param resultCode Standard activity result: operation succeeded.
-     * @param data The received Intent includes an extra for KEY_ACCOUNT_NAME, specifying
-     *             the account name (an email address) you must use to acquire the OAuth 2.0 token.
+     * @param resultCode  Standard activity result: operation succeeded.
+     * @param data        The received Intent includes an extra for KEY_ACCOUNT_NAME, specifying
+     *                    the account name (an email address) you must use to acquire the OAuth 2.0 token.
      */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -194,7 +194,7 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
                         saveAccount();
                     }
 
-                    youTubeSearch.searchPlaylists();
+                    youTubeSearch.searchPlaylist();
                 }
                 break;
         }
@@ -241,7 +241,7 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
                         chooseAccount();
                     } else {
                         youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
-                        youTubeSearch.searchPlaylists();
+                        youTubeSearch.searchPlaylist();
                     }
                 } else {
                     networkConf.createNetErrorDialog();
@@ -303,7 +303,9 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
                         getResources().getString(R.string.toast_message_playlist_not_exist),
                         Toast.LENGTH_SHORT
                 ).show();
-                removePlaylist(playlistId);
+                if (!playlistId.equals("empty")) {
+                    removePlaylist(playlistId);
+                }
             }
         });
     }

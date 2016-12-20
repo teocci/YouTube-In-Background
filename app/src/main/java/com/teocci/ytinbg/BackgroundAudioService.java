@@ -21,6 +21,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.util.SparseArray;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -59,15 +60,19 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     public static final String ACTION_PREVIOUS = "action_previous";
     public static final String ACTION_STOP = "action_stop";
 
+    private BackgroundAudioService backgroundAudioService = this;
+
     private MediaPlayer mediaPlayer;
     private MediaSessionCompat mediaSession;
     private MediaControllerCompat mediaController;
 
     private int mediaType = Config.YOUTUBE_MEDIA_NO_NEW_REQUEST;
 
-    private YouTubeVideo videoItem;
-
     private boolean isStarting = false;
+
+    private YouTubeVideo currentVideo;
+    private String currentVideoTitle;
+    private int currentVideoPosition;
 
     private ArrayList<YouTubeVideo> youTubeVideos;
     private ListIterator<YouTubeVideo> iterator;
@@ -85,7 +90,8 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     @Override
     public void onCreate() {
         super.onCreate();
-        videoItem = new YouTubeVideo();
+        currentVideo = new YouTubeVideo();
+        currentVideoPosition = -1;
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.setOnPreparedListener(this);
@@ -146,28 +152,31 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     }
 
     /**
-     * Handles media - playlists and videos sent from fragments
+     * Handles media - playlist and videos sent from fragments
      *
      * @param intent
      */
     private void handleMedia(Intent intent) {
         int intentMediaType = intent.getIntExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_NO_NEW_REQUEST);
         switch (intentMediaType) {
-            case Config.YOUTUBE_MEDIA_NO_NEW_REQUEST: //video is paused,so no new playback requests should be processed
+            // Video has been paused. It is not necessary a new playback requests
+            case Config.YOUTUBE_MEDIA_NO_NEW_REQUEST:
                 mediaPlayer.start();
                 break;
             case Config.YOUTUBE_MEDIA_TYPE_VIDEO:
                 mediaType = Config.YOUTUBE_MEDIA_TYPE_VIDEO;
-                videoItem = (YouTubeVideo) intent.getSerializableExtra(Config.YOUTUBE_TYPE_VIDEO);
-                if (videoItem.getId() != null) {
+                currentVideo = (YouTubeVideo) intent.getSerializableExtra(Config.YOUTUBE_TYPE_VIDEO);
+                if (currentVideo.getId() != null) {
                     playVideo();
                 }
                 break;
-            case Config.YOUTUBE_MEDIA_TYPE_PLAYLIST: //new playlist playback request
+            // New playlist playback request
+            case Config.YOUTUBE_MEDIA_TYPE_PLAYLIST:
                 mediaType = Config.YOUTUBE_MEDIA_TYPE_PLAYLIST;
                 youTubeVideos = (ArrayList<YouTubeVideo>) intent.getSerializableExtra(Config.YOUTUBE_TYPE_PLAYLIST);
-                int startPosition = intent.getIntExtra(Config.YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, 0);
-                iterator = youTubeVideos.listIterator(startPosition);
+                currentVideoPosition = intent.getIntExtra(Config.YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, 0);
+                Log.e(TAG, "currentVideoPosition: " + currentVideoPosition);
+                iterator = youTubeVideos.listIterator(currentVideoPosition);
                 playNext();
                 break;
             default:
@@ -299,19 +308,19 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
 
         builder = new NotificationCompat.Builder(this);
         builder.setSmallIcon(R.mipmap.utubinbg_icon);
-        builder.setContentTitle(videoItem.getTitle());
-        builder.setContentInfo(videoItem.getDuration());
+        builder.setContentTitle(currentVideo.getTitle());
+        builder.setContentInfo(currentVideo.getDuration());
         builder.setShowWhen(false);
         builder.setContentIntent(clickPendingIntent);
         builder.setDeleteIntent(stopPendingIntent);
         builder.setOngoing(false);
-        builder.setSubText(videoItem.getViewCount());
+        builder.setSubText(currentVideo.getViewCount());
         builder.setStyle(style);
 
         //load bitmap for largeScreen
-        if (videoItem.getThumbnailURL() != null && !videoItem.getThumbnailURL().isEmpty()) {
+        if (currentVideo.getThumbnailURL() != null && !currentVideo.getThumbnailURL().isEmpty()) {
             Picasso.with(this)
-                    .load(videoItem.getThumbnailURL())
+                    .load(currentVideo.getThumbnailURL())
                     .into(target);
         }
 
@@ -358,8 +367,8 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     /**
      * Generates specific action with parameters below
      *
-     * @param icon the icon number
-     * @param title the title of the notification
+     * @param icon         the icon number
+     * @param title        the title of the notification
      * @param intentAction the action
      * @return
      */
@@ -374,7 +383,7 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
      * Plays next video in playlist
      */
     private void playNext() {
-        //if media type is video not playlist, just loop it
+        // If media type is video not playlist, just loop it
         if (mediaType == Config.YOUTUBE_MEDIA_TYPE_VIDEO) {
             seekVideo(0);
             restartVideo();
@@ -386,11 +395,14 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
             iterator.next();
         }
 
-        if (!iterator.hasNext()) {
+        if (iterator == null || !iterator.hasNext()) {
             iterator = youTubeVideos.listIterator();
         }
 
-        videoItem = iterator.next();
+        Log.e(TAG, "Start playNext");
+        currentVideoPosition = iterator.nextIndex();
+        currentVideo = iterator.next();
+
         nextWasCalled = true;
         playVideo();
     }
@@ -410,11 +422,14 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
             nextWasCalled = false;
         }
 
-        if (!iterator.hasPrevious()) {
+        if (iterator == null || !iterator.hasPrevious()) {
             iterator = youTubeVideos.listIterator(youTubeVideos.size());
         }
 
-        videoItem = iterator.previous();
+        Log.e(TAG, "Start playPrevious");
+        currentVideoPosition = iterator.previousIndex();
+        currentVideo = iterator.previous();
+
         previousWasCalled = true;
         playVideo();
     }
@@ -469,6 +484,17 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
         mediaPlayer.release();
     }
 
+    private void verifyIterator() {
+        if (iterator == null) {
+            int size = youTubeVideos.size();
+            if (currentVideoPosition > -1 && currentVideoPosition < size) {
+                iterator = youTubeVideos.listIterator(currentVideoPosition);
+            } else {
+                iterator = youTubeVideos.listIterator();
+            }
+        }
+    }
+
     /**
      * Get the best available audio stream
      *
@@ -501,25 +527,27 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
      * Extracts link from youtube video ID, so mediaPlayer can play it
      */
     private void extractUrlAndPlay() {
-        Log.e(TAG, "extractUrlAndPlay: extract url for video id=" + videoItem.getId());
-        final String youtubeLink = "http://youtube.com/watch?v=" + videoItem.getId();
+        Log.e(TAG, "extractUrlAndPlay: extract url for video id=" + currentVideo.getId());
+        final String youtubeLink = "http://youtube.com/watch?v=" + currentVideo.getId();
 
         Log.e(TAG, youtubeLink);
 
         YouTubeUriExtractor ytEx = new YouTubeUriExtractor(this) {
             @Override
-            public void onUrisAvailable(String videoId, String videoTitle, SparseArray<YtFile> ytFiles) {
+            public void onUrisAvailable(String videoId, final String videoTitle, SparseArray<YtFile> ytFiles) {
                 if (ytFiles != null) {
                     YtFile ytFile = getBestStream(ytFiles);
                     try {
                         Log.e(TAG, ytFile.getUrl());
-                        Log.d(TAG, "Start playback");
+                        Log.e(TAG, "Start playback");
                         if (mediaPlayer != null) {
                             mediaPlayer.reset();
                             mediaPlayer.setDataSource(ytFile.getUrl());
                             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                            mediaPlayer.prepare();
-                            mediaPlayer.start();
+                            mediaPlayer.setOnPreparedListener(backgroundAudioService);
+                            currentVideoTitle = videoTitle;
+                            mediaPlayer.prepareAsync();
+//                            mediaPlayer.start();
                         }
                     } catch (IOException io) {
                         io.printStackTrace();
@@ -553,6 +581,11 @@ public class BackgroundAudioService extends Service implements MediaPlayer.OnCom
     @Override
     public void onPrepared(MediaPlayer mp) {
         isStarting = false;
+        mp.start();
+        Toast.makeText(
+                getApplicationContext(),
+                getResources().getString(R.string.toast_message_playing, currentVideoTitle),
+                Toast.LENGTH_SHORT
+        ).show();
     }
-
 }
