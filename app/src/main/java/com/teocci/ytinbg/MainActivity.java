@@ -31,6 +31,8 @@ import com.teocci.ytinbg.fragments.FavoritesFragment;
 import com.teocci.ytinbg.fragments.PlaylistFragment;
 import com.teocci.ytinbg.fragments.RecentlyWatchedFragment;
 import com.teocci.ytinbg.fragments.SearchFragment;
+import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
+import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
 
 import java.text.DateFormat;
@@ -42,9 +44,9 @@ import java.util.List;
 /**
  * Activity that manages fragments and action bar
  */
-public class MainActivity extends AppCompatActivity {
-
-    private static final String TAG = "YTinBGMainActivity";
+public class MainActivity extends AppCompatActivity
+{
+    private static final String TAG = LogHelper.makeLogTag(MainActivity.class);
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private ViewPager viewPager;
@@ -64,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
     private NetworkConf networkConf;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -87,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
         setupTabIcons();
 
         loadColor();
-
     }
 
     /**
@@ -96,7 +98,8 @@ public class MainActivity extends AppCompatActivity {
      * intent.
      */
     @Override
-    public void onNewIntent(Intent intent) {
+    public void onNewIntent(Intent intent)
+    {
         super.onNewIntent(intent);
         setIntent(intent);
 
@@ -108,8 +111,8 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param intent search intent and queries
      */
-    private void handleIntent(Intent intent) {
-
+    private void handleIntent(Intent intent)
+    {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
 
@@ -125,14 +128,15 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Setups icons for four tabs
      */
-    private void setupTabIcons() {
+    private void setupTabIcons()
+    {
         try {
             tabLayout.getTabAt(0).setIcon(tabIcons[0]);
             tabLayout.getTabAt(1).setIcon(tabIcons[1]);
             tabLayout.getTabAt(2).setIcon(tabIcons[2]);
             tabLayout.getTabAt(3).setIcon(tabIcons[3]);
         } catch (NullPointerException e) {
-            Log.e(TAG, "setupTabIcons are not found - Null");
+            LogHelper.e(TAG, "setupTabIcons are not found - Null");
         }
     }
 
@@ -141,14 +145,15 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param viewPager for switching between pages
      */
-    private void setupViewPager(ViewPager viewPager) {
-
+    private void setupViewPager(ViewPager viewPager)
+    {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
 
         searchFragment = new SearchFragment();
         recentlyPlayedFragment = new RecentlyWatchedFragment();
         adapter.addFragment(new FavoritesFragment(), getString(R.string.fragment_tab_favorites));
-        adapter.addFragment(recentlyPlayedFragment, getString(R.string.fragment_tab_recently_watched));
+        adapter.addFragment(recentlyPlayedFragment, getString(R.string
+                .fragment_tab_recently_watched));
         adapter.addFragment(searchFragment, getString(R.string.fragment_tab_search));
         adapter.addFragment(new PlaylistFragment(), getString(R.string.fragment_tab_playlist));
         viewPager.setAdapter(adapter);
@@ -157,31 +162,37 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Class which provides adapter for fragment pager
      */
-    class ViewPagerAdapter extends FragmentPagerAdapter {
+    class ViewPagerAdapter extends FragmentPagerAdapter
+    {
         private final List<Fragment> fragmentList = new ArrayList<>();
         private final List<String> fragmentTitleList = new ArrayList<>();
 
-        ViewPagerAdapter(FragmentManager manager) {
+        ViewPagerAdapter(FragmentManager manager)
+        {
             super(manager);
         }
 
         @Override
-        public Fragment getItem(int position) {
+        public Fragment getItem(int position)
+        {
             return fragmentList.get(position);
         }
 
         @Override
-        public int getCount() {
+        public int getCount()
+        {
             return fragmentList.size();
         }
 
-        void addFragment(Fragment fragment, String title) {
+        void addFragment(Fragment fragment, String title)
+        {
             fragmentList.add(fragment);
             fragmentTitleList.add(title);
         }
 
         @Override
-        public CharSequence getPageTitle(int position) {
+        public CharSequence getPageTitle(int position)
+        {
             return fragmentTitleList.get(position);
         }
     }
@@ -193,7 +204,8 @@ public class MainActivity extends AppCompatActivity {
      * @return boolean
      */
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
@@ -216,14 +228,17 @@ public class MainActivity extends AppCompatActivity {
 
         searchView.setSuggestionsAdapter(suggestionAdapter);
 
-        searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
+        searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener()
+        {
             @Override
-            public boolean onSuggestionSelect(int position) {
+            public boolean onSuggestionSelect(int position)
+            {
                 return false;
             }
 
             @Override
-            public boolean onSuggestionClick(int position) {
+            public boolean onSuggestionClick(int position)
+            {
                 searchView.setQuery(suggestions.get(position), false);
                 searchView.clearFocus();
 
@@ -235,23 +250,28 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
+        {
             @Override
-            public boolean onQueryTextSubmit(String s) {
+            public boolean onQueryTextSubmit(String s)
+            {
                 return false; // Whenever is true, no new intent will be started
             }
 
             @Override
-            public boolean onQueryTextChange(String suggestion) {
+            public boolean onQueryTextChange(String suggestion)
+            {
                 // Check network connection. If not available, do not query.
                 // This also disables onSuggestionClick triggering
                 if (suggestion.length() > 2) { //make suggestions after 3rd letter
 
                     if (networkConf.isNetworkAvailable()) {
 
-                        new JsonAsyncTask(new JsonAsyncTask.AsyncResponse() {
+                        new JsonAsyncTask(new JsonAsyncResponse()
+                        {
                             @Override
-                            public void processFinish(ArrayList<String> result) {
+                            public void processFinish(ArrayList<String> result)
+                            {
                                 suggestions.clear();
                                 suggestions.addAll(result);
                                 String[] columns = {
@@ -281,11 +301,12 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Handles selected item from action bar
      *
-     * @param item
-     * @return
+     * @param item the selected item from the action bar
+     * @return boolean
      */
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
@@ -300,11 +321,14 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
             alertDialog.setTitle("Teocci");
             alertDialog.setIcon(R.mipmap.ic_launcher);
-            alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@naver.com\n\n" +
+            alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@naver" +
+                    ".com\n\n" +
                     monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
             alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
+                    new DialogInterface.OnClickListener()
+                    {
+                        public void onClick(DialogInterface dialog, int which)
+                        {
                             dialog.dismiss();
                         }
                     });
@@ -312,7 +336,8 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         } else if (id == R.id.action_clear_list) {
-            YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).deleteAll();
+            YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                    .deleteAll();
             recentlyPlayedFragment.clearRecentlyPlayedList();
             return true;
         } else if (id == R.id.action_search) {
@@ -325,7 +350,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Loads app theme color saved in preferences
      */
-    private void loadColor() {
+    private void loadColor()
+    {
         SharedPreferences sp = PreferenceManager
                 .getDefaultSharedPreferences(this);
         int backgroundColor = sp.getInt("BACKGROUND_COLOR", -1);
@@ -335,16 +361,16 @@ public class MainActivity extends AppCompatActivity {
             setColors(backgroundColor, textColor);
         } else {
             initialColors = new int[]{
-                    ContextCompat.getColor(this, R.color.colorPrimary),
-                    ContextCompat.getColor(this, R.color.textColorPrimary)};
+                    ContextCompat.getColor(this, R.color.color_primary),
+                    ContextCompat.getColor(this, R.color.text_color_primary)};
         }
     }
 
     /**
      * Save app theme color in preferences
      */
-    private void setColors(int backgroundColor, int textColor) {
-
+    private void setColors(int backgroundColor, int textColor)
+    {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setBackgroundColor(backgroundColor);
         toolbar.setTitleTextColor(textColor);

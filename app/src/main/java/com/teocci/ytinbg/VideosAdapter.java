@@ -15,6 +15,8 @@ import com.nhaarman.listviewanimations.itemmanipulation.swipedismiss.undo.UndoAd
 import com.nhaarman.listviewanimations.util.Swappable;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.squareup.picasso.Picasso;
+import com.teocci.ytinbg.model.YouTubeVideo;
+import com.teocci.ytinbg.utils.LogHelper;
 
 import java.util.List;
 
@@ -24,16 +26,17 @@ import javax.annotation.Nullable;
  * Custom ArrayAdapter which enables setup of a list view row views
  * Created by teocci on 8.2.16..
  */
-public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappable, UndoAdapter {
-
-    private static final String TAG = "VideosAdapter";
+public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappable, UndoAdapter
+{
+    private static final String TAG = LogHelper.makeLogTag(VideosAdapter.class);
 
     private Activity context;
     private final List<YouTubeVideo> list;
     private boolean[] itemChecked;
     private boolean isFavoriteList;
 
-    public VideosAdapter(Activity context, List<YouTubeVideo> list, boolean isFavoriteList) {
+    public VideosAdapter(Activity context, List<YouTubeVideo> list, boolean isFavoriteList)
+    {
         super(context, R.layout.video_item, list);
         this.list = list;
         this.context = context;
@@ -42,7 +45,8 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
     }
 
     @Override
-    public View getView(final int position, View convertView, final ViewGroup parent) {
+    public View getView(final int position, View convertView, final ViewGroup parent)
+    {
         if (convertView == null) {
             convertView = context.getLayoutInflater().inflate(R.layout.video_item, parent, false);
         }
@@ -60,26 +64,29 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
         viewCount.setText(searchResult.getViewCount());
 
         //set checked if exists in database
-        if (YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).checkIfExists(searchResult.getId())) {
-            itemChecked[position] = true;
-        } else {
-            itemChecked[position] = false;
-        }
+        itemChecked[position] = YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
+                .FAVORITE).checkIfExists(searchResult.getId());
         checkBox.setChecked(itemChecked[position]);
 
-        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton btn, boolean isChecked) {
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        {
+            public void onCheckedChanged(CompoundButton btn, boolean isChecked)
+            {
                 itemChecked[position] = isChecked;
             }
         });
 
-        checkBox.setOnClickListener(new View.OnClickListener() {
+        checkBox.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View v) {
+            public void onClick(View v)
+            {
                 if (((CheckBox) v).isChecked()) {
-                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).create(searchResult);
+                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).create
+                            (searchResult);
                 } else {
-                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).delete(searchResult.getId());
+                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).delete
+                            (searchResult.getId());
                     if (isFavoriteList) {
                         list.remove(position);
                         notifyDataSetChanged();
@@ -92,19 +99,22 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
     }
 
     @Override
-    public long getItemId(int i) {
+    public long getItemId(int i)
+    {
         return getItem(i).hashCode();
     }
 
 
     @Override
-    public boolean hasStableIds() {
+    public boolean hasStableIds()
+    {
         return true;
     }
 
 
     @Override
-    public void swapItems(int i, int i1) {
+    public void swapItems(int i, int i1)
+    {
         YouTubeVideo firstItem = getItem(i);
 
         list.set(i, getItem(i1));
@@ -115,7 +125,8 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
 
     @NonNull
     @Override
-    public View getUndoView(int i, @Nullable View convertView, @NonNull ViewGroup viewGroup) {
+    public View getUndoView(int i, @Nullable View convertView, @NonNull ViewGroup viewGroup)
+    {
         View view = convertView;
         if (view == null) {
             view = LayoutInflater.from(getContext()).inflate(R.layout.undo_row, viewGroup, false);
@@ -125,7 +136,8 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
 
     @NonNull
     @Override
-    public View getUndoClickView(@NonNull View view) {
+    public View getUndoClickView(@NonNull View view)
+    {
         return view.findViewById(R.id.button_undo_row);
     }
 }

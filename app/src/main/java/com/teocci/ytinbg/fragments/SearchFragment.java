@@ -18,10 +18,11 @@ import com.teocci.ytinbg.BackgroundAudioService;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.VideosAdapter;
 import com.teocci.ytinbg.YouTubeSearch;
-import com.teocci.ytinbg.YouTubeVideo;
+import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.interfaces.YouTubeVideosReceiver;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
 
 import java.util.ArrayList;
@@ -31,9 +32,10 @@ import java.util.List;
  * Class that handles list of the videos searched on YouTube
  * Created by Teocci on 7.3.16..
  */
-public class SearchFragment extends ListFragment implements YouTubeVideosReceiver {
+public class SearchFragment extends ListFragment implements YouTubeVideosReceiver
+{
 
-    private static final String TAG = "SearchFragment";
+    private static final String TAG = LogHelper.makeLogTag(SearchFragment.class);
 
     private DynamicListView videosFoundListView;
     private Handler handler;
@@ -47,12 +49,11 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
     private int onScrollIndex = 0;
     private int mPrevTotalItemCount = 0;
 
-    public SearchFragment() {
-        // Required empty public constructor
-    }
+    public SearchFragment() {}
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
 
         handler = new Handler();
@@ -63,7 +64,8 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             Bundle savedInstanceState)
+    {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_search, container, false);
         loadingProgressBar = (ProgressBar) v.findViewById(R.id.progressBar);
@@ -71,7 +73,8 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
     }
 
     @Override
-    public void setUserVisibleHint(boolean visible) {
+    public void setUserVisibleHint(boolean visible)
+    {
         super.setUserVisibleHint(visible);
 
         if (visible && isResumed()) {
@@ -82,20 +85,21 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
     }
 
     @Override
-    public void onResume() {
+    public void onResume()
+    {
         super.onResume();
 
         if (!getUserVisibleHint()) {
             // Do nothing for now
         }
-        // 4th parameter is null, because playlist are not needed to this fragment
 
         youTubeSearch = new YouTubeSearch(getActivity(), this);
         youTubeSearch.setYouTubeVideosReceiver(this);
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
+    public void onActivityCreated(Bundle savedInstanceState)
+    {
         super.onActivityCreated(savedInstanceState);
         videosFoundListView = (DynamicListView) getListView();
         setupListViewAndAdapter();
@@ -105,9 +109,11 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
     /**
      * Setups custom adapter which enables animations when adding elements
      */
-    private void setupListViewAndAdapter() {
+    private void setupListViewAndAdapter()
+    {
         videoListAdapter = new VideosAdapter(getActivity(), searchResultsList, false);
-        SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter(videoListAdapter);
+        SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter
+                (videoListAdapter);
         animationAdapter.setAbsListView(videosFoundListView);
         videosFoundListView.setAdapter(animationAdapter);
     }
@@ -115,10 +121,11 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
     /**
      * Search for query on youTube by using YouTube Data API V3
      *
-     * @param query
+     * @param query the keyword for the search
      */
-    public void searchQuery(String query) {
-        //check network connectivity
+    public void searchQuery(String query)
+    {
+        // Check network connectivity
         if (!networkConf.isNetworkAvailable()) {
             networkConf.createNetErrorDialog();
             return;
@@ -132,13 +139,15 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
     /**
      * Adds listener for item list selection and starts BackgroundAudioService
      */
-    private void addListeners() {
-
-        videosFoundListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+    private void addListeners()
+    {
+        videosFoundListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
 
             @Override
             public void onItemClick(AdapterView<?> av, View v, int pos,
-                                    long id) {
+                                    long id)
+            {
                 // Check network connectivity
                 if (!networkConf.isNetworkAvailable()) {
                     networkConf.createNetErrorDialog();
@@ -151,7 +160,8 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
                         Toast.LENGTH_SHORT
                 ).show();
 
-                YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).create(searchResultsList.get(pos));
+                YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                        .create(searchResultsList.get(pos));
 
                 Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
                 serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
@@ -161,16 +171,17 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
             }
         });
 
-        videosFoundListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+        videosFoundListView.setOnScrollListener(new AbsListView.OnScrollListener()
+        {
             @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-
-            }
+            public void onScrollStateChanged(AbsListView view, int scrollState) { }
 
             @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,
+                                 int totalItemCount)
+            {
 
-                //if specified number of videos is added, do not load more
+                // Whenever reaches the quote of added videos, do not load more
                 if (totalItemCount < Config.NUMBER_OF_VIDEOS_RETURNED) {
                     if (view.getAdapter() != null &&
                             ((firstVisibleItem + visibleItemCount) >= totalItemCount) &&
@@ -189,15 +200,17 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
      * @param youTubeVideos - videos to be shown in list view
      */
     @Override
-    public void onVideosReceived(ArrayList<YouTubeVideo> youTubeVideos) {
-
+    public void onVideosReceived(ArrayList<YouTubeVideo> youTubeVideos)
+    {
         videosFoundListView.smoothScrollToPosition(0);
         searchResultsList.clear();
         scrollResultsList.clear();
         scrollResultsList.addAll(youTubeVideos);
 
-        handler.post(new Runnable() {
-            public void run() {
+        handler.post(new Runnable()
+        {
+            public void run()
+            {
                 loadingProgressBar.setVisibility(View.INVISIBLE);
             }
         });
@@ -209,13 +222,11 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
      * Called when playlist cannot be found
      * NOT USED in this fragment
      *
-     * @param playlistId
-     * @param errorCode
+     * @param playlistId the playlist ID
+     * @param errorCode  the error code obtained
      */
     @Override
-    public void onPlaylistNotFound(String playlistId, int errorCode) {
-
-    }
+    public void onPlaylistNotFound(String playlistId, int errorCode) { }
 
     /**
      * Adds 10 items at the bottom of the list when list is scrolled to the end (10th element)
@@ -223,8 +234,8 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
      * If number is between, so no full step is available (step is 10), add elements:
      * scrollResultsList.size() % 10
      */
-    private void addMoreData() {
-
+    private void addMoreData()
+    {
         List<YouTubeVideo> subList;
         if (scrollResultsList.size() < (onScrollIndex + 10)) {
             subList = scrollResultsList.subList(onScrollIndex, scrollResultsList.size());
@@ -236,8 +247,10 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
 
         if (!subList.isEmpty()) {
             searchResultsList.addAll(subList);
-            handler.post(new Runnable() {
-                public void run() {
+            handler.post(new Runnable()
+            {
+                public void run()
+                {
                     if (videoListAdapter != null) {
                         videoListAdapter.notifyDataSetChanged();
                     }

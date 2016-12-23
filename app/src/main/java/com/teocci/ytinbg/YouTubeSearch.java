@@ -29,8 +29,11 @@ import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
 import com.teocci.ytinbg.interfaces.YouTubeVideosReceiver;
+import com.teocci.ytinbg.model.YouTubePlaylist;
+import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.Auth;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.Utils;
 
 import java.io.IOException;
@@ -47,16 +50,20 @@ import java.util.Locale;
  * Class for sending YouTube DATA API V3 request and receiving data from it
  * Created by Teocci on 18.2.16..
  */
-public class YouTubeSearch {
-
-    private static final String TAG = "YouTubeSearch";
+public class YouTubeSearch
+{
+    private static final String TAG = LogHelper.makeLogTag(YouTubeSearch.class);
 
     // See: https://developers.google.com/youtube/v3/docs/playlistItems/list
     private static final String YOUTUBE_PLAYLIST_PART = "snippet";
-    private static final String YOUTUBE_PLAYLIST_FIELDS = "pageInfo,nextPageToken,items(id,snippet(resourceId/videoId))";
+    private static final String YOUTUBE_PLAYLIST_FIELDS = "pageInfo,nextPageToken,items(id," +
+            "snippet(resourceId/videoId))";
     // See: https://developers.google.com/youtube/v3/docs/videos/list
-    private static final String YOUTUBE_VIDEOS_PART = "snippet,contentDetails,statistics"; // video resource properties that the response will include.
-    private static final String YOUTUBE_VIDEOS_FIELDS = "items(id,snippet(title,description,thumbnails/high),contentDetails/duration,statistics)"; // selector specifying which fields to include in a partial response.
+    private static final String YOUTUBE_VIDEOS_PART = "snippet,contentDetails,statistics"; //
+    // video resource properties that the response will include.
+    private static final String YOUTUBE_VIDEOS_FIELDS = "items(id,snippet(title,description," +
+            "thumbnails/high),contentDetails/duration,statistics)"; // selector specifying which
+    // fields to include in a partial response.
 
 
     private String appName;
@@ -81,11 +88,13 @@ public class YouTubeSearch {
     private static final int REQUEST_AUTHORIZATION = 3;
     private GoogleAccountCredential credential;
 
-    public YouTubeSearch(Activity activity, Fragment playlistFragment) {
+    public YouTubeSearch(Activity activity, Fragment playlistFragment)
+    {
         this.activity = activity;
         this.playlistFragment = playlistFragment;
         handler = new Handler();
-        credential = GoogleAccountCredential.usingOAuth2(activity.getApplicationContext(), Arrays.asList(Auth.SCOPES));
+        credential = GoogleAccountCredential.usingOAuth2(activity.getApplicationContext(), Arrays
+                .asList(Auth.SCOPES));
 
         // set exponential backoff policy
         credential.setBackOff(new ExponentialBackOff());
@@ -93,11 +102,13 @@ public class YouTubeSearch {
         language = Locale.getDefault().getLanguage();
     }
 
-    public void setYouTubeVideosReceiver(YouTubeVideosReceiver youTubeVideosReceiver) {
+    public void setYouTubeVideosReceiver(YouTubeVideosReceiver youTubeVideosReceiver)
+    {
         this.youTubeVideosReceiver = youTubeVideosReceiver;
     }
 
-    public void setYouTubePlaylistReceiver(YouTubePlaylistReceiver youTubePlaylistReceiver) {
+    public void setYouTubePlaylistReceiver(YouTubePlaylistReceiver youTubePlaylistReceiver)
+    {
         this.youTubePlaylistReceiver = youTubePlaylistReceiver;
     }
 
@@ -106,7 +117,8 @@ public class YouTubeSearch {
      *
      * @param authSelectedAccountName
      */
-    public void setAuthSelectedAccountName(String authSelectedAccountName) {
+    public void setAuthSelectedAccountName(String authSelectedAccountName)
+    {
         this.chosenAccountName = authSelectedAccountName;
         credential.setSelectedAccountName(chosenAccountName);
     }
@@ -116,7 +128,8 @@ public class YouTubeSearch {
      *
      * @return
      */
-    public GoogleAccountCredential getCredential() {
+    public GoogleAccountCredential getCredential()
+    {
         return credential;
     }
 
@@ -125,13 +138,19 @@ public class YouTubeSearch {
      *
      * @param keywords - query
      */
-    public void searchVideos(final String keywords) {
-        new Thread() {
-            public void run() {
+    public void searchVideos(final String keywords)
+    {
+        new Thread()
+        {
+            public void run()
+            {
                 try {
-                    youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(), new HttpRequestInitializer() {
+                    youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(),
+                            new HttpRequestInitializer()
+                    {
                         @Override
-                        public void initialize(HttpRequest request) throws IOException {
+                        public void initialize(HttpRequest request) throws IOException
+                        {
 
                         }
                     }).setApplicationName(appName).build();
@@ -151,7 +170,8 @@ public class YouTubeSearch {
                     // As a best practice, only retrieve the fields that the
                     // application uses.
                     searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
-                    searchList.setFields("items(id/videoId,snippet/title,snippet/thumbnails/default/url)");
+                    searchList.setFields("items(id/videoId,snippet/title," +
+                            "snippet/thumbnails/default/url)");
 
                     Log.e(TAG, language);
                     searchList.set("hl", language);
@@ -188,12 +208,15 @@ public class YouTubeSearch {
 
                         // SearchList list info
                         item.setTitle(searchResults.get(i).getSnippet().getTitle());
-                        item.setThumbnailURL(searchResults.get(i).getSnippet().getThumbnails().getDefault().getUrl());
+                        item.setThumbnailURL(searchResults.get(i).getSnippet().getThumbnails()
+                                .getDefault().getUrl());
                         item.setId(searchResults.get(i).getId().getVideoId());
                         // Video info
                         if (videoResults.get(i) != null) {
-                            BigInteger viewsNumber = videoResults.get(i).getStatistics().getViewCount();
-                            String viewsFormatted = NumberFormat.getIntegerInstance().format(viewsNumber) + " views";
+                            BigInteger viewsNumber = videoResults.get(i).getStatistics()
+                                    .getViewCount();
+                            String viewsFormatted = NumberFormat.getIntegerInstance().format
+                                    (viewsNumber) + " views";
                             item.setViewCount(viewsFormatted);
                             String isoTime = videoResults.get(i).getContentDetails().getDuration();
                             String time = Utils.convertISO8601DurationToNormalTime(isoTime);
@@ -221,18 +244,22 @@ public class YouTubeSearch {
      * /**
      * Search playlist for a current user
      */
-    public void searchPlaylist() {
+    public void searchPlaylist()
+    {
         if (chosenAccountName == null) {
             return;
         }
         credential.setSelectedAccountName(chosenAccountName);
 
-        new Thread() {
-            public void run() {
+        new Thread()
+        {
+            public void run()
+            {
                 youtube = new YouTube.Builder(transport, jsonFactory, credential)
                         .setApplicationName(appName).build();
                 try {
-                    ChannelListResponse channelListResponse = youtube.channels().list("snippet").setMine(true).execute();
+                    ChannelListResponse channelListResponse = youtube.channels().list("snippet")
+                            .setMine(true).execute();
 
                     List<Channel> channelList = channelListResponse.getItems();
                     if (channelList.isEmpty()) {
@@ -240,10 +267,12 @@ public class YouTubeSearch {
                     }
                     Channel channel = channelList.get(0);
 
-                    YouTube.Playlists.List searchList = youtube.playlists().list("id,snippet,contentDetails,status");
+                    YouTube.Playlists.List searchList = youtube.playlists().list("id,snippet," +
+                            "contentDetails,status");
 
                     searchList.setChannelId(channel.getId());
-                    searchList.setFields("items(id,snippet/title,snippet/thumbnails/default/url,contentDetails/itemCount,status)");
+                    searchList.setFields("items(id,snippet/title,snippet/thumbnails/default/url," +
+                            "contentDetails/itemCount,status)");
                     searchList.setMaxResults((long) 50);
                     searchList.set("hl", language);
 
@@ -304,13 +333,14 @@ public class YouTubeSearch {
      *
      * @param playlistId
      */
-    public void acquirePlaylistVideos(final String playlistId) {
-
+    public void acquirePlaylistVideos(final String playlistId)
+    {
         // Define a list to store items in the list of uploaded videos.
-        new Thread(new Runnable() {
+        new Thread(new Runnable()
+        {
             @Override
-            public void run() {
-
+            public void run()
+            {
                 Log.e(TAG, "Chosen name: " + chosenAccountName);
                 credential.setSelectedAccountName(chosenAccountName);
 
@@ -348,7 +378,8 @@ public class YouTubeSearch {
                         e.printStackTrace();
                     }
                 } catch (UnknownHostException e) {
-                    Toast.makeText(activity.getApplicationContext(), "Check internet connection", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity.getApplicationContext(), "Check internet connection",
+                            Toast.LENGTH_SHORT).show();
                     e.printStackTrace();
                     return;
                 } catch (IOException e) {
@@ -396,7 +427,8 @@ public class YouTubeSearch {
                     YouTubeVideo youTubeVideo = new YouTubeVideo();
                     youTubeVideo.setId(playlistItem.getContentDetails().getVideoId());
                     youTubeVideo.setTitle(playlistItem.getSnippet().getTitle());
-                    youTubeVideo.setThumbnailURL(playlistItem.getSnippet().getThumbnails().getDefault().getUrl());
+                    youTubeVideo.setThumbnailURL(playlistItem.getSnippet().getThumbnails()
+                            .getDefault().getUrl());
                     //video info
                     if (videoItem != null) {
                         String isoTime = videoItem.getContentDetails().getDuration();

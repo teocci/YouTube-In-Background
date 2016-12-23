@@ -15,9 +15,10 @@ import com.nhaarman.listviewanimations.itemmanipulation.DynamicListView;
 import com.teocci.ytinbg.BackgroundAudioService;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.VideosAdapter;
-import com.teocci.ytinbg.YouTubeVideo;
+import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
 
 import java.util.ArrayList;
@@ -25,8 +26,9 @@ import java.util.ArrayList;
 /**
  * Created by Teocci on 21.3.16..
  */
-public class FavoritesFragment extends Fragment {
-    private static final String TAG = "FavoritesFragment";
+public class FavoritesFragment extends Fragment
+{
+    private static final String TAG = LogHelper.makeLogTag(FavoritesFragment.class);
 
     private ArrayList<YouTubeVideo> favoriteVideos;
 
@@ -34,12 +36,11 @@ public class FavoritesFragment extends Fragment {
     private VideosAdapter videoListAdapter;
     private NetworkConf conf;
 
-    public FavoritesFragment() {
-        // Required empty public constructor
-    }
+    public FavoritesFragment() {}
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
 
         favoriteVideos = new ArrayList<>();
@@ -48,7 +49,8 @@ public class FavoritesFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             Bundle savedInstanceState)
+    {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_recently_watched, container, false);
         TextView fragmentListTitle = (TextView) v.findViewById(R.id.text_view_title);
@@ -59,25 +61,28 @@ public class FavoritesFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
+    public void onResume()
+    {
         super.onResume();
 
         if (!getUserVisibleHint()) {
             //do nothing for now
         }
         favoriteVideos.clear();
-        favoriteVideos.addAll(YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).readAll());
+        favoriteVideos.addAll(YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
+                .FAVORITE).readAll());
         videoListAdapter.notifyDataSetChanged();
     }
 
     @Override
-    public void setUserVisibleHint(boolean visible) {
+    public void setUserVisibleHint(boolean visible)
+    {
         super.setUserVisibleHint(visible);
 
         if (visible && isResumed()) {
-            //Log.d(TAG, "RecentlyWatchedFragment visible and resumed");
-            //Only manually call onResume if fragment is already visible
-            //Otherwise allow natural fragment lifecycle to call onResume
+//            LogHelper.d(TAG, "RecentlyWatchedFragment visible and resumed");
+            // Only manually call onResume if fragment is already visible
+            // Otherwise allow natural fragment lifecycle to call onResume
             onResume();
         }
     }
@@ -85,11 +90,12 @@ public class FavoritesFragment extends Fragment {
     /**
      * Setups list view and adapter for storing recently watched YouTube videos
      */
-    private void setupListViewAndAdapter() {
-
+    private void setupListViewAndAdapter()
+    {
         /* Setup the adapter */
         videoListAdapter = new VideosAdapter(getActivity(), favoriteVideos, true);
-        SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter(videoListAdapter);
+        SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter
+                (videoListAdapter);
         animationAdapter.setAbsListView(favoritesListView);
         favoritesListView.setAdapter(videoListAdapter);
 
@@ -99,12 +105,15 @@ public class FavoritesFragment extends Fragment {
     /**
      * Adds listener for list item choosing
      */
-    void addListeners() {
-        favoritesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+    void addListeners()
+    {
+        favoritesListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
 
             @Override
             public void onItemClick(AdapterView<?> av, View v, final int pos,
-                                    long id) {
+                                    long id)
+            {
                 if (conf.isNetworkAvailable()) {
                     Toast.makeText(
                             getContext(),
@@ -112,8 +121,9 @@ public class FavoritesFragment extends Fragment {
                             Toast.LENGTH_SHORT
                     ).show();
 
-                    //add item to recently watched list
-                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).create(favoriteVideos.get(pos));
+                    // Adds items in the recently watched list
+                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                            .create(favoriteVideos.get(pos));
 
                     Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
                     serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
@@ -131,7 +141,8 @@ public class FavoritesFragment extends Fragment {
     /**
      * Clears recently played list items
      */
-    public void clearFavoritesList() {
+    public void clearFavoritesList()
+    {
         favoriteVideos.clear();
         videoListAdapter.notifyDataSetChanged();
     }

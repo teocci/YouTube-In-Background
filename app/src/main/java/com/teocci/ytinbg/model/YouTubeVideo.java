@@ -1,4 +1,6 @@
-package com.teocci.ytinbg;
+package com.teocci.ytinbg.model;
+
+import com.teocci.ytinbg.utils.LogHelper;
 
 import java.io.Serializable;
 
@@ -6,8 +8,9 @@ import java.io.Serializable;
  * YouTube video class
  * Created by teocci on 3.2.16..
  */
-public class YouTubeVideo implements Serializable {
-    private static final String TAG = "YouTubeVideo";
+public class YouTubeVideo implements Serializable
+{
+    private static final String TAG = LogHelper.makeLogTag(YouTubeVideo.class);
     private static final long serialVersionUID = 1L;
     private String id;
     private String title;
@@ -15,7 +18,8 @@ public class YouTubeVideo implements Serializable {
     private String duration;
     private String viewCount;
 
-    public YouTubeVideo() {
+    public YouTubeVideo()
+    {
         this.id = "";
         this.title = "";
         this.thumbnailURL = "";
@@ -23,7 +27,9 @@ public class YouTubeVideo implements Serializable {
         this.viewCount = "";
     }
 
-    public YouTubeVideo(String id, String title, String thumbnailURL, String duration, String viewCount) {
+    public YouTubeVideo(String id, String title, String thumbnailURL, String duration, String
+            viewCount)
+    {
         this.id = id;
         this.title = title;
         this.thumbnailURL = thumbnailURL;
@@ -31,48 +37,59 @@ public class YouTubeVideo implements Serializable {
         this.viewCount = viewCount;
     }
 
-    public String getId() {
+    public String getId()
+    {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(String id)
+    {
         this.id = id;
     }
 
-    public String getDuration() {
+    public String getDuration()
+    {
         return duration;
     }
 
-    public void setDuration(String duration) {
+    public void setDuration(String duration)
+    {
         this.duration = duration;
     }
 
-    public String getTitle() {
+    public String getTitle()
+    {
         return title;
     }
 
-    public void setTitle(String title) {
+    public void setTitle(String title)
+    {
         this.title = title;
     }
 
-    public String getThumbnailURL() {
+    public String getThumbnailURL()
+    {
         return thumbnailURL;
     }
 
-    public void setThumbnailURL(String thumbnail) {
+    public void setThumbnailURL(String thumbnail)
+    {
         this.thumbnailURL = thumbnail;
     }
 
-    public String getViewCount() {
+    public String getViewCount()
+    {
         return viewCount;
     }
 
-    public void setViewCount(String viewCount) {
+    public void setViewCount(String viewCount)
+    {
         this.viewCount = viewCount;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "YouTubeVideo {" +
                 "id='" + id + '\'' +
                 ", title='" + title + '\'' +

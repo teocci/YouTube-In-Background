@@ -17,9 +17,10 @@ import com.nhaarman.listviewanimations.itemmanipulation.swipedismiss.undo.Simple
 import com.teocci.ytinbg.BackgroundAudioService;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.VideosAdapter;
-import com.teocci.ytinbg.YouTubeVideo;
+import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
 
 import java.util.ArrayList;
@@ -30,9 +31,10 @@ import javax.annotation.Nullable;
  * Class that handles list of the recently watched YouTube
  * Created by teocci on 7.3.16..
  */
-public class RecentlyWatchedFragment extends Fragment {
+public class RecentlyWatchedFragment extends Fragment
+{
 
-    private static final String TAG = "RecentlyWatchedFragment";
+    private static final String TAG = LogHelper.makeLogTag(RecentlyWatchedFragment.class);
 
     private ArrayList<YouTubeVideo> recentlyPlayedVideos;
 
@@ -41,12 +43,11 @@ public class RecentlyWatchedFragment extends Fragment {
 
     private NetworkConf conf;
 
-    public RecentlyWatchedFragment() {
-        // Required empty public constructor
-    }
+    public RecentlyWatchedFragment() {}
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
 
         recentlyPlayedVideos = new ArrayList<>();
@@ -55,7 +56,8 @@ public class RecentlyWatchedFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                             Bundle savedInstanceState)
+    {
         // Inflate the layout for this fragment
         View v = inflater.inflate(R.layout.fragment_recently_watched, container, false);
 
@@ -66,7 +68,8 @@ public class RecentlyWatchedFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
+    public void onResume()
+    {
         super.onResume();
 
         if (!getUserVisibleHint()) {
@@ -74,19 +77,21 @@ public class RecentlyWatchedFragment extends Fragment {
         }
 
         recentlyPlayedVideos.clear();
-        recentlyPlayedVideos.addAll(YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).readAll());
+        recentlyPlayedVideos.addAll(YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
+                .RECENTLY_WATCHED).readAll());
         videoListAdapter.notifyDataSetChanged();
     }
 
 
     @Override
-    public void setUserVisibleHint(boolean visible) {
+    public void setUserVisibleHint(boolean visible)
+    {
         super.setUserVisibleHint(visible);
 
         if (visible && isResumed()) {
-            //Log.d(TAG, "RecentlyWatchedFragment visible and resumed");
-            //Only manually call onResume if fragment is already visible
-            //Otherwise allow natural fragment lifecycle to call onResume
+//            Log.d(TAG, "RecentlyWatchedFragment visible and resumed");
+            // Only manually call onResume if fragment is already visible
+            // Otherwise allow natural fragment lifecycle to call onResume
             onResume();
         }
     }
@@ -94,12 +99,14 @@ public class RecentlyWatchedFragment extends Fragment {
     /**
      * Setups list view and adapter for storing recently watched YouTube videos
      */
-    private void setupListViewAndAdapter() {
-
+    private void setupListViewAndAdapter()
+    {
         // Setup the adapter
         videoListAdapter = new VideosAdapter(getActivity(), recentlyPlayedVideos, false);
-        SimpleSwipeUndoAdapter simpleSwipeUndoAdapter = new SimpleSwipeUndoAdapter(videoListAdapter, getContext(), new MyOnDismissCallback());
-        SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter(simpleSwipeUndoAdapter);
+        SimpleSwipeUndoAdapter simpleSwipeUndoAdapter = new SimpleSwipeUndoAdapter
+                (videoListAdapter, getContext(), new MyOnDismissCallback());
+        SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter
+                (simpleSwipeUndoAdapter);
         animationAdapter.setAbsListView(recentlyPlayedListView);
         recentlyPlayedListView.setAdapter(animationAdapter);
 
@@ -107,10 +114,12 @@ public class RecentlyWatchedFragment extends Fragment {
         recentlyPlayedListView.enableDragAndDrop();
 //        recentlyPlayedListView.setDraggableManager(new TouchViewDraggableManager(R.id.row_item));
         recentlyPlayedListView.setOnItemLongClickListener(
-                new AdapterView.OnItemLongClickListener() {
+                new AdapterView.OnItemLongClickListener()
+                {
                     @Override
                     public boolean onItemLongClick(final AdapterView<?> parent, final View view,
-                                                   final int position, final long id) {
+                                                   final int position, final long id)
+                    {
                         recentlyPlayedListView.startDragging(position);
                         return true;
                     }
@@ -126,12 +135,15 @@ public class RecentlyWatchedFragment extends Fragment {
     /**
      * Adds listener for list item choosing
      */
-    void addListeners() {
-        recentlyPlayedListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+    void addListeners()
+    {
+        recentlyPlayedListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
 
             @Override
             public void onItemClick(AdapterView<?> av, View v, final int pos,
-                                    long id) {
+                                    long id)
+            {
                 if (conf.isNetworkAvailable()) {
                     Toast.makeText(
                             getContext(),
@@ -139,12 +151,14 @@ public class RecentlyWatchedFragment extends Fragment {
                             Toast.LENGTH_SHORT
                     ).show();
 
-                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).create(recentlyPlayedVideos.get(pos));
+                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                            .create(recentlyPlayedVideos.get(pos));
 
                     Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
                     serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
                     serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
-                    serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, recentlyPlayedVideos.get(pos));
+                    serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, recentlyPlayedVideos.get
+                            (pos));
                     getActivity().startService(serviceIntent);
                 } else {
                     conf.createNetErrorDialog();
@@ -156,13 +170,16 @@ public class RecentlyWatchedFragment extends Fragment {
     /**
      * Callback which handles onDismiss event of a list item
      */
-    private class MyOnDismissCallback implements OnDismissCallback {
+    private class MyOnDismissCallback implements OnDismissCallback
+    {
 
         @Nullable
         private Toast callbackToast;
 
         @Override
-        public void onDismiss(@NonNull final ViewGroup listView, @NonNull final int[] reverseSortedPositions) {
+        public void onDismiss(@NonNull final ViewGroup listView, @NonNull final int[]
+                reverseSortedPositions)
+        {
             for (int position : reverseSortedPositions) {
                 YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).
                         delete(recentlyPlayedVideos.get(position).getId());
@@ -185,7 +202,8 @@ public class RecentlyWatchedFragment extends Fragment {
     /**
      * Clears recently played list items
      */
-    public void clearRecentlyPlayedList() {
+    public void clearRecentlyPlayedList()
+    {
         recentlyPlayedVideos.clear();
         videoListAdapter.notifyDataSetChanged();
     }

@@ -5,10 +5,8 @@ package com.teocci.ytinbg.utils;
  * Created by teocci on 2.2.16..
  */
 
-public final class Config {
-
-    public static final boolean DEBUG = false;
-
+public final class Config
+{
     public static final int YOUTUBE_MEDIA_NO_NEW_REQUEST = -1;
     public static final int YOUTUBE_MEDIA_TYPE_VIDEO = 0;
     public static final int YOUTUBE_MEDIA_TYPE_PLAYLIST = 1;

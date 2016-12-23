@@ -2,7 +2,7 @@ package com.teocci.ytinbg.utils;
 
 import android.util.Log;
 
-import com.teocci.ytinbg.YouTubeVideo;
+import com.teocci.ytinbg.model.YouTubeVideo;
 
 import java.util.Iterator;
 import java.util.List;
@@ -11,14 +11,15 @@ import java.util.List;
  * Helper methods
  * Created by teocci on 4.2.16..
  */
-public class Utils {
-
+public class Utils
+{
     private static final String TAG = "Utils";
 
     /**
      * Converting ISO8601 formatted duration to normal readable time
      */
-    public static String convertISO8601DurationToNormalTime(String isoTime) {
+    public static String convertISO8601DurationToNormalTime(String isoTime)
+    {
         String formattedTime = new String();
 
         if (isoTime.contains("H") && isoTime.contains("M") && isoTime.contains("S")) {
@@ -55,7 +56,8 @@ public class Utils {
     /**
      * Makes values consist of 2 letters "01"
      */
-    private static String formatTo2Digits(String str) {
+    private static String formatTo2Digits(String str)
+    {
         if (str.length() < 2) {
             str = "0" + str;
         }
@@ -67,7 +69,8 @@ public class Utils {
      *
      * @param videos
      */
-    public static void prettyPrintVideos(List<YouTubeVideo> videos) {
+    public static void prettyPrintVideos(List<YouTubeVideo> videos)
+    {
         Log.d(TAG, "=============================================================");
         Log.d(TAG, "\t\tTotal Videos: " + videos.size());
         Log.d(TAG, "=============================================================\n");
@@ -89,7 +92,8 @@ public class Utils {
      *
      * @param playlistEntry
      */
-    public static void prettyPrintVideoItem(YouTubeVideo playlistEntry) {
+    public static void prettyPrintVideoItem(YouTubeVideo playlistEntry)
+    {
         Log.d(TAG, "*************************************************************");
         Log.d(TAG, "\t\tItem:");
         Log.d(TAG, "*************************************************************");
@@ -100,5 +104,4 @@ public class Utils {
         Log.d(TAG, " thumbnail   = " + playlistEntry.getThumbnailURL());
         Log.d(TAG, "\n*************************************************************\n");
     }
-
 }

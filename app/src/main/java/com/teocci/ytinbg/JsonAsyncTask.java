@@ -2,6 +2,9 @@ package com.teocci.ytinbg;
 
 import android.os.AsyncTask;
 
+import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
+import com.teocci.ytinbg.utils.LogHelper;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,29 +23,25 @@ import java.util.ArrayList;
  * AsyncTask for acquiring search suggestion in action bar
  * Created by Teocci on 19.2.16..
  */
-public class JsonAsyncTask extends AsyncTask<String, Void, ArrayList<String>> {
-
-    private static final String TAG = "JsonAsyncTask";
+public class JsonAsyncTask extends AsyncTask<String, Void, ArrayList<String>>
+{
+    private static final String TAG = LogHelper.makeLogTag(JsonAsyncTask.class);
 
     private final int JSON_ERROR = 0;
     private final int JSON_ARRAY = 1;
     private final int JSON_OBJECT = 2;
 
-    // you may separate this or combined to caller class.
-    public interface AsyncResponse {
-        void processFinish(ArrayList<String> result);
-    }
+    private JsonAsyncResponse delegate = null;
 
-    public AsyncResponse delegate = null;
-
-    public JsonAsyncTask(AsyncResponse delegate) {
+    public JsonAsyncTask(JsonAsyncResponse delegate)
+    {
         this.delegate = delegate;
     }
 
     @Override
-    protected ArrayList<String> doInBackground(String... params) {
-
-        //encode param to avoid spaces in URL
+    protected ArrayList<String> doInBackground(String... params)
+    {
+        // Encode param to avoid spaces in URL
         String encodedParam = "";
         try {
             encodedParam = URLEncoder.encode(params[0], "UTF-8").replace("+", "%20");
@@ -52,19 +51,21 @@ public class JsonAsyncTask extends AsyncTask<String, Void, ArrayList<String>> {
 
         ArrayList<String> items = new ArrayList<>();
         try {
-            URL url = new URL("http://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=" + encodedParam);
+            URL url = new URL("http://suggestqueries.google.com/complete/search?" +
+                    "client=youtube&ds=yt&q=" + encodedParam);
+
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("GET");
             urlConnection.connect();
-            // gets the server json data
+
+            // Gets the server json data
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
                     urlConnection.getInputStream()));
 
             String next;
             while ((next = bufferedReader.readLine()) != null) {
-
-                if (checkJson(next) == JSON_ERROR) {
-                    //if not valid, remove invalid parts (this is simple hack for URL above)
+                // Removes invalid parts (this is simple hack for URL above)
+                if (checkJsonError(next) == JSON_ERROR) {
                     next = next.substring(19, next.length() - 1);
                 }
 
@@ -74,19 +75,18 @@ public class JsonAsyncTask extends AsyncTask<String, Void, ArrayList<String>> {
 
                     if (ja.get(i) instanceof JSONArray) {
                         JSONArray ja2 = ja.getJSONArray(i);
-
                         for (int j = 0; j < ja2.length(); j++) {
 
                             if (ja2.get(j) instanceof JSONArray) {
                                 String suggestion = ((JSONArray) ja2.get(j)).getString(0);
-                                //Log.d(TAG, "Suggestion: " + suggestion);
+//                                LogHelper.d(TAG, "Suggestion: " + suggestion);
                                 items.add(suggestion);
                             }
                         }
                     } else if (ja.get(i) instanceof JSONObject) {
-                        //Log.d(TAG, "json object");
+//                        LogHelper.d(TAG, "json object");
                     } else {
-                        //Log.d(TAG, "unknown object");
+//                        LogHelper.d(TAG, "unknown object");
                     }
                 }
             }
@@ -97,16 +97,19 @@ public class JsonAsyncTask extends AsyncTask<String, Void, ArrayList<String>> {
     }
 
     @Override
-    protected void onPostExecute(ArrayList<String> result) {
+    protected void onPostExecute(ArrayList<String> result)
+    {
         delegate.processFinish(result);
     }
 
     /**
      * Checks if JSON data is correctly formatted
-     * @param string
-     * @return
+     *
+     * @param string the raw JSON response
+     * @return int
      */
-    private int checkJson(String string) {
+    private int checkJsonError(String string)
+    {
         try {
             Object json = new JSONTokener(string).nextValue();
             if (json instanceof JSONObject) {

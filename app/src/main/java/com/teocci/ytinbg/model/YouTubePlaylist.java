@@ -1,4 +1,6 @@
-package com.teocci.ytinbg;
+package com.teocci.ytinbg.model;
+
+import com.teocci.ytinbg.utils.LogHelper;
 
 import java.io.Serializable;
 
@@ -6,9 +8,9 @@ import java.io.Serializable;
  * YouTube playlist class
  * Created by Teocci on 8.3.16..
  */
-public class YouTubePlaylist implements Serializable {
-
-    private static final String TAG = "YouTubePlaylist";
+public class YouTubePlaylist implements Serializable
+{
+    private static final String TAG = LogHelper.makeLogTag(YouTubePlaylist.class);
     private String title;
     private String thumbnailURL;
     private String id;
@@ -16,7 +18,8 @@ public class YouTubePlaylist implements Serializable {
     private String status;
 
 
-    public YouTubePlaylist() {
+    public YouTubePlaylist()
+    {
         this.title = "";
         this.thumbnailURL = "";
         this.id = "";
@@ -24,7 +27,9 @@ public class YouTubePlaylist implements Serializable {
         this.status = "";
     }
 
-    public YouTubePlaylist(String title, String thumbnailURL, String id, long numberOfVideos, String status) {
+    public YouTubePlaylist(String title, String thumbnailURL, String id, long numberOfVideos,
+                           String status)
+    {
         this.title = title;
         this.thumbnailURL = thumbnailURL;
         this.id = id;
@@ -32,48 +37,59 @@ public class YouTubePlaylist implements Serializable {
         this.status = status;
     }
 
-    public long getNumberOfVideos() {
+    public long getNumberOfVideos()
+    {
         return numberOfVideos;
     }
 
-    public void setNumberOfVideos(long numberOfVideos) {
+    public void setNumberOfVideos(long numberOfVideos)
+    {
         this.numberOfVideos = numberOfVideos;
     }
 
-    public String getId() {
+    public String getId()
+    {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(String id)
+    {
         this.id = id;
     }
 
-    public String getTitle() {
+    public String getTitle()
+    {
         return title;
     }
 
-    public void setTitle(String title) {
+    public void setTitle(String title)
+    {
         this.title = title;
     }
 
-    public String getThumbnailURL() {
+    public String getThumbnailURL()
+    {
         return thumbnailURL;
     }
 
-    public void setThumbnailURL(String thumbnail) {
+    public void setThumbnailURL(String thumbnail)
+    {
         this.thumbnailURL = thumbnail;
     }
 
-    public String getStatus() {
+    public String getStatus()
+    {
         return status;
     }
 
-    public void setPrivacy(String status) {
+    public void setPrivacy(String status)
+    {
         this.status = status;
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         return "YouTubePlaylist {" +
                 "id='" + id + '\'' +
                 ", title='" + title + '\'' +

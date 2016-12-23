@@ -8,8 +8,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 import android.util.Log;
 
-import com.teocci.ytinbg.YouTubePlaylist;
-import com.teocci.ytinbg.YouTubeVideo;
+import com.teocci.ytinbg.model.YouTubePlaylist;
+import com.teocci.ytinbg.model.YouTubeVideo;
 
 import java.util.ArrayList;
 
@@ -17,7 +17,8 @@ import java.util.ArrayList;
  * SQLite database for storing recentlyWatchedVideos and playlist
  * Created by Teocci on 17.3.16..
  */
-public class YouTubeSqlDb {
+public class YouTubeSqlDb
+{
 
     private static final String TAG = "TEOCCI TABLE SQL";
 
@@ -28,7 +29,10 @@ public class YouTubeSqlDb {
     public static final String FAVORITES_TABLE_NAME = "favorites_videos";
 
 
-    public enum VIDEOS_TYPE {FAVORITE, RECENTLY_WATCHED}
+    public enum VIDEOS_TYPE
+    {
+        FAVORITE, RECENTLY_WATCHED
+    }
 
     private YouTubeDbHelper dbHelper;
 
@@ -38,14 +42,15 @@ public class YouTubeSqlDb {
 
     private static YouTubeSqlDb ourInstance = new YouTubeSqlDb();
 
-    public static YouTubeSqlDb getInstance() {
+    public static YouTubeSqlDb getInstance()
+    {
         return ourInstance;
     }
 
-    private YouTubeSqlDb() {
-    }
+    private YouTubeSqlDb() {}
 
-    public void init(Context context) {
+    public void init(Context context)
+    {
         dbHelper = new YouTubeDbHelper(context);
         dbHelper.getWritableDatabase();
 
@@ -54,7 +59,8 @@ public class YouTubeSqlDb {
         favoriteVideos = new Videos(FAVORITES_TABLE_NAME);
     }
 
-    public Videos videos(VIDEOS_TYPE type) {
+    public Videos videos(VIDEOS_TYPE type)
+    {
         if (type == VIDEOS_TYPE.FAVORITE) {
             return favoriteVideos;
         } else if (type == VIDEOS_TYPE.RECENTLY_WATCHED) {
@@ -64,24 +70,29 @@ public class YouTubeSqlDb {
         return null;
     }
 
-    public Playlists playlists() {
+    public Playlists playlists()
+    {
         return playlists;
     }
 
-    private final class YouTubeDbHelper extends SQLiteOpenHelper {
-        public YouTubeDbHelper(Context context) {
+    private final class YouTubeDbHelper extends SQLiteOpenHelper
+    {
+        public YouTubeDbHelper(Context context)
+        {
             super(context, DATABASE_NAME, null, DATABASE_VERSION);
         }
 
         @Override
-        public void onCreate(SQLiteDatabase db) {
+        public void onCreate(SQLiteDatabase db)
+        {
             db.execSQL(YouTubeVideoEntry.DATABASE_FAVORITES_TABLE_CREATE);
             db.execSQL(YouTubeVideoEntry.DATABASE_RECENTLY_WATCHED_TABLE_CREATE);
             db.execSQL(YouTubePlaylistEntry.DATABASE_TABLE_CREATE);
         }
 
         @Override
-        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion)
+        {
             db.execSQL(YouTubeVideoEntry.DROP_QUERY_RECENTLY_WATCHED);
             db.execSQL(YouTubeVideoEntry.DROP_QUERY_FAVORITES);
             db.execSQL(YouTubePlaylistEntry.DROP_QUERY);
@@ -89,30 +100,33 @@ public class YouTubeSqlDb {
         }
 
         @Override
-        public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion)
+        {
             onUpgrade(db, oldVersion, newVersion);
         }
     }
 
     /**
-     * Class that enables basic CRUD operations on Playlists database table
+     * Class that enables basic CRUD operations on Playlist database table
      */
-    public class Videos {
-
+    public class Videos
+    {
         private String tableName;
 
-        private Videos(String tableName) {
+        private Videos(String tableName)
+        {
             this.tableName = tableName;
         }
 
         /**
-         * Creates video entry in playlists table
+         * Creates video entry in playlist table
          *
-         * @param video
-         * @return
+         * @param video this is a video object
+         * @return boolean
          */
-        public boolean create(YouTubeVideo video) {
-            if(checkIfExists(video.getId())){
+        public boolean create(YouTubeVideo video)
+        {
+            if (checkIfExists(video.getId())) {
                 return false;
             }
             // Gets the data repository in write mode
@@ -131,12 +145,15 @@ public class YouTubeSqlDb {
 
         /**
          * Checks if entry is already present in database
-         * @param videoId
-         * @return
+         *
+         * @param videoId this is the video ID
+         * @return boolean
          */
-        public boolean checkIfExists(String videoId) {
+        public boolean checkIfExists(String videoId)
+        {
             SQLiteDatabase db = dbHelper.getWritableDatabase();
-            String Query = "SELECT * FROM " + tableName + " WHERE " + YouTubeVideoEntry.COLUMN_VIDEO_ID + "='" + videoId + "'";
+            String Query = "SELECT * FROM " + tableName + " WHERE " + YouTubeVideoEntry
+                    .COLUMN_VIDEO_ID + "='" + videoId + "'";
             Cursor cursor = db.rawQuery(Query, null);
             if (cursor.getCount() <= 0) {
                 cursor.close();
@@ -147,12 +164,12 @@ public class YouTubeSqlDb {
         }
 
         /**
-         * Reads all recentlyWatchedVideos from playlists database
+         * Reads all recentlyWatchedVideos from playlist database
          *
-         * @return
+         * @return ArrayList<YouTubeVideo>
          */
-        public ArrayList<YouTubeVideo> readAll() {
-
+        public ArrayList<YouTubeVideo> readAll()
+        {
             final String SELECT_QUERY_ORDER_DESC = "SELECT * FROM " + tableName + " ORDER BY "
                     + YouTubeVideoEntry.COLUMN_ENTRY_ID + " DESC";
 
@@ -161,11 +178,15 @@ public class YouTubeSqlDb {
 
             Cursor c = db.rawQuery(SELECT_QUERY_ORDER_DESC, null);
             while (c.moveToNext()) {
-                String videoId = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_VIDEO_ID));
+                String videoId = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry
+                        .COLUMN_VIDEO_ID));
                 String title = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_TITLE));
-                String duration = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_DURATION));
-                String thumbnailUrl = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_THUMBNAIL_URL));
-                String viewsNumber = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_VIEWS_NUMBER));
+                String duration = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry
+                        .COLUMN_DURATION));
+                String thumbnailUrl = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry
+                        .COLUMN_THUMBNAIL_URL));
+                String viewsNumber = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry
+                        .COLUMN_VIEWS_NUMBER));
                 list.add(new YouTubeVideo(videoId, title, thumbnailUrl, duration, viewsNumber));
             }
             c.close();
@@ -175,10 +196,11 @@ public class YouTubeSqlDb {
         /**
          * Deletes video entry with provided ID
          *
-         * @param videoId
-         * @return
+         * @param videoId this is the video id
+         * @return boolean
          */
-        public boolean delete(String videoId) {
+        public boolean delete(String videoId)
+        {
             return dbHelper.getWritableDatabase().delete(tableName,
                     YouTubeVideoEntry.COLUMN_VIDEO_ID + "='" + videoId + "'", null) > 0;
         }
@@ -188,7 +210,8 @@ public class YouTubeSqlDb {
          *
          * @return
          */
-        public boolean deleteAll() {
+        public boolean deleteAll()
+        {
             return dbHelper.getWritableDatabase().delete(tableName, "1", null) > 0;
         }
     }
@@ -196,17 +219,18 @@ public class YouTubeSqlDb {
     /**
      * Class that enables basic CRUD operations on Videos database table
      */
-    public class Playlists {
-
+    public class Playlists
+    {
         private Playlists() {}
 
         /**
-         * Creates playlist entry in playlists table
+         * Creates playlist entry in playlist table
          *
-         * @param youTubePlaylist
-         * @return
+         * @param youTubePlaylist the playlist object
+         * @return boolean
          */
-        public boolean create(YouTubePlaylist youTubePlaylist) {
+        public boolean create(YouTubePlaylist youTubePlaylist)
+        {
             // Gets the data repository in write mode
             SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -214,31 +238,40 @@ public class YouTubeSqlDb {
             ContentValues values = new ContentValues();
             values.put(YouTubePlaylistEntry.COLUMN_PLAYLIST_ID, youTubePlaylist.getId());
             values.put(YouTubePlaylistEntry.COLUMN_TITLE, youTubePlaylist.getTitle());
-            values.put(YouTubePlaylistEntry.COLUMN_VIDEOS_NUMBER, youTubePlaylist.getNumberOfVideos());
+            values.put(YouTubePlaylistEntry.COLUMN_VIDEOS_NUMBER, youTubePlaylist
+                    .getNumberOfVideos());
             values.put(YouTubePlaylistEntry.COLUMN_STATUS, youTubePlaylist.getStatus());
-            values.put(YouTubePlaylistEntry.COLUMN_THUMBNAIL_URL, youTubePlaylist.getThumbnailURL());
+            values.put(YouTubePlaylistEntry.COLUMN_THUMBNAIL_URL, youTubePlaylist.getThumbnailURL
+                    ());
 
-            // Insert the new row, returning the primary key value of the new row. If -1, operation has failed
-            return db.insert(YouTubePlaylistEntry.TABLE_NAME, YouTubePlaylistEntry.COLUMN_NAME_NULLABLE, values) > 0;
+            // Insert the new row, returning the primary key value of the new row. If -1,
+            // operation has failed
+            return db.insert(YouTubePlaylistEntry.TABLE_NAME, YouTubePlaylistEntry
+                    .COLUMN_NAME_NULLABLE, values) > 0;
         }
 
         /**
-         * Reads all playlists from playlists database
+         * Reads all playlist from playlist database
          *
-         * @return
+         * @return ArrayList<YouTubePlaylist>
          */
-        public ArrayList<YouTubePlaylist> readAll() {
-
+        public ArrayList<YouTubePlaylist> readAll()
+        {
             ArrayList<YouTubePlaylist> list = new ArrayList<>();
             SQLiteDatabase db = dbHelper.getReadableDatabase();
 
             Cursor c = db.rawQuery(YouTubePlaylistEntry.SELECT_QUERY_ORDER_DESC, null);
             while (c.moveToNext()) {
-                String playlistId = c.getString(c.getColumnIndexOrThrow(YouTubePlaylistEntry.COLUMN_PLAYLIST_ID));
-                String title = c.getString(c.getColumnIndexOrThrow(YouTubePlaylistEntry.COLUMN_TITLE));
-                long number = c.getLong(c.getColumnIndexOrThrow(YouTubePlaylistEntry.COLUMN_VIDEOS_NUMBER));
-                String status = c.getString(c.getColumnIndexOrThrow(YouTubePlaylistEntry.COLUMN_STATUS));
-                String thumbnailUrl = c.getString(c.getColumnIndexOrThrow(YouTubePlaylistEntry.COLUMN_THUMBNAIL_URL));
+                String playlistId = c.getString(c.getColumnIndexOrThrow(YouTubePlaylistEntry
+                        .COLUMN_PLAYLIST_ID));
+                String title = c.getString(c.getColumnIndexOrThrow(YouTubePlaylistEntry
+                        .COLUMN_TITLE));
+                long number = c.getLong(c.getColumnIndexOrThrow(YouTubePlaylistEntry
+                        .COLUMN_VIDEOS_NUMBER));
+                String status = c.getString(c.getColumnIndexOrThrow(YouTubePlaylistEntry
+                        .COLUMN_STATUS));
+                String thumbnailUrl = c.getString(c.getColumnIndexOrThrow(YouTubePlaylistEntry
+                        .COLUMN_THUMBNAIL_URL));
                 list.add(new YouTubePlaylist(title, thumbnailUrl, playlistId, number, status));
             }
             c.close();
@@ -248,10 +281,11 @@ public class YouTubeSqlDb {
         /**
          * Deletes playlist entry with provided ID
          *
-         * @param playlistId
-         * @return
+         * @param playlistId playlist ID
+         * @return boolean
          */
-        public boolean delete(String playlistId) {
+        public boolean delete(String playlistId)
+        {
             return dbHelper.getWritableDatabase().delete(YouTubePlaylistEntry.TABLE_NAME,
                     YouTubePlaylistEntry.COLUMN_PLAYLIST_ID + "='" + playlistId + "'", null) > 0;
         }
@@ -259,17 +293,20 @@ public class YouTubeSqlDb {
         /**
          * Deletes all entries from database
          *
-         * @return
+         * @return boolean
          */
-        public boolean deleteAll() {
-            return dbHelper.getWritableDatabase().delete(YouTubePlaylistEntry.TABLE_NAME, "1", null) > 0;
+        public boolean deleteAll()
+        {
+            return dbHelper.getWritableDatabase().delete(YouTubePlaylistEntry.TABLE_NAME, "1",
+                    null) > 0;
         }
     }
 
     /**
      * Inner class that defines Videos table entry
      */
-    public static abstract class YouTubeVideoEntry implements BaseColumns {
+    public static abstract class YouTubeVideoEntry implements BaseColumns
+    {
         public static final String COLUMN_ENTRY_ID = "_id";
         public static final String COLUMN_VIDEO_ID = "video_id";
         public static final String COLUMN_TITLE = "title";
@@ -297,14 +334,16 @@ public class YouTubeSqlDb {
                         COLUMN_THUMBNAIL_URL + " TEXT," +
                         COLUMN_VIEWS_NUMBER + " TEXT)";
 
-        public static final String DROP_QUERY_RECENTLY_WATCHED = "DROP TABLE " + RECENTLY_WATCHED_TABLE_NAME;
+        public static final String DROP_QUERY_RECENTLY_WATCHED = "DROP TABLE " +
+                RECENTLY_WATCHED_TABLE_NAME;
         public static final String DROP_QUERY_FAVORITES = "DROP TABLE " + FAVORITES_TABLE_NAME;
     }
 
     /**
      * Inner class that defines Playlist table entry
      */
-    public static abstract class YouTubePlaylistEntry implements BaseColumns {
+    public static abstract class YouTubePlaylistEntry implements BaseColumns
+    {
         public static final String TABLE_NAME = "playlists";
         public static final String COLUMN_ENTRY_ID = "_id";
         public static final String COLUMN_PLAYLIST_ID = "playlist_id";
@@ -325,6 +364,7 @@ public class YouTubeSqlDb {
                         COLUMN_STATUS + " TEXT);";
 
         public static final String DROP_QUERY = "DROP TABLE " + TABLE_NAME;
-        public static final String SELECT_QUERY_ORDER_DESC = "SELECT * FROM " + TABLE_NAME + " ORDER BY " + COLUMN_ENTRY_ID + " DESC";
+        public static final String SELECT_QUERY_ORDER_DESC = "SELECT * FROM " + TABLE_NAME + " " +
+                "ORDER BY " + COLUMN_ENTRY_ID + " DESC";
     }
 }
