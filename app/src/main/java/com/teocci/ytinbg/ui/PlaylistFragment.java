@@ -1,4 +1,4 @@
-package com.teocci.ytinbg.fragments;
+package com.teocci.ytinbg.ui;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -153,7 +152,7 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
         }
 
         playlistList.clear();
-        playlistList.addAll(YouTubeSqlDb.getInstance().playlists().readAll());
+        playlistList.addAll(YouTubeSqlDb.getInstance().playlistModel().readAll());
         playlistAdapter.notifyDataSetChanged();
     }
 
@@ -347,7 +346,7 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
      */
     private void removePlaylist(final String playlistId)
     {
-        YouTubeSqlDb.getInstance().playlists().delete(playlistId);
+        YouTubeSqlDb.getInstance().playlistModel().delete(playlistId);
 
         for (YouTubePlaylist playlist : this.playlistList) {
             if (playlist.getId().equals(playlistId)) {
@@ -369,9 +368,9 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
     {
 
         //refresh playlistList in database
-        YouTubeSqlDb.getInstance().playlists().deleteAll();
+        YouTubeSqlDb.getInstance().playlistModel().deleteAll();
         for (YouTubePlaylist playlist : youTubePlaylistList) {
-            YouTubeSqlDb.getInstance().playlists().create(playlist);
+            YouTubeSqlDb.getInstance().playlistModel().create(playlist);
         }
 
         playlistList.clear();
