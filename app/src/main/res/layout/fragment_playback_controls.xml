@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/playback_controls_padding">
+    <ImageView
+        android:id="@+id/video_thumbnail"
+        tools:src="@mipmap/ic_launcher"
+        android:layout_width="@dimen/playback_controls_thumbnail_size"
+        android:layout_height="@dimen/playback_controls_thumbnail_size"
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/current_video_title"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"/>
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/playback_controls_thumbnail_horizontal_margin"
+        android:orientation="vertical"
+        android:layout_toEndOf="@id/video_thumbnail"
+        android:layout_toStartOf="@+id/play_pause"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="@dimen/playback_controls_thumbnail_horizontal_margin"
+        android:layout_toRightOf="@id/video_thumbnail"
+        android:layout_toLeftOf="@+id/play_pause">
+        <TextView
+            android:id="@+id/video_title"
+            tools:text="The Best Music EVAH1111 THE BEST"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/current_video_title"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="?android:attr/textColorPrimary"/>
+        <TextView
+            android:id="@+id/views_number"
+            tools:text="John Doe and Band"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/current_video_views_number"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+        <TextView
+            android:id="@+id/video_duration"
+            tools:text="casting to MyCast"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:contentDescription="@string/current_video_duration"
+            android:textAppearance="?android:attr/textAppearanceSmall"/>
+    </LinearLayout>
+    <ImageButton
+        android:id="@+id/play_pause"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:layout_alignParentEnd="true"
+        android:background="?selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_play_arrow_black_36dp"
+        android:contentDescription="@string/play_pause"
+        android:tintMode="src_in"
+        android:tint="@color/accent_color"
+        android:layout_alignParentRight="true"/>
+</RelativeLayout>

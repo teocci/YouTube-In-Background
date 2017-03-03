@@ -14,6 +14,7 @@ import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.RemoteException;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -22,10 +23,12 @@ import android.support.v7.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.SparseArray;
+import android.widget.MediaController;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+import com.teocci.ytinbg.interfaces.CurrentVideoReceiver;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.receivers.MediaButtonIntentReceiver;
 import com.teocci.ytinbg.ui.MainActivity;
@@ -111,7 +114,8 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     private ArrayList<YouTubeVideo> youTubeVideos;
     private ListIterator<YouTubeVideo> iterator;
 
-    private NotificationCompat.Builder builder = null;
+    private NotificationCompat.Builder notificationBuilder = null;
+    private CurrentVideoReceiver currentVideoReceiver = null;
 
     private boolean nextWasCalled = false;
     private boolean previousWasCalled = false;
@@ -311,6 +315,13 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         }
     }
 
+    private void sendCurrentVideoUpdates(MediaMetadataCompat metadata)
+    {
+        if (metadata != null) {
+            currentVideoReceiver.onCurrentVideoChanged(currentVideo);
+        }
+    }
+
     private void initPhoneCallListener()
     {
         PhoneStateListener phoneStateListener = new PhoneStateListener()
@@ -417,16 +428,16 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         clickIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent clickPendingIntent = PendingIntent.getActivity(this, 0, clickIntent, 0);
 
-        builder = new NotificationCompat.Builder(this);
-        builder.setSmallIcon(R.mipmap.utubinbg_icon);
-        builder.setContentTitle(currentVideo.getTitle());
-        builder.setContentInfo(currentVideo.getDuration());
-        builder.setShowWhen(false);
-        builder.setContentIntent(clickPendingIntent);
-        builder.setDeleteIntent(stopPendingIntent);
-        builder.setOngoing(false);
-        builder.setSubText(currentVideo.getViewCount());
-        builder.setStyle(style);
+        notificationBuilder = new NotificationCompat.Builder(this);
+        notificationBuilder.setSmallIcon(R.mipmap.utubinbg_icon);
+        notificationBuilder.setContentTitle(currentVideo.getTitle());
+        notificationBuilder.setContentInfo(currentVideo.getDuration());
+        notificationBuilder.setShowWhen(false);
+        notificationBuilder.setContentIntent(clickPendingIntent);
+        notificationBuilder.setDeleteIntent(stopPendingIntent);
+        notificationBuilder.setOngoing(false);
+        notificationBuilder.setSubText(currentVideo.getViewCount());
+        notificationBuilder.setStyle(style);
 
         //load bitmap for largeScreen
         if (currentVideo.getThumbnailURL() != null && !currentVideo.getThumbnailURL().isEmpty()) {
@@ -435,19 +446,19 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                     .into(target);
         }
 
-        builder.addAction(generateAction(
+        notificationBuilder.addAction(generateAction(
                 android.R.drawable.ic_media_previous,
                 getApplicationContext().getString(R.string.action_previous),
                 ACTION_PREVIOUS
         ));
-        builder.addAction(action);
-        builder.addAction(generateAction(android.R.drawable.ic_media_next, getApplicationContext
+        notificationBuilder.addAction(action);
+        notificationBuilder.addAction(generateAction(android.R.drawable.ic_media_next, getApplicationContext
                 ().getString(R.string.action_next), ACTION_NEXT));
         style.setShowActionsInCompactView(0, 1, 2);
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(
                 Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(1, builder.build());
+        notificationManager.notify(1, notificationBuilder.build());
     }
 
     /**
@@ -457,10 +468,10 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private void updateNotificationLargeIcon(Bitmap bitmap)
     {
-        builder.setLargeIcon(bitmap);
+        notificationBuilder.setLargeIcon(bitmap);
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context
                 .NOTIFICATION_SERVICE);
-        notificationManager.notify(1, builder.build());
+        notificationManager.notify(1, notificationBuilder.build());
     }
 
     /**
@@ -748,7 +759,9 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         ytEx.execute(youtubeLink);
     }
 
-    private void startPlayback(SparseArray<YtFile> ytFiles) {
+    private void startPlayback(SparseArray<YtFile> ytFiles)
+    {
+
 
     }
 

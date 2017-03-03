@@ -9,11 +9,15 @@ import android.database.MatrixCursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.CursorAdapter;
@@ -29,9 +33,12 @@ import com.teocci.ytinbg.BuildConfig;
 import com.teocci.ytinbg.JsonAsyncTask;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
+import com.teocci.ytinbg.interfaces.CurrentVideoReceiver;
 import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
+import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
+import com.teocci.ytinbg.utils.NetworkHelper;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -42,7 +49,7 @@ import java.util.List;
 /**
  * Activity that manages fragments and action bar
  */
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends AppCompatActivity implements CurrentVideoReceiver
 {
     private static final String TAG = LogHelper.makeLogTag(MainActivity.class);
     private Toolbar toolbar;
@@ -51,8 +58,12 @@ public class MainActivity extends AppCompatActivity
 
     private int initialColors[] = new int[2];
 
+    private MediaSessionCompat mediaSession;
+    private CurrentVideoReceiver currentVideoReceiver;
+
     private SearchFragment searchFragment;
     private RecentlyWatchedFragment recentlyPlayedFragment;
+    private PlaybackControlsFragment controlsFragment;
 
     private int[] tabIcons = {
             R.drawable.ic_favorite_tab_icon,
@@ -86,6 +97,8 @@ public class MainActivity extends AppCompatActivity
         networkConf = new NetworkConf(this);
 
         setupTabIcons();
+
+        setupControls();
 
         loadColor();
     }
@@ -123,6 +136,16 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private void setupControls(){
+        controlsFragment = (PlaybackControlsFragment) getFragmentManager()
+                .findFragmentById(R.id.fragment_playback_controls);
+        if (controlsFragment == null) {
+            throw new IllegalStateException("Missing fragment with id 'controls'. Cannot continue.");
+        }
+        controlsFragment.setCurrentVideoReceiver(this);
+        hidePlaybackControls();
+    }
+
     /**
      * Setups icons for four tabs
      */
@@ -155,6 +178,62 @@ public class MainActivity extends AppCompatActivity
         adapter.addFragment(searchFragment, getString(R.string.fragment_tab_search));
         adapter.addFragment(new PlaylistFragment(), getString(R.string.fragment_tab_playlist));
         viewPager.setAdapter(adapter);
+    }
+
+
+
+    /**
+     * Check if the MediaSession is active and in a "playback-able" state
+     * (not NONE and not STOPPED).
+     *
+     * @return true if the MediaSession's state requires playback controls to be visible.
+     */
+    protected boolean shouldShowControls() {
+        MediaControllerCompat mediaController = getSupportMediaController();
+        if (mediaController == null ||
+                mediaController.getMetadata() == null ||
+                mediaController.getPlaybackState() == null) {
+            return false;
+        }
+        switch (mediaController.getPlaybackState().getState()) {
+            case PlaybackStateCompat.STATE_ERROR:
+            case PlaybackStateCompat.STATE_NONE:
+            case PlaybackStateCompat.STATE_STOPPED:
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    protected void showPlaybackControls() {
+        LogHelper.d(TAG, "showPlaybackControls");
+        if (NetworkHelper.isOnline(this)) {
+            getFragmentManager().beginTransaction()
+                    .setCustomAnimations(
+                            R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom,
+                            R.animator.slide_in_from_bottom, R.animator.slide_out_to_bottom)
+                    .show(controlsFragment)
+                    .commit();
+        }
+    }
+
+    protected void hidePlaybackControls() {
+        LogHelper.e(TAG, "hidePlaybackControls");
+        getFragmentManager().beginTransaction()
+                .hide(controlsFragment)
+                .commit();
+    }
+
+    @Override
+    public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state)
+    {
+
+    }
+
+    @Override
+    public void onCurrentVideoChanged(YouTubeVideo currentVideo)
+    {
+
     }
 
     /**

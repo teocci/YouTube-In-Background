@@ -19,4 +19,9 @@ public final class Config
     public static final String YOUTUBE_API_KEY = "AIzaSyAN074XUjainWwyXkhv2hergNIlh2uTWUc";
 
     public static final long NUMBER_OF_VIDEOS_RETURNED = 50; //due to YouTube API rules - MAX 50
+
+    public static final String CURRENT_YOUTUBE_VIDEO  = "com.teocci.ytinbg.CURRENT_YOUTUBE_VIDEO";
+
+    // Extra on MediaSession that contains the Cast device name currently connected to
+    public static final String EXTRA_CONNECTED_CAST = "com.example.android.uamp.CAST_NAME";
 }

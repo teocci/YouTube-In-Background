@@ -16,6 +16,10 @@
     <string name="action_pause">Pause</string>
     <string name="action_previous">Previous</string>
     <string name="action_next">Next</string>
+    <string name="play_item">Play item</string>
+    <string name="play_pause">play or pause</string>
+    <string name="skip_next">skip to next</string>
+    <string name="skip_prev">skip to previous</string>
 
     <!-- fragments -->
     <string name="fragment_tab_favorites">Favorites</string>
@@ -40,7 +44,6 @@
     <string name="playlist_number_videos">Number of videos: %1$d</string>
     <string name="playlist_status">Status: %1$s</string>
 
-
     <string name="removed_positions">Removed</string>
     <string name="tap_to_undo">Tap to undo</string>
     <string name="item_deleted">Item deleted</string>
@@ -48,4 +51,24 @@
     <string name="user_playlist">Playlist</string>
     <string name="clear_list">Clear recently played list</string>
     <string name="video_thumbnail">Video Thumbnail</string>
+
+    <!-- Currently Video -->
+    <string name="current_video_title">Song currently playing</string>
+    <string name="current_video_views_number">Artist of currently playing song</string>
+    <string name="current_video_duration">Extra info for currently playing song</string>
+
+    <!-- Drawer -->
+    <string name="open_content_drawer">Open the main menu</string>
+    <string name="close_content_drawer">Close the main menu</string>
+    <string name="placeholder_message">This is a placeholder for your application code.</string>
+    <string name="drawer_allmusic_title">All Music</string>
+    <string name="drawer_playlists_title">Playlists</string>
+    <string name="now_playing">Now Playing</string>
+
+    <!-- Fullscreen -->
+    <string name="background_image_str">Background image for album art</string>
+
+    <!-- Messages -->
+    <string name="casting_to_device">Casting to %1$s</string>
+    <string name="loading">Loading…</string>
 </resources>
