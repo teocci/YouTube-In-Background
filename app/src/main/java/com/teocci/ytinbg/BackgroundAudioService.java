@@ -1,5 +1,6 @@
 package com.teocci.ytinbg;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -111,7 +112,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     private ArrayList<YouTubeVideo> youTubeVideos;
     private ListIterator<YouTubeVideo> iterator;
 
-    private NotificationCompat.Builder builder = null;
+    private NotificationCompat.Builder notificationBuilder = null;
 
     private boolean nextWasCalled = false;
     private boolean previousWasCalled = false;
@@ -146,6 +147,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         return null;
     }
 
+    @SuppressLint("WifiManagerPotentialLeak")
     @Override
     public void onCreate()
     {
@@ -156,7 +158,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         currentVideoPosition = -1;
 
         // Create the Wifi lock (this does not acquire the lock, this just creates it)
-        this.wifiLock = ((WifiManager) getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, "YTinBG_lock");
+        this.wifiLock = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, "YTinBG_lock");
         initMediaSessions();
         initPhoneCallListener();
     }
@@ -243,6 +245,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                                     getString(R.string.action_pause),
                                     ACTION_PAUSE
                             ));
+                            updateNotificationOngoing(true);
                         }
 
                         @Override
@@ -256,6 +259,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                                     getString(R.string.action_play),
                                     ACTION_PLAY
                             ));
+                            updateNotificationOngoing(false);
                         }
 
                         @Override
@@ -409,24 +413,24 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
         Intent intent = new Intent(getApplicationContext(), BackgroundAudioService.class);
         intent.setAction(ACTION_STOP);
-        PendingIntent stopPendingIntent = PendingIntent.getService(getApplicationContext(), 1,
-                intent, 0);
+        PendingIntent stopPendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
 
         Intent clickIntent = new Intent(this, MainActivity.class);
         clickIntent.setAction(Intent.ACTION_MAIN);
         clickIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         PendingIntent clickPendingIntent = PendingIntent.getActivity(this, 0, clickIntent, 0);
 
-        builder = new NotificationCompat.Builder(this);
-        builder.setSmallIcon(R.mipmap.utubinbg_icon);
-        builder.setContentTitle(currentVideo.getTitle());
-        builder.setContentInfo(currentVideo.getDuration());
-        builder.setShowWhen(false);
-        builder.setContentIntent(clickPendingIntent);
-        builder.setDeleteIntent(stopPendingIntent);
-        builder.setOngoing(false);
-        builder.setSubText(currentVideo.getViewCount());
-        builder.setStyle(style);
+        notificationBuilder = new NotificationCompat.Builder(this);
+        notificationBuilder.setSmallIcon(R.mipmap.utubinbg_icon);
+        notificationBuilder.setContentTitle(currentVideo.getTitle());
+        notificationBuilder.setContentInfo(currentVideo.getDuration());
+        notificationBuilder.setShowWhen(false);
+        notificationBuilder.setContentIntent(clickPendingIntent);
+        notificationBuilder.setDeleteIntent(stopPendingIntent);
+        notificationBuilder.setOngoing(true);
+        notificationBuilder.setSubText(currentVideo.getViewCount());
+        notificationBuilder.setStyle(style);
+        notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
         //load bitmap for largeScreen
         if (currentVideo.getThumbnailURL() != null && !currentVideo.getThumbnailURL().isEmpty()) {
@@ -435,19 +439,19 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                     .into(target);
         }
 
-        builder.addAction(generateAction(
+        notificationBuilder.addAction(generateAction(
                 android.R.drawable.ic_media_previous,
                 getApplicationContext().getString(R.string.action_previous),
                 ACTION_PREVIOUS
         ));
-        builder.addAction(action);
-        builder.addAction(generateAction(android.R.drawable.ic_media_next, getApplicationContext
+        notificationBuilder.addAction(action);
+        notificationBuilder.addAction(generateAction(android.R.drawable.ic_media_next, getApplicationContext
                 ().getString(R.string.action_next), ACTION_NEXT));
         style.setShowActionsInCompactView(0, 1, 2);
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(
                 Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(1, builder.build());
+        notificationManager.notify(1, notificationBuilder.build());
     }
 
     /**
@@ -457,10 +461,23 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private void updateNotificationLargeIcon(Bitmap bitmap)
     {
-        builder.setLargeIcon(bitmap);
+        notificationBuilder.setLargeIcon(bitmap);
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context
                 .NOTIFICATION_SERVICE);
-        notificationManager.notify(1, builder.build());
+        notificationManager.notify(1, notificationBuilder.build());
+    }
+
+    /**
+     * Updates only the notification panel's flag if the notification can be or not closed
+     *
+     * @param isOngoing is the videos is playing then the notification panel should not be dismissed
+     */
+    private void updateNotificationOngoing(boolean isOngoing)
+    {
+        notificationBuilder.setOngoing(isOngoing);
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context
+                .NOTIFICATION_SERVICE);
+        notificationManager.notify(1, notificationBuilder.build());
     }
 
     /**
