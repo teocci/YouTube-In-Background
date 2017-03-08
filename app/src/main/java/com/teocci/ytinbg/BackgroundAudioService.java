@@ -4,9 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -37,6 +39,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
+import at.huber.youtubeExtractor.VideoMeta;
+import at.huber.youtubeExtractor.YouTubeExtractor;
 import at.huber.youtubeExtractor.YouTubeUriExtractor;
 import at.huber.youtubeExtractor.YtFile;
 
@@ -49,6 +53,8 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 {
 
     private static final String TAG = LogHelper.makeLogTag(BackgroundAudioService.class);
+
+    private static final int NOTIFICATION_ID = 412;
 
     // The volume we set the media player to when we lose audio focus, but are
     // allowed to reduce the volume instead of stopping playback.
@@ -120,6 +126,22 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
     private volatile int currentPosition;
 
+    private final IntentFilter audioNoisyIntentFilter =
+            new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+
+    private final BroadcastReceiver audioNoisyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+                LogHelper.e(TAG, "audioNoisyReceiver: Headphones disconnected.");
+                if (isPlaying()) {
+                    pauseVideo();
+                    LogHelper.e(TAG, "audioNoisyReceiver: Video Pause");
+                }
+            }
+        }
+    };
+
     /**
      * Field which handles image loading
      */
@@ -168,6 +190,10 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     {
         handleIntent(intent);
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    public boolean isPlaying() {
+        return playOnFocusGain || (mediaPlayer != null && mediaPlayer.isPlaying());
     }
 
     /**
@@ -240,26 +266,25 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                         public void onPlay()
                         {
                             super.onPlay();
-                            buildNotification(generateAction(
-                                    android.R.drawable.ic_media_pause,
-                                    getString(R.string.action_pause),
-                                    ACTION_PAUSE
-                            ));
-                            updateNotificationOngoing(true);
+                            updateAction(ACTION_PAUSE);
+//                            buildNotification(generateAction(
+//                                    R.drawable.ic_pause_white_24dp,
+//                                    getString(R.string.action_pause),
+//                                    ACTION_PAUSE
+//                            ));
                         }
 
                         @Override
                         public void onPause()
                         {
-
                             super.onPause();
                             pauseVideo();
-                            buildNotification(generateAction(
-                                    android.R.drawable.ic_media_play,
-                                    getString(R.string.action_play),
-                                    ACTION_PLAY
-                            ));
-                            updateNotificationOngoing(false);
+                            updateAction(ACTION_PLAY);
+//                            buildNotification(generateAction(
+//                                    R.drawable.ic_play_arrow_white_24dp,
+//                                    getString(R.string.action_play),
+//                                    ACTION_PLAY
+//                            ));
                         }
 
                         @Override
@@ -269,11 +294,12 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                             if (!isStarting) {
                                 playNext();
                             }
-                            buildNotification(generateAction(
-                                    android.R.drawable.ic_media_pause,
-                                    getString(R.string.action_pause),
-                                    ACTION_PAUSE
-                            ));
+                            updateAction(ACTION_PAUSE);
+//                            buildNotification(generateAction(
+//                                    R.drawable.ic_pause_white_24dp,
+//                                    getString(R.string.action_pause),
+//                                    ACTION_PAUSE
+//                            ));
                         }
 
                         @Override
@@ -283,11 +309,12 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                             if (!isStarting) {
                                 playPrevious();
                             }
-                            buildNotification(generateAction(
-                                    android.R.drawable.ic_media_pause,
-                                    getString(R.string.action_pause),
-                                    ACTION_PAUSE
-                            ));
+                            updateAction(ACTION_PAUSE);
+//                            buildNotification(generateAction(
+//                                    R.drawable.ic_pause_white_24dp,
+//                                    getString(R.string.action_pause),
+//                                    ACTION_PAUSE
+//                            ));
                         }
 
                         @Override
@@ -298,7 +325,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                             //remove notification and stop service
                             NotificationManager notificationManager = (NotificationManager)
                                     getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                            notificationManager.cancel(1);
+                            notificationManager.cancel(NOTIFICATION_ID);
                             Intent intent = new Intent(getApplicationContext(), BackgroundAudioService.class);
                             stopService(intent);
                         }
@@ -315,6 +342,29 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         }
     }
 
+    private void updateAction(String action)
+    {
+        LogHelper.d(TAG, "updateAction");
+        String label;
+        int icon;
+        if (action.equals(ACTION_PAUSE)) {
+            label = getString(R.string.action_pause);
+            icon = R.drawable.ic_pause_white_24dp;
+        } else if (action.equals(ACTION_PLAY)) {
+            label = getString(R.string.action_play);
+            icon = R.drawable.ic_play_arrow_white_24dp;
+        } else if (action.equals(ACTION_NEXT)) {
+            label = getString(R.string.action_next);
+            icon = R.drawable.ic_skip_next_white_24dp;
+        } else if (action.equals(ACTION_PREVIOUS)) {
+            label = getString(R.string.action_previous);
+            icon = R.drawable.ic_skip_previous_white_24dp;
+        } else {
+            return;
+        }
+        buildNotification(generateAction(icon, label, action));
+    }
+
     private void initPhoneCallListener()
     {
         PhoneStateListener phoneStateListener = new PhoneStateListener()
@@ -325,9 +375,11 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                 if (state == TelephonyManager.CALL_STATE_RINGING) {
                     //Incoming call: Pause music
                     pauseVideo();
+                    updateAction(ACTION_PLAY);
                 } else if (state == TelephonyManager.CALL_STATE_IDLE) {
                     //Not in call: Play music
                     resumeVideo();
+                    updateAction(ACTION_PAUSE);
                 } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
                     //A call is dialing, active or on hold
                 }
@@ -421,13 +473,13 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         PendingIntent clickPendingIntent = PendingIntent.getActivity(this, 0, clickIntent, 0);
 
         notificationBuilder = new NotificationCompat.Builder(this);
-        notificationBuilder.setSmallIcon(R.mipmap.utubinbg_icon);
+        notificationBuilder.setSmallIcon(R.drawable.ic_notification);
         notificationBuilder.setContentTitle(currentVideo.getTitle());
         notificationBuilder.setContentInfo(currentVideo.getDuration());
-        notificationBuilder.setShowWhen(false);
+        notificationBuilder.setUsesChronometer(true);
         notificationBuilder.setContentIntent(clickPendingIntent);
         notificationBuilder.setDeleteIntent(stopPendingIntent);
-        notificationBuilder.setOngoing(true);
+//        notificationBuilder.setOngoing(true);
         notificationBuilder.setSubText(currentVideo.getViewCount());
         notificationBuilder.setStyle(style);
         notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
@@ -439,19 +491,51 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                     .into(target);
         }
 
-        notificationBuilder.addAction(generateAction(
-                android.R.drawable.ic_media_previous,
-                getApplicationContext().getString(R.string.action_previous),
-                ACTION_PREVIOUS
-        ));
+        notificationBuilder.addAction(generateIntentAction(ACTION_PREVIOUS));
+        notificationBuilder.addAction(generateIntentAction(ACTION_NEXT));
+//        notificationBuilder.updateAction(generateAction(
+//                R.drawable.ic_skip_previous_white_24dp,
+//                getApplicationContext().getString(R.string.action_previous),
+//                ACTION_PREVIOUS
+//        ));
+//        notificationBuilder.updateAction(generateAction(
+//                R.drawable.ic_skip_next_white_24dp,
+//                getApplicationContext().getString(R.string.action_next),
+//                ACTION_NEXT));
         notificationBuilder.addAction(action);
-        notificationBuilder.addAction(generateAction(android.R.drawable.ic_media_next, getApplicationContext
-                ().getString(R.string.action_next), ACTION_NEXT));
+        LogHelper.e(TAG, "setNotificationPlaybackState. mediaPlayer=" + mediaPlayer);
+        setNotificationPlaybackState(notificationBuilder);
+
         style.setShowActionsInCompactView(0, 1, 2);
 
-        NotificationManager notificationManager = (NotificationManager) getSystemService(
-                Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(1, notificationBuilder.build());
+        NotificationManager notificationManager = (NotificationManager)
+                getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+    }
+
+    private void setNotificationPlaybackState(NotificationCompat.Builder builder)
+    {
+        LogHelper.e(TAG, "updateNotificationPlaybackState. mediaPlayer=" + mediaPlayer);
+        if (mediaPlayer == null) {
+            LogHelper.e(TAG, "updateNotificationPlaybackState. cancelling notification!");
+            stopForeground(true);
+            return;
+        }
+        if (mediaPlayer.isPlaying() && mediaPlayer.getCurrentPosition()  >= 0) {
+            LogHelper.e(TAG, "updateNotificationPlaybackState. updating playback position to ",
+                    (System.currentTimeMillis() - mediaPlayer.getCurrentPosition()) / 1000, " seconds");
+            builder.setWhen(System.currentTimeMillis() - mediaPlayer.getCurrentPosition())
+                    .setShowWhen(true)
+                    .setUsesChronometer(true);
+        } else {
+            LogHelper.e(TAG, "updateNotificationPlaybackState. hiding playback position");
+            builder.setWhen(0)
+                    .setShowWhen(false)
+                    .setUsesChronometer(false);
+        }
+
+        // Make sure that the notification can be dismissed by the user when we are not playing:
+        builder.setOngoing(mediaPlayer.isPlaying());
     }
 
     /**
@@ -464,7 +548,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         notificationBuilder.setLargeIcon(bitmap);
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context
                 .NOTIFICATION_SERVICE);
-        notificationManager.notify(1, notificationBuilder.build());
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
     }
 
     /**
@@ -474,10 +558,15 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private void updateNotificationOngoing(boolean isOngoing)
     {
-        notificationBuilder.setOngoing(isOngoing);
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context
-                .NOTIFICATION_SERVICE);
-        notificationManager.notify(1, notificationBuilder.build());
+//        notificationBuilder.setOngoing(isOngoing);
+//        NotificationManager notificationManager = (NotificationManager) getSystemService(Context
+//                .NOTIFICATION_SERVICE);
+//        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
+        if (isOngoing) {
+            startForeground(NOTIFICATION_ID, notificationBuilder.build());
+        } else {
+            stopForeground(true);
+        }
     }
 
     /**
@@ -490,11 +579,46 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private NotificationCompat.Action generateAction(int icon, String title, String intentAction)
     {
-        Intent intent = new Intent(getApplicationContext(), BackgroundAudioService.class);
+        Context context = getApplicationContext();
+        Intent intent = new Intent(context, BackgroundAudioService.class);
         intent.setAction(intentAction);
-        PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1,
-                intent, 0);
+        PendingIntent pendingIntent = PendingIntent.getService(context, 1, intent, 0);
+
         return new NotificationCompat.Action.Builder(icon, title, pendingIntent).build();
+    }
+
+    /**
+     * Generates specific action with parameters below
+     *
+     * @param intentAction the action
+     * @return NotificationCompat.Action
+     */
+    private NotificationCompat.Action generateIntentAction(String intentAction)
+    {
+        Context context = getApplicationContext();
+        Intent intent = new Intent(context, BackgroundAudioService.class);
+        intent.setAction(intentAction);
+        PendingIntent pendingIntent = PendingIntent.getService(context, 1, intent, 0);
+
+        String label;
+        int icon;
+        if (intentAction.equals(ACTION_PAUSE)) {
+            label = getString(R.string.action_pause);
+            icon = R.drawable.ic_pause_white_24dp;
+        } else if (intentAction.equals(ACTION_PLAY)) {
+            label = getString(R.string.action_play);
+            icon = R.drawable.ic_play_arrow_white_24dp;
+        } else if (intentAction.equals(ACTION_NEXT)) {
+            label = getString(R.string.action_next);
+            icon = R.drawable.ic_skip_next_white_24dp;
+        } else if (intentAction.equals(ACTION_PREVIOUS)) {
+            label = getString(R.string.action_previous);
+            icon = R.drawable.ic_skip_previous_white_24dp;
+        } else {
+            return null;
+        }
+
+        return new NotificationCompat.Action.Builder(icon, label, pendingIntent).build();
     }
 
     /**
@@ -561,7 +685,8 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     {
         isStarting = true;
         relaxResources(false); // release everything except MediaPlayer
-        extractUrlAndPlay();
+//        extractUrlAndPlay();
+        newExtractUrlAndPlay();
     }
 
     /**
@@ -579,7 +704,8 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
             relaxResources(false);
         }
         playState = PlaybackStateCompat.STATE_PAUSED;
-        stopForeground(true);
+        unregisterAudioNoisyReceiver();
+//        stopForeground(true);
 //        if (mCallback != null) {
 //            mCallback.onPlaybackStatusChanged(playState);
 //        }
@@ -602,7 +728,19 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private void restartVideo()
     {
-        mediaPlayer.start();
+        playOnFocusGain = true;
+        tryToGetAudioFocus();
+//        mediaPlayer.start();
+        // The service needs to continue running even after the bound client (usually a
+        // MediaController) disconnects, otherwise the music playback will stop.
+        // Calling startService(Intent) will keep the service running until it is explicitly killed.
+        startService(new Intent(getApplicationContext(), BackgroundAudioService.class));
+        configMediaPlayerState();
+        Toast.makeText(
+                getApplicationContext(),
+                getResources().getString(R.string.toast_message_playing, currentVideoTitle),
+                Toast.LENGTH_SHORT
+        ).show();
     }
 
     /**
@@ -621,8 +759,12 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     private void stopPlayer()
     {
         currentPosition = getCurrentStreamPosition();
+        // Give up Audio focus
+        giveUpAudioFocus();
         // Relax all resources
         relaxResources(true);
+        unregisterAudioNoisyReceiver();
+        updateNotificationOngoing(false);
     }
 
     public int getCurrentStreamPosition()
@@ -668,34 +810,68 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     }
 
     /**
-     * Get the best available audio stream
-     *
-     * @param ytFiles Array of available streams
-     * @return Audio stream with highest bitrate
+     * Extracts link from youtube video ID, so mediaPlayer can play it
      */
-    private YtFile getBestStream(SparseArray<YtFile> ytFiles)
+    private void newExtractUrlAndPlay()
     {
-        if (ytFiles.get(YOUTUBE_ITAG_141) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_141);
-        } else if (ytFiles.get(YOUTUBE_ITAG_140) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_140);
-        } else if (ytFiles.get(YOUTUBE_ITAG_251) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_251);
-        } else if (ytFiles.get(YOUTUBE_ITAG_250) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_250);
-        } else if (ytFiles.get(YOUTUBE_ITAG_249) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_249);
-        } else if (ytFiles.get(YOUTUBE_ITAG_171) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_171);
-        } else if (ytFiles.get(YOUTUBE_ITAG_18) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_18);
-        } else if (ytFiles.get(YOUTUBE_ITAG_22) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_22);
-        } else if (ytFiles.get(YOUTUBE_ITAG_43) != null) {
-            return ytFiles.get(YOUTUBE_ITAG_43);
-        }
+        LogHelper.e(TAG, "extractUrlAndPlay: extracting url for video id=" + currentVideo.getId());
+        final String youtubeLink = "http://youtube.com/watch?v=" + currentVideo.getId();
+//        LogHelper.e(TAG, youtubeLink);
 
-        return ytFiles.get(YOUTUBE_ITAG_17);
+        new YouTubeExtractor(this) {
+            @Override
+            public void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta videoMeta) {
+
+                if (ytFiles == null) {
+                    Toast.makeText(
+                            getApplicationContext(),
+                            getResources().getString(R.string.toast_message_error_extracting, currentVideoTitle),
+                            Toast.LENGTH_SHORT
+                    ).show();
+                    return;
+                }
+
+                if (ytFiles != null) {
+                    YtFile ytFile = getBestStream(ytFiles);
+
+                    playOnFocusGain = true;
+                    currentPosition = 0;
+                    tryToGetAudioFocus();
+                    registerAudioNoisyReceiver();
+                    playState = PlaybackStateCompat.STATE_STOPPED;
+                    relaxResources(false); // release everything except MediaPlayer
+
+                    try {
+                        LogHelper.e(TAG, ytFile.getUrl());
+                        LogHelper.e(TAG, "extractUrlAndPlay: Start playback");
+
+                        createMediaPlayerIfNeeded();
+
+                        playState = PlaybackStateCompat.STATE_BUFFERING;
+
+                        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                        mediaPlayer.setDataSource(ytFile.getUrl());
+                        mediaPlayer.setOnPreparedListener(backgroundAudioService);
+                        currentVideoTitle = videoMeta.getTitle();
+
+                        // Starts preparing the media player in the background. When
+                        // it's done, it will call our OnPreparedListener (that is,
+                        // the onPrepared() method on this class, since we set the
+                        // listener to 'this'). Until the media player is prepared,
+                        // we *cannot* call start() on it!
+                        mediaPlayer.prepareAsync();
+
+                        // If we are streaming from the internet, we want to hold a
+                        // Wifi lock, which prevents the Wifi radio from going to
+                        // sleep while the song is playing.
+                        wifiLock.acquire();
+                    } catch (IOException io) {
+                        LogHelper.e(TAG, io, "extractUrlAndPlay: Exception playing song");
+                        io.printStackTrace();
+                    }
+                }
+            }
+        }.extract(youtubeLink, true, true);
     }
 
     /**
@@ -719,6 +895,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                     playOnFocusGain = true;
                     currentPosition = 0;
                     tryToGetAudioFocus();
+                    registerAudioNoisyReceiver();
                     playState = PlaybackStateCompat.STATE_STOPPED;
                     relaxResources(false); // release everything except MediaPlayer
 
@@ -765,7 +942,49 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         ytEx.execute(youtubeLink);
     }
 
-    private void startPlayback(SparseArray<YtFile> ytFiles) {
+    /**
+     * Get the best available audio stream
+     *
+     * @param ytFiles Array of available streams
+     * @return Audio stream with highest bitrate
+     */
+    private YtFile getBestStream(SparseArray<YtFile> ytFiles)
+    {
+        if (ytFiles.get(YOUTUBE_ITAG_141) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_141");
+            return ytFiles.get(YOUTUBE_ITAG_141);
+        } else if (ytFiles.get(YOUTUBE_ITAG_140) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_140");
+            return ytFiles.get(YOUTUBE_ITAG_140);
+        } else if (ytFiles.get(YOUTUBE_ITAG_251) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_251");
+            return ytFiles.get(YOUTUBE_ITAG_251);
+        } else if (ytFiles.get(YOUTUBE_ITAG_250) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_250");
+            return ytFiles.get(YOUTUBE_ITAG_250);
+        } else if (ytFiles.get(YOUTUBE_ITAG_249) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_249");
+            return ytFiles.get(YOUTUBE_ITAG_249);
+        } else if (ytFiles.get(YOUTUBE_ITAG_171) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_171");
+            return ytFiles.get(YOUTUBE_ITAG_171);
+        } else if (ytFiles.get(YOUTUBE_ITAG_18) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_18");
+            return ytFiles.get(YOUTUBE_ITAG_18);
+        } else if (ytFiles.get(YOUTUBE_ITAG_22) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_22");
+            return ytFiles.get(YOUTUBE_ITAG_22);
+        } else if (ytFiles.get(YOUTUBE_ITAG_43) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_43");
+            return ytFiles.get(YOUTUBE_ITAG_43);
+        }
+
+        LogHelper.e(TAG, " gets YOUTUBE_ITAG_17");
+        return ytFiles.get(YOUTUBE_ITAG_17);
+    }
+
+    private void startPlayback(SparseArray<YtFile> ytFiles)
+    {
 
     }
 
@@ -774,7 +993,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context
                 .NOTIFICATION_SERVICE);
-        notificationManager.cancel(1);
+        notificationManager.cancel(NOTIFICATION_ID);
     }
 
     @Override
@@ -782,9 +1001,11 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     {
         if (mediaType == Config.YOUTUBE_MEDIA_TYPE_PLAYLIST) {
             playNext();
-            buildNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
+            updateAction(ACTION_PAUSE);
+//            buildNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
         } else {
             restartVideo();
+            updateAction(ACTION_PAUSE);
         }
     }
 
@@ -825,6 +1046,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
             if (mediaPlayer.isPlaying()) {
                 playState = PlaybackStateCompat.STATE_BUFFERING;
             }
+            registerAudioNoisyReceiver();
             mediaPlayer.seekTo(position);
 //            if (callback != null) {
 //                callback.onPlaybackStatusChanged(playState);
@@ -838,8 +1060,10 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         LogHelper.d(TAG, "onSeekComplete from MediaPlayer:", mp.getCurrentPosition());
         currentPosition = mp.getCurrentPosition();
         if (playState == PlaybackStateCompat.STATE_BUFFERING) {
+            registerAudioNoisyReceiver();
             mediaPlayer.start();
             playState = PlaybackStateCompat.STATE_PLAYING;
+            updateAction(ACTION_PAUSE);
         }
 //        if (callback != null) {
 //            callback.onPlaybackStatusChanged(playState);
@@ -893,14 +1117,16 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
             // If we don't have audio focus and can't duck, we have to pause,
             if (playState == PlaybackStateCompat.STATE_PLAYING) {
                 pauseVideo();
+                updateAction(ACTION_PLAY);
             }
-        } else {  // we have audio focus:
+        } else {  // We have audio focus:
+            registerAudioNoisyReceiver();
             if (audioFocus == AUDIO_NO_FOCUS_CAN_DUCK) {
                 mediaPlayer.setVolume(VOLUME_DUCK, VOLUME_DUCK); // we'll be relatively quiet
             } else {
                 if (mediaPlayer != null) {
                     mediaPlayer.setVolume(VOLUME_NORMAL, VOLUME_NORMAL); // we can be loud again
-                } // else do something for remote client.
+                } // Else do something for remote client.
             }
             // If we were playing when we lost focus, we need to resume playing.
             if (playOnFocusGain) {
@@ -908,6 +1134,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                     LogHelper.e(TAG, "configMediaPlayerState startMediaPlayer. seeking to ", currentPosition);
                     if (currentPosition == mediaPlayer.getCurrentPosition()) {
                         mediaPlayer.start();
+                        updateAction(ACTION_PAUSE);
                         playState = PlaybackStateCompat.STATE_PLAYING;
                     } else {
                         mediaPlayer.seekTo(currentPosition);
@@ -952,5 +1179,19 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
             LogHelper.e(TAG, "onAudioFocusChange: Ignoring unsupported focusChange: ", focusChange);
         }
         configMediaPlayerState();
+    }
+
+    private void registerAudioNoisyReceiver() {
+        if (!audioNoisyReceiverRegistered) {
+            registerReceiver(audioNoisyReceiver, audioNoisyIntentFilter);
+            audioNoisyReceiverRegistered = true;
+        }
+    }
+
+    private void unregisterAudioNoisyReceiver() {
+        if (audioNoisyReceiverRegistered) {
+            unregisterReceiver(audioNoisyReceiver);
+            audioNoisyReceiverRegistered = false;
+        }
     }
 }
