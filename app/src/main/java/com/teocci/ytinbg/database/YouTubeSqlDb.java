@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.teocci.ytinbg.model.YouTubePlaylist;
 import com.teocci.ytinbg.model.YouTubeVideo;
+import com.teocci.ytinbg.utils.LogHelper;
 
 import java.util.ArrayList;
 
@@ -19,8 +20,7 @@ import java.util.ArrayList;
  */
 public class YouTubeSqlDb
 {
-
-    private static final String TAG = "TEOCCI TABLE SQL";
+    private static final String TAG = LogHelper.makeLogTag(YouTubeSqlDb.class);
 
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "YouTubeDb.db";
@@ -36,7 +36,7 @@ public class YouTubeSqlDb
 
     private YouTubeDbHelper dbHelper;
 
-    private Playlists playlists;
+    private PlaylistModel playlistModel;
     private Videos recentlyWatchedVideos;
     private Videos favoriteVideos;
 
@@ -54,7 +54,7 @@ public class YouTubeSqlDb
         dbHelper = new YouTubeDbHelper(context);
         dbHelper.getWritableDatabase();
 
-        playlists = new Playlists();
+        playlistModel = new PlaylistModel();
         recentlyWatchedVideos = new Videos(RECENTLY_WATCHED_TABLE_NAME);
         favoriteVideos = new Videos(FAVORITES_TABLE_NAME);
     }
@@ -70,9 +70,9 @@ public class YouTubeSqlDb
         return null;
     }
 
-    public Playlists playlists()
+    public PlaylistModel playlistModel()
     {
-        return playlists;
+        return playlistModel;
     }
 
     private final class YouTubeDbHelper extends SQLiteOpenHelper
@@ -151,15 +151,16 @@ public class YouTubeSqlDb
          */
         public boolean checkIfExists(String videoId)
         {
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
-            String Query = "SELECT * FROM " + tableName + " WHERE " + YouTubeVideoEntry
-                    .COLUMN_VIDEO_ID + "='" + videoId + "'";
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            String Query = "SELECT * FROM " + tableName +
+                    " WHERE " + YouTubeVideoEntry.COLUMN_VIDEO_ID + "='" + videoId + "'";
             Cursor cursor = db.rawQuery(Query, null);
             if (cursor.getCount() <= 0) {
                 cursor.close();
                 return false;
             }
             cursor.close();
+
             return true;
         }
 
@@ -170,26 +171,27 @@ public class YouTubeSqlDb
          */
         public ArrayList<YouTubeVideo> readAll()
         {
-            final String SELECT_QUERY_ORDER_DESC = "SELECT * FROM " + tableName + " ORDER BY "
-                    + YouTubeVideoEntry.COLUMN_ENTRY_ID + " DESC";
+            final String SELECT_QUERY_ORDER_DESC = "SELECT * FROM " + tableName +
+                    " ORDER BY " + YouTubeVideoEntry.COLUMN_ENTRY_ID + " DESC";
 
             SQLiteDatabase db = dbHelper.getReadableDatabase();
             ArrayList<YouTubeVideo> list = new ArrayList<>();
 
             Cursor c = db.rawQuery(SELECT_QUERY_ORDER_DESC, null);
             while (c.moveToNext()) {
-                String videoId = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry
-                        .COLUMN_VIDEO_ID));
+                String videoId = c.getString(
+                        c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_VIDEO_ID));
                 String title = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_TITLE));
-                String duration = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry
-                        .COLUMN_DURATION));
-                String thumbnailUrl = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry
-                        .COLUMN_THUMBNAIL_URL));
-                String viewsNumber = c.getString(c.getColumnIndexOrThrow(YouTubeVideoEntry
-                        .COLUMN_VIEWS_NUMBER));
+                String duration = c.getString(
+                        c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_DURATION));
+                String thumbnailUrl = c.getString(
+                        c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_THUMBNAIL_URL));
+                String viewsNumber = c.getString(
+                        c.getColumnIndexOrThrow(YouTubeVideoEntry.COLUMN_VIEWS_NUMBER));
                 list.add(new YouTubeVideo(videoId, title, thumbnailUrl, duration, viewsNumber));
             }
             c.close();
+
             return list;
         }
 
@@ -208,7 +210,7 @@ public class YouTubeSqlDb
         /**
          * Deletes all entries from database
          *
-         * @return
+         * @return boolean
          */
         public boolean deleteAll()
         {
@@ -219,9 +221,9 @@ public class YouTubeSqlDb
     /**
      * Class that enables basic CRUD operations on Videos database table
      */
-    public class Playlists
+    public class PlaylistModel
     {
-        private Playlists() {}
+        private PlaylistModel() {}
 
         /**
          * Creates playlist entry in playlist table
@@ -344,7 +346,7 @@ public class YouTubeSqlDb
      */
     public static abstract class YouTubePlaylistEntry implements BaseColumns
     {
-        public static final String TABLE_NAME = "playlists";
+        public static final String TABLE_NAME = "playlistModel";
         public static final String COLUMN_ENTRY_ID = "_id";
         public static final String COLUMN_PLAYLIST_ID = "playlist_id";
         public static final String COLUMN_TITLE = "title";

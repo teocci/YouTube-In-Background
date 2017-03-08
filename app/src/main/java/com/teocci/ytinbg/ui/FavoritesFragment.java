@@ -1,4 +1,4 @@
-package com.teocci.ytinbg.fragments;
+package com.teocci.ytinbg.ui;
 
 import android.content.Intent;
 import android.os.Bundle;

@@ -1,4 +1,4 @@
-package com.teocci.ytinbg;
+package com.teocci.ytinbg.ui;
 
 import android.app.SearchManager;
 import android.content.Context;
@@ -22,15 +22,13 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.teocci.ytinbg.BuildConfig;
+import com.teocci.ytinbg.JsonAsyncTask;
+import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
-import com.teocci.ytinbg.fragments.FavoritesFragment;
-import com.teocci.ytinbg.fragments.PlaylistFragment;
-import com.teocci.ytinbg.fragments.RecentlyWatchedFragment;
-import com.teocci.ytinbg.fragments.SearchFragment;
 import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
