@@ -45,4 +45,5 @@
     <string name="video_thumbnail">视频缩略图</string>
     <string name="tap_to_undo">点击撤销</string>
     <string name="toast_message_loading">正在加载音频</string>
+    <string name="toast_message_error_extracting">Error Extracting Audio: %1$s</string>
 </resources>

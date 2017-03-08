@@ -48,4 +48,5 @@
     <string name="item_deleted">Iten borrado</string>
     <string name="video_thumbnail">Video Thumbnail</string>
     <string name="toast_message_playing">Reproduciendo: %1$s</string>
+    <string name="toast_message_error_extracting">Error Extrayendo Audio: %1$s</string>
 </resources>
