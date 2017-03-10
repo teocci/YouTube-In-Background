@@ -49,4 +49,7 @@
     <string name="user_playlist">Playlist</string>
     <string name="clear_list">Clear recently played list</string>
     <string name="video_thumbnail">Video Thumbnail</string>
+
+    <!-- Image Buttons -->
+    <string name="share_image_button">Share with:</string>
 </resources>

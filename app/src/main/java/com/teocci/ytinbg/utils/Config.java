@@ -19,4 +19,11 @@ public final class Config
     public static final String YOUTUBE_API_KEY = "AIzaSyAN074XUjainWwyXkhv2hergNIlh2uTWUc";
 
     public static final long NUMBER_OF_VIDEOS_RETURNED = 50; //due to YouTube API rules - MAX 50
+
+    // Resolution reasonable for carrying around as an icon (generally in
+    // MediaDescription.getIconBitmap). This should not be bigger than necessary, because
+    // the MediaDescription object should be lightweight. If you set it too high and try to
+    // serialize the MediaDescription, you may get FAILED BINDER TRANSACTION errors.
+    public static final int MAX_WIDTH_ICON = 128;  // pixels
+    public static final int MAX_HEIGHT_ICON = 128;  // pixels
 }

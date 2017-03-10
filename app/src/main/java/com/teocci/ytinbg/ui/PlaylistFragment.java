@@ -433,7 +433,11 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
 
             YouTubePlaylist searchResult = playlistList.get(position);
 
-            Picasso.with(getContext()).load(searchResult.getThumbnailURL()).into(thumbnail);
+            Picasso.with(getContext())
+                    .load(searchResult.getThumbnailURL())
+                    .centerCrop()
+                    .fit()
+                    .into(thumbnail);
             title.setText(searchResult.getTitle());
             videosNumber.setText(getResources().getString(
                     R.string.playlist_number_videos,

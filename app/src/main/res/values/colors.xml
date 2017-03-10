@@ -7,4 +7,7 @@
     <color name="navigation_bar_color">#000000</color>
     <color name="accent_color">#bfbfbf</color>
     <color name="undo_background">#888888</color>
+    <color name="bt_accent">#00B8D4</color>
+    <color name="media_item_icon_playing">@color/bt_accent</color>
+    <color name="drawer_header_background">@color/bt_accent</color>
 </resources>

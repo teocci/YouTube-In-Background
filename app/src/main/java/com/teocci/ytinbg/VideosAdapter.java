@@ -1,6 +1,9 @@
 package com.teocci.ytinbg;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -44,6 +48,7 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
         this.isFavoriteList = isFavoriteList;
     }
 
+    @NonNull
     @Override
     public View getView(final int position, View convertView, final ViewGroup parent)
     {
@@ -54,11 +59,17 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
         TextView title = (TextView) convertView.findViewById(R.id.video_title);
         TextView duration = (TextView) convertView.findViewById(R.id.video_duration);
         TextView viewCount = (TextView) convertView.findViewById(R.id.views_number);
-        CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.image_button);
+        CheckBox checkBoxFavorite = (CheckBox) convertView.findViewById(R.id.image_button_favorite);
+        ImageButton imageButtonDownload = (ImageButton) convertView.findViewById(R.id.image_button_download);
+        ImageButton imageButtonShare = (ImageButton) convertView.findViewById(R.id.image_button_share);
 
         final YouTubeVideo searchResult = list.get(position);
 
-        Picasso.with(context).load(searchResult.getThumbnailURL()).into(thumbnail);
+        Picasso.with(context)
+                .load(searchResult.getThumbnailURL())
+                .centerCrop()
+                .fit()
+                .into(thumbnail);
         title.setText(searchResult.getTitle());
         duration.setText(searchResult.getDuration());
         viewCount.setText(searchResult.getViewCount());
@@ -66,9 +77,9 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
         //set checked if exists in database
         itemChecked[position] = YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
                 .FAVORITE).checkIfExists(searchResult.getId());
-        checkBox.setChecked(itemChecked[position]);
+        checkBoxFavorite.setChecked(itemChecked[position]);
 
-        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        checkBoxFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
         {
             public void onCheckedChanged(CompoundButton btn, boolean isChecked)
             {
@@ -76,7 +87,7 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
             }
         });
 
-        checkBox.setOnClickListener(new View.OnClickListener()
+        checkBoxFavorite.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
@@ -94,6 +105,15 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
                 }
             }
         });
+
+        imageButtonShare.setOnClickListener(new View.OnClickListener()
+    {
+        @Override
+        public void onClick(View v)
+        {
+            doShareLink(searchResult.getTitle(), searchResult.getId());
+        }
+    });
 
         return convertView;
     }
@@ -139,5 +159,25 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
     public View getUndoClickView(@NonNull View view)
     {
         return view.findViewById(R.id.button_undo_row);
+    }
+
+
+
+    private void doShareLink(String text, String link) {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        Intent chooserIntent = Intent.createChooser(shareIntent, context.getResources().getString(R.string.share_image_button));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, context.getResources().getString(R.string.app_name));
+            shareIntent.putExtra(Intent.EXTRA_TEXT, text + " https://youtu.be/" + link);
+        } else {
+
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, context.getResources().getString(R.string.app_name));
+            shareIntent.putExtra(Intent.EXTRA_TEXT, "https://youtu.be/" + link);
+        }
+
+//        chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(chooserIntent);
     }
 }

@@ -19,22 +19,24 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:paddingEnd="10dp"
-            android:paddingStart="10dp" />
+            android:paddingStart="10dp"
+            android:contentDescription="video_thumbnail"/>
 
         <TextView
             android:id="@+id/video_duration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|left"
+            android:layout_gravity="bottom|start"
             android:layout_marginBottom="5dp"
+            android:layout_marginStart="10dp"
             android:layout_marginLeft="10dp"
             android:background="@android:color/black"
             android:textColor="@android:color/white"
             android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
     </FrameLayout>
 
-    <FrameLayout
+    <RelativeLayout
         android:id="@+id/info_frame_layout"
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -46,7 +48,8 @@
             android:id="@+id/video_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|left"
+            android:layout_alignParentTop="true"
+            android:layout_gravity="top|start"
             android:maxLines="3"
             android:textSize="16sp" />
 
@@ -54,17 +57,39 @@
             android:id="@+id/views_number"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|left"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="bottom|start"
             android:layout_marginBottom="5dp"
             android:maxLines="1"
             android:textSize="12sp" />
 
-        <CheckBox
-            android:id="@+id/image_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right|bottom"
-            android:button="@drawable/favorite_button_selector" />
+        <ImageButton
+            android:id="@+id/image_button_share"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_toLeftOf="@+id/image_button_download"
+            android:layout_toStartOf="@+id/image_button_download"
+            android:layout_alignParentBottom="true"
+            android:background="@null"
+            android:src="@drawable/share_button_selector"/>
 
-    </FrameLayout>
+        <ImageButton
+            android:id="@+id/image_button_download"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_toLeftOf="@+id/image_button_favorite"
+            android:layout_toStartOf="@+id/image_button_favorite"
+            android:layout_alignParentBottom="true"
+            android:background="@null"
+            android:src="@drawable/download_button_selector"/>
+
+        <CheckBox
+            android:id="@+id/image_button_favorite"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:button="@drawable/favorite_button_selector" />
+    </RelativeLayout>
 </LinearLayout>
