@@ -1,5 +1,6 @@
 package com.teocci.ytinbg;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
@@ -20,6 +21,8 @@ import com.nhaarman.listviewanimations.util.Swappable;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.squareup.picasso.Picasso;
 import com.teocci.ytinbg.model.YouTubeVideo;
+import com.teocci.ytinbg.ui.DownloadActivity;
+import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
 
 import java.util.List;
@@ -107,13 +110,23 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
         });
 
         imageButtonShare.setOnClickListener(new View.OnClickListener()
-    {
-        @Override
-        public void onClick(View v)
         {
-            doShareLink(searchResult.getTitle(), searchResult.getId());
-        }
-    });
+            @Override
+            public void onClick(View v)
+            {
+                doShareLink(searchResult.getTitle(), searchResult.getId());
+            }
+        });
+
+        imageButtonDownload.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                doDownloadVideo(searchResult.getId());
+            }
+        });
+
 
         return convertView;
     }
@@ -162,8 +175,8 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
     }
 
 
-
-    private void doShareLink(String text, String link) {
+    private void doShareLink(String text, String link)
+    {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
         Intent chooserIntent = Intent.createChooser(shareIntent, context.getResources().getString(R.string.share_image_button));
@@ -179,5 +192,12 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
 
 //        chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(chooserIntent);
+    }
+
+    private void doDownloadVideo(String link)
+    {
+        Intent downloadIntent = new Intent(context, DownloadActivity.class);
+        downloadIntent.putExtra(Config.YOUTUBE_LINK, "https://youtu.be/" + link);
+        context.startActivity(downloadIntent);
     }
 }

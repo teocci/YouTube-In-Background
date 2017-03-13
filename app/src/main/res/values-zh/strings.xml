@@ -46,4 +46,7 @@
     <string name="tap_to_undo">点击撤销</string>
     <string name="toast_message_loading">正在加载音频</string>
     <string name="toast_message_error_extracting">Error Extracting Audio: %1$s</string>
+    <string name="app_update">无法提取网址，您可能需要更新！</string>
+    <string name="error_no_yt_link">不是有效的YouTube连结！</string>
+    <string name="share_image_button">分享：</string>
 </resources>

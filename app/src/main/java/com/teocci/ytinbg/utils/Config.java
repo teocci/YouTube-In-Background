@@ -11,6 +11,7 @@ public final class Config
     public static final int YOUTUBE_MEDIA_TYPE_VIDEO = 0;
     public static final int YOUTUBE_MEDIA_TYPE_PLAYLIST = 1;
 
+    public static final String YOUTUBE_LINK = "YT_DOWNLOAD_LINK";
     public static final String YOUTUBE_TYPE = "YT_MEDIA_TYPE";
     public static final String YOUTUBE_TYPE_VIDEO = "YT_VIDEO";
     public static final String YOUTUBE_TYPE_PLAYLIST = "YT_PLAYLIST";

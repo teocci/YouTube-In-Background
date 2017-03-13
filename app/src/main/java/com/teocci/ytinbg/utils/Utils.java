@@ -104,4 +104,9 @@ public class Utils
         Log.d(TAG, " thumbnail   = " + playlistEntry.getThumbnailURL());
         Log.d(TAG, "\n*************************************************************\n");
     }
+
+    public static boolean empty( final String s ) {
+        // Null-safe, short-circuit evaluation.
+        return s == null || s.trim().isEmpty();
+    }
 }

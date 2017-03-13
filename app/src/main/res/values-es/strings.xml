@@ -49,4 +49,7 @@
     <string name="video_thumbnail">Video Thumbnail</string>
     <string name="toast_message_playing">Reproduciendo: %1$s</string>
     <string name="toast_message_error_extracting">Error Extrayendo Audio: %1$s</string>
+    <string name="app_update">No se pudo extraer el video, tal vez necesites una update!</string>
+    <string name="error_no_yt_link">No es un enlacce valido de YouTube!</string>
+    <string name="share_image_button">Compartir:</string>
 </resources>

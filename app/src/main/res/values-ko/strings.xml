@@ -49,4 +49,7 @@
     <string name="video_thumbnail">영상 썸네일</string>
     <string name="toast_message_playing">재생 중: %1$s</string>
     <string name="toast_message_error_extracting">Error Extracting Audio: %1$s</string>
+    <string name="app_update">업데이트에 필요한 URL을 추출할 수 없습니다.</string>
+    <string name="error_no_yt_link">유효한 YouTube 링크가 아닙니다.</string>
+    <string name="share_image_button">공유:</string>
 </resources>

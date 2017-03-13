@@ -51,5 +51,9 @@
     <string name="video_thumbnail">Video Thumbnail</string>
 
     <!-- Image Buttons -->
-    <string name="share_image_button">Share with:</string>
+    <string name="share_image_button">Share:</string>
+    <string name="error_no_yt_link">Not a valid YouTube link!</string>
+    <string name="app_update">Couldn\'t extract URLs you may need an update!</string>
+
+    <!-- Permissions -->
 </resources>

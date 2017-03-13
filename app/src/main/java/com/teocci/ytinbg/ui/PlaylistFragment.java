@@ -43,7 +43,6 @@ import java.util.ArrayList;
 public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
         YouTubePlaylistReceiver
 {
-
     private static final String TAG = LogHelper.makeLogTag(PlaylistFragment.class);
 
     private static final int REQUEST_ACCOUNT_PICKER = 2;
@@ -125,8 +124,7 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
             userNameTextView.setText(extractUserName(chosenAccountName));
             Toast.makeText(
                     getContext(),
-                    getResources().getString(R.string.toast_message_hello) + extractUserName
-                            (chosenAccountName),
+                    getResources().getString(R.string.toast_message_hello) + extractUserName(chosenAccountName),
                     Toast.LENGTH_SHORT
             ).show();
         }
