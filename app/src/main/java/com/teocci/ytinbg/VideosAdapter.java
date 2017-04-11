@@ -1,11 +1,10 @@
 package com.teocci.ytinbg;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,7 +29,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Custom ArrayAdapter which enables setup of a list view row views
+ * Custom ArrayAdapter which enables setup of a videoList view row views
  * Created by teocci on 8.2.16..
  */
 public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappable, UndoAdapter
@@ -38,16 +37,16 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
     private static final String TAG = LogHelper.makeLogTag(VideosAdapter.class);
 
     private Activity context;
-    private final List<YouTubeVideo> list;
-    private boolean[] itemChecked;
+    private final List<YouTubeVideo> videoList;
+    private boolean[] videoChecked;
     private boolean isFavoriteList;
 
-    public VideosAdapter(Activity context, List<YouTubeVideo> list, boolean isFavoriteList)
+    public VideosAdapter(Activity context, List<YouTubeVideo> videoList, boolean isFavoriteList)
     {
-        super(context, R.layout.video_item, list);
-        this.list = list;
+        super(context, R.layout.video_item, videoList);
+        this.videoList = videoList;
         this.context = context;
-        this.itemChecked = new boolean[50];
+        this.videoChecked = new boolean[50];
         this.isFavoriteList = isFavoriteList;
     }
 
@@ -55,42 +54,40 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
     @Override
     public View getView(final int position, View convertView, final ViewGroup parent)
     {
+        VideoViewHolder videoViewHolder;
         if (convertView == null) {
             convertView = context.getLayoutInflater().inflate(R.layout.video_item, parent, false);
+            videoViewHolder = new VideoViewHolder(convertView);
+            convertView.setTag(videoViewHolder);
+        }else {
+            videoViewHolder = (VideoViewHolder) convertView.getTag();
         }
-        ImageView thumbnail = (ImageView) convertView.findViewById(R.id.video_thumbnail);
-        TextView title = (TextView) convertView.findViewById(R.id.video_title);
-        TextView duration = (TextView) convertView.findViewById(R.id.video_duration);
-        TextView viewCount = (TextView) convertView.findViewById(R.id.views_number);
-        CheckBox checkBoxFavorite = (CheckBox) convertView.findViewById(R.id.image_button_favorite);
-        ImageButton imageButtonDownload = (ImageButton) convertView.findViewById(R.id.image_button_download);
-        ImageButton imageButtonShare = (ImageButton) convertView.findViewById(R.id.image_button_share);
 
-        final YouTubeVideo searchResult = list.get(position);
+        final YouTubeVideo searchResult = videoList.get(position);
 
         Picasso.with(context)
                 .load(searchResult.getThumbnailURL())
                 .centerCrop()
                 .fit()
-                .into(thumbnail);
-        title.setText(searchResult.getTitle());
-        duration.setText(searchResult.getDuration());
-        viewCount.setText(searchResult.getViewCount());
+                .into(videoViewHolder.thumbnail);
+        videoViewHolder.title.setText(searchResult.getTitle());
+        videoViewHolder.duration.setText(searchResult.getDuration());
+        videoViewHolder.viewCount.setText(searchResult.getViewCount());
 
         //set checked if exists in database
-        itemChecked[position] = YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
+        videoChecked[position] = YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
                 .FAVORITE).checkIfExists(searchResult.getId());
-        checkBoxFavorite.setChecked(itemChecked[position]);
+        videoViewHolder.checkBoxFavorite.setChecked(videoChecked[position]);
 
-        checkBoxFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        videoViewHolder.checkBoxFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
         {
             public void onCheckedChanged(CompoundButton btn, boolean isChecked)
             {
-                itemChecked[position] = isChecked;
+                videoChecked[position] = isChecked;
             }
         });
 
-        checkBoxFavorite.setOnClickListener(new View.OnClickListener()
+        videoViewHolder.checkBoxFavorite.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
@@ -102,14 +99,14 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
                     YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).delete
                             (searchResult.getId());
                     if (isFavoriteList) {
-                        list.remove(position);
+                        videoList.remove(position);
                         notifyDataSetChanged();
                     }
                 }
             }
         });
 
-        imageButtonShare.setOnClickListener(new View.OnClickListener()
+        videoViewHolder.imageButtonShare.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
@@ -118,7 +115,7 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
             }
         });
 
-        imageButtonDownload.setOnClickListener(new View.OnClickListener()
+        videoViewHolder.imageButtonDownload.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
@@ -126,7 +123,6 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
                 doDownloadVideo(searchResult.getId());
             }
         });
-
 
         return convertView;
     }
@@ -137,21 +133,19 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
         return getItem(i).hashCode();
     }
 
-
     @Override
     public boolean hasStableIds()
     {
         return true;
     }
 
-
     @Override
     public void swapItems(int i, int i1)
     {
         YouTubeVideo firstItem = getItem(i);
 
-        list.set(i, getItem(i1));
-        list.set(i1, firstItem);
+        videoList.set(i, getItem(i1));
+        videoList.set(i1, firstItem);
 
         notifyDataSetChanged();
     }
@@ -199,5 +193,32 @@ public class VideosAdapter extends ArrayAdapter<YouTubeVideo> implements Swappab
         Intent downloadIntent = new Intent(context, DownloadActivity.class);
         downloadIntent.putExtra(Config.YOUTUBE_LINK, "https://youtu.be/" + link);
         context.startActivity(downloadIntent);
+    }
+
+
+
+    // Provide a reference to the views for each data item
+    // Complex data items may need more than one view per item, and
+    // you provide access to all the views for a data item in a view holder
+    public static class VideoViewHolder extends RecyclerView.ViewHolder {
+        public ImageView thumbnail;
+        public TextView title;
+        public TextView duration;
+        public TextView viewCount;
+        public CheckBox checkBoxFavorite;
+        public ImageButton imageButtonDownload;
+        public ImageButton imageButtonShare;
+
+        public VideoViewHolder(View convertView) {
+            super(convertView);
+
+            thumbnail = (ImageView) convertView.findViewById(R.id.video_thumbnail);
+            title = (TextView) convertView.findViewById(R.id.video_title);
+            duration = (TextView) convertView.findViewById(R.id.video_duration);
+            viewCount = (TextView) convertView.findViewById(R.id.views_number);
+            checkBoxFavorite = (CheckBox) convertView.findViewById(R.id.image_button_favorite);
+            imageButtonDownload = (ImageButton) convertView.findViewById(R.id.image_button_download);
+            imageButtonShare = (ImageButton) convertView.findViewById(R.id.image_button_share);
+        }
     }
 }

@@ -51,7 +51,6 @@ import at.huber.youtubeExtractor.YtFile;
 public class BackgroundAudioService extends Service implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnSeekCompleteListener
 {
-
     private static final String TAG = LogHelper.makeLogTag(BackgroundAudioService.class);
 
     private static final int NOTIFICATION_ID = 412;
@@ -899,7 +898,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                     tryToGetAudioFocus();
                     registerAudioNoisyReceiver();
                     playState = PlaybackStateCompat.STATE_STOPPED;
-                    relaxResources(false); // release everything except MediaPlayer
+                    relaxResources(false); // Release everything except MediaPlayer
 
                     try {
                         LogHelper.e(TAG, ytFile.getUrl());

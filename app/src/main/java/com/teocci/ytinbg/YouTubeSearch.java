@@ -65,7 +65,6 @@ public class YouTubeSearch
             "thumbnails/high),contentDetails/duration,statistics)"; // selector specifying which
     // fields to include in a partial response.
 
-
     private String appName;
 
     private final String language;
@@ -213,11 +212,13 @@ public class YouTubeSearch
                         item.setId(searchResults.get(i).getId().getVideoId());
                         // Video info
                         if (videoResults.get(i) != null) {
-                            BigInteger viewsNumber = videoResults.get(i).getStatistics()
-                                    .getViewCount();
-                            String viewsFormatted = NumberFormat.getIntegerInstance().format
-                                    (viewsNumber) + " views";
-                            item.setViewCount(viewsFormatted);
+                            if (videoResults.get(i).getStatistics() != null) {
+                                BigInteger viewsNumber = videoResults.get(i).getStatistics()
+                                        .getViewCount();
+                                String viewsFormatted = NumberFormat.getIntegerInstance().format
+                                        (viewsNumber) + " views";
+                                item.setViewCount(viewsFormatted);
+                            }
                             String isoTime = videoResults.get(i).getContentDetails().getDuration();
                             String time = Utils.convertISO8601DurationToNormalTime(isoTime);
                             item.setDuration(time);
@@ -241,7 +242,7 @@ public class YouTubeSearch
     }
 
     /**
-     * /**
+     *
      * Search playlist for a current user
      */
     public void searchPlaylist()
