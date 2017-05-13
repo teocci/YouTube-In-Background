@@ -33,6 +33,11 @@ import com.teocci.ytinbg.JsonAsyncTask;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
+import com.teocci.ytinbg.ui.fragments.FavoritesFragment;
+import com.teocci.ytinbg.ui.fragments.PlaylistFragment;
+import com.teocci.ytinbg.ui.fragments.RecentlyWatchedFragment;
+import com.teocci.ytinbg.ui.fragments.SearchFragment;
+import com.teocci.ytinbg.ui.fragments.SearchRVFragment;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
 
@@ -54,7 +59,7 @@ public class MainActivity extends AppCompatActivity
 
     private int initialColors[] = new int[2];
 
-    private SearchFragment searchFragment;
+    private SearchRVFragment searchFragment;
     private RecentlyWatchedFragment recentlyPlayedFragment;
 
     private int[] tabIcons = {
@@ -78,7 +83,9 @@ public class MainActivity extends AppCompatActivity
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        }
 
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setOffscreenPageLimit(3);
@@ -149,29 +156,35 @@ public class MainActivity extends AppCompatActivity
      */
     private void setupViewPager(ViewPager viewPager)
     {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager());
 
-        searchFragment = new SearchFragment();
+        searchFragment = SearchRVFragment.newInstance();
         recentlyPlayedFragment = new RecentlyWatchedFragment();
-        adapter.addFragment(new FavoritesFragment(), getString(R.string.fragment_tab_favorites));
-        adapter.addFragment(recentlyPlayedFragment, getString(R.string
+        pagerAdapter.addFragment(new FavoritesFragment(), getString(R.string.fragment_tab_favorites));
+        pagerAdapter.addFragment(recentlyPlayedFragment, getString(R.string
                 .fragment_tab_recently_watched));
-        adapter.addFragment(searchFragment, getString(R.string.fragment_tab_search));
-        adapter.addFragment(new PlaylistFragment(), getString(R.string.fragment_tab_playlist));
-        viewPager.setAdapter(adapter);
+        pagerAdapter.addFragment(searchFragment, getString(R.string.fragment_tab_search));
+        pagerAdapter.addFragment(new PlaylistFragment(), getString(R.string.fragment_tab_playlist));
+        viewPager.setAdapter(pagerAdapter);
     }
 
     /**
      * Class which provides adapter for fragment pager
      */
-    class ViewPagerAdapter extends FragmentPagerAdapter
+    class PagerAdapter extends FragmentPagerAdapter
     {
         private final List<Fragment> fragmentList = new ArrayList<>();
-        private final List<String> fragmentTitleList = new ArrayList<>();
+        private final List<String> titleList = new ArrayList<>();
 
-        ViewPagerAdapter(FragmentManager manager)
+        PagerAdapter(FragmentManager manager)
         {
             super(manager);
+        }
+
+        @Override
+        public int getCount()
+        {
+            return fragmentList.size();
         }
 
         @Override
@@ -181,21 +194,15 @@ public class MainActivity extends AppCompatActivity
         }
 
         @Override
-        public int getCount()
+        public CharSequence getPageTitle(int position)
         {
-            return fragmentList.size();
+            return titleList.get(position);
         }
 
         void addFragment(Fragment fragment, String title)
         {
             fragmentList.add(fragment);
-            fragmentTitleList.add(title);
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position)
-        {
-            return fragmentTitleList.get(position);
+            titleList.add(title);
         }
     }
 
@@ -388,7 +395,8 @@ public class MainActivity extends AppCompatActivity
         initialColors[1] = textColor;
     }
 
-    private  boolean checkAndRequestPermissions() {
+    private boolean checkAndRequestPermissions()
+    {
         int writeStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int readStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         int getAccounts = ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS);
@@ -416,8 +424,7 @@ public class MainActivity extends AppCompatActivity
         if (accessWIFIState != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(android.Manifest.permission.ACCESS_WIFI_STATE);
         }
-        if (!listPermissionsNeeded.isEmpty())
-        {
+        if (!listPermissionsNeeded.isEmpty()) {
             ActivityCompat.requestPermissions(
                     this,
                     listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),

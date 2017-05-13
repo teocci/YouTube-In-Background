@@ -139,7 +139,7 @@ public class DownloadActivity extends Activity
 
     private void addButtonToMainLayout(final String videoTitle, final YtFragmentedVideo ytFrVideo)
     {
-        // Display some buttons and let the user choose the format
+        // Display some buttons and let the user choose the formatViewCount
         String btnText;
         if (ytFrVideo.height == -1)
             btnText = "Audio " + ytFrVideo.audioFile.getFormat().getAudioBitrate() + " kbit/s";

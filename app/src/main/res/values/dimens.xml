@@ -7,6 +7,7 @@
     <dimen name="tab_label">14sp</dimen>
     <dimen name="custom_tab_layout_height">72dp</dimen>
 
+    <dimen name="card_insets">1dp</dimen>
     <dimen name="nav_drawer_width">260dp</dimen>
     <dimen name="text_margin">16dp</dimen>
 </resources>

@@ -936,7 +936,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                 }
             }
         };
-        // Ignore the webm container format
+        // Ignore the webm container formatViewCount
 //         ytEx.setIncludeWebM(false);
 //         ytEx.setParseDashManifest(true);
         // Lets execute the request

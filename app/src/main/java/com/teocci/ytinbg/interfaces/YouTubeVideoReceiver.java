@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * Interface which enables passing videos to the fragments
  * Created by Teocci on 10.3.16..
  */
-public interface YouTubeVideosReceiver
+public interface YouTubeVideoReceiver
 {
     void onVideosReceived(ArrayList<YouTubeVideo> youTubeVideos);
 

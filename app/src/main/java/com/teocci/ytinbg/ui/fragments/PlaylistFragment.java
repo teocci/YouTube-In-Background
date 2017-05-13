@@ -1,4 +1,4 @@
-package com.teocci.ytinbg.ui;
+package com.teocci.ytinbg.ui.fragments;
 
 import android.accounts.AccountManager;
 import android.app.Activity;
@@ -28,7 +28,7 @@ import com.teocci.ytinbg.YouTubeSearch;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
-import com.teocci.ytinbg.interfaces.YouTubeVideosReceiver;
+import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
@@ -40,7 +40,7 @@ import java.util.ArrayList;
  * Class that handles list of the playlistList acquired from YouTube
  * Created by teocci on 7.3.16..
  */
-public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
+public class PlaylistFragment extends Fragment implements YouTubeVideoReceiver,
         YouTubePlaylistReceiver
 {
     private static final String TAG = LogHelper.makeLogTag(PlaylistFragment.class);
@@ -76,7 +76,7 @@ public class PlaylistFragment extends Fragment implements YouTubeVideosReceiver,
 
         youTubeSearch = new YouTubeSearch(getActivity(), this);
         youTubeSearch.setYouTubePlaylistReceiver(this);
-        youTubeSearch.setYouTubeVideosReceiver(this);
+        youTubeSearch.setYouTubeVideoReceiver(this);
 
         networkConf = new NetworkConf(getActivity());
     }

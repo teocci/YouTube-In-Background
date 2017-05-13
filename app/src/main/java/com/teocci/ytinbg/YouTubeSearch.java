@@ -28,7 +28,7 @@ import com.google.api.services.youtube.model.SearchResult;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
-import com.teocci.ytinbg.interfaces.YouTubeVideosReceiver;
+import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.model.YouTubePlaylist;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.Auth;
@@ -61,8 +61,11 @@ public class YouTubeSearch
     // See: https://developers.google.com/youtube/v3/docs/videos/list
     private static final String YOUTUBE_VIDEOS_PART = "snippet,contentDetails,statistics"; //
     // video resource properties that the response will include.
-    private static final String YOUTUBE_VIDEOS_FIELDS = "items(id,snippet(title,description," +
-            "thumbnails/high),contentDetails/duration,statistics)"; // selector specifying which
+//    private static final String YOUTUBE_VIDEOS_FIELDS = "items(id,snippet(title,description," +
+//            "thumbnails/high),contentDetails/duration,statistics)";
+    private static final String YOUTUBE_VIDEOS_FIELDS = "items(id/videoId,snippet/title," +
+            "snippet/thumbnails/default/url)";
+    // selector specifying which
     // fields to include in a partial response.
 
     private String appName;
@@ -81,7 +84,7 @@ public class YouTubeSearch
 
     private String chosenAccountName;
 
-    private YouTubeVideosReceiver youTubeVideosReceiver;
+    private YouTubeVideoReceiver youTubeVideoReceiver;
     private YouTubePlaylistReceiver youTubePlaylistReceiver;
 
     private static final int REQUEST_AUTHORIZATION = 3;
@@ -101,9 +104,9 @@ public class YouTubeSearch
         language = Locale.getDefault().getLanguage();
     }
 
-    public void setYouTubeVideosReceiver(YouTubeVideosReceiver youTubeVideosReceiver)
+    public void setYouTubeVideoReceiver(YouTubeVideoReceiver youTubeVideoReceiver)
     {
-        this.youTubeVideosReceiver = youTubeVideosReceiver;
+        this.youTubeVideoReceiver = youTubeVideoReceiver;
     }
 
     public void setYouTubePlaylistReceiver(YouTubePlaylistReceiver youTubePlaylistReceiver)
@@ -169,8 +172,7 @@ public class YouTubeSearch
                     // As a best practice, only retrieve the fields that the
                     // application uses.
                     searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
-                    searchList.setFields("items(id/videoId,snippet/title," +
-                            "snippet/thumbnails/default/url)");
+                    searchList.setFields(YOUTUBE_VIDEOS_FIELDS);
 
                     Log.e(TAG, language);
                     searchList.set("hl", language);
@@ -230,7 +232,7 @@ public class YouTubeSearch
                         items.add(item);
                     }
 
-                    youTubeVideosReceiver.onVideosReceived(items);
+                    youTubeVideoReceiver.onVideosReceived(items);
 
                 } catch (IOException e) {
                     Log.e(TAG, "Could not initialize: " + e);
@@ -308,7 +310,7 @@ public class YouTubeSearch
                     e.printStackTrace();
                 } catch (GoogleJsonResponseException e) {
                     if (e.getStatusCode() == 404) {
-                        youTubeVideosReceiver.onPlaylistNotFound("empty", e.getStatusCode());
+                        youTubeVideoReceiver.onPlaylistNotFound("empty", e.getStatusCode());
                         return;
                     } else {
                         e.printStackTrace();
@@ -373,7 +375,7 @@ public class YouTubeSearch
                     Log.d(TAG, "all items size: " + playlistItemList.size());
                 } catch (GoogleJsonResponseException e) {
                     if (e.getStatusCode() == 404) {
-                        youTubeVideosReceiver.onPlaylistNotFound(playlistId, e.getStatusCode());
+                        youTubeVideoReceiver.onPlaylistNotFound(playlistId, e.getStatusCode());
                         return;
                     } else {
                         e.printStackTrace();
@@ -423,25 +425,29 @@ public class YouTubeSearch
                 Iterator<Video> vit = videoResults.iterator();
                 while (pit.hasNext()) {
                     PlaylistItem playlistItem = pit.next();
-                    Video videoItem = vit.next();
 
-                    YouTubeVideo youTubeVideo = new YouTubeVideo();
-                    youTubeVideo.setId(playlistItem.getContentDetails().getVideoId());
-                    youTubeVideo.setTitle(playlistItem.getSnippet().getTitle());
-                    youTubeVideo.setThumbnailURL(playlistItem.getSnippet().getThumbnails()
-                            .getDefault().getUrl());
-                    //video info
-                    if (videoItem != null) {
-                        String isoTime = videoItem.getContentDetails().getDuration();
-                        String time = Utils.convertISO8601DurationToNormalTime(isoTime);
-                        youTubeVideo.setDuration(time);
-                    } else {
-                        youTubeVideo.setDuration("NA");
+                    Video videoItem = null;
+                    if (vit.hasNext()) videoItem = vit.next();
+
+                    if (playlistItem.getSnippet().getThumbnails() != null) {
+                        YouTubeVideo youTubeVideo = new YouTubeVideo();
+                        youTubeVideo.setId(playlistItem.getContentDetails().getVideoId());
+                        youTubeVideo.setTitle(playlistItem.getSnippet().getTitle());
+                        youTubeVideo.setThumbnailURL(playlistItem.getSnippet().getThumbnails()
+                                .getDefault().getUrl());
+                        //video info
+                        if (videoItem != null) {
+                            String isoTime = videoItem.getContentDetails().getDuration();
+                            String time = Utils.convertISO8601DurationToNormalTime(isoTime);
+                            youTubeVideo.setDuration(time);
+                        } else {
+                            youTubeVideo.setDuration("NA");
+                        }
+                        playlistItems.add(youTubeVideo);
                     }
-                    playlistItems.add(youTubeVideo);
                 }
 
-                youTubeVideosReceiver.onVideosReceived(playlistItems);
+                youTubeVideoReceiver.onVideosReceived(playlistItems);
             }
         }).start();
     }

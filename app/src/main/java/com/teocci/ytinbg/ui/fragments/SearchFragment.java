@@ -1,4 +1,4 @@
-package com.teocci.ytinbg.ui;
+package com.teocci.ytinbg.ui.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,7 +20,7 @@ import com.teocci.ytinbg.VideosAdapter;
 import com.teocci.ytinbg.YouTubeSearch;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
-import com.teocci.ytinbg.interfaces.YouTubeVideosReceiver;
+import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
@@ -32,9 +32,8 @@ import java.util.List;
  * Class that handles list of the videos searched on YouTube
  * Created by Teocci on 7.3.16..
  */
-public class SearchFragment extends ListFragment implements YouTubeVideosReceiver
+public class SearchFragment extends ListFragment implements YouTubeVideoReceiver
 {
-
     private static final String TAG = LogHelper.makeLogTag(SearchFragment.class);
 
     private DynamicListView videosFoundListView;
@@ -67,9 +66,10 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
                              Bundle savedInstanceState)
     {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_search, container, false);
-        loadingProgressBar = (ProgressBar) v.findViewById(R.id.progressBar);
-        return v;
+        View rootView = inflater.inflate(R.layout.fragment_search, container, false);
+        loadingProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
+
+        return rootView;
     }
 
     @Override
@@ -94,7 +94,7 @@ public class SearchFragment extends ListFragment implements YouTubeVideosReceive
         }
 
         youTubeSearch = new YouTubeSearch(getActivity(), this);
-        youTubeSearch.setYouTubeVideosReceiver(this);
+        youTubeSearch.setYouTubeVideoReceiver(this);
     }
 
     @Override
