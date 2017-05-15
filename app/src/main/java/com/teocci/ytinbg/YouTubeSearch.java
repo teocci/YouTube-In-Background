@@ -147,15 +147,19 @@ public class YouTubeSearch
             public void run()
             {
                 try {
+                    // This object is used to make YouTube Data API requests. The last
+                    // argument is required, but since we don't need anything
+                    // initialized when the HttpRequest is initialized, we override
+                    // the interface and provide a no-op function.
                     youtube = new YouTube.Builder(new NetHttpTransport(), new JacksonFactory(),
                             new HttpRequestInitializer()
-                    {
-                        @Override
-                        public void initialize(HttpRequest request) throws IOException
-                        {
+                            {
+                                @Override
+                                public void initialize(HttpRequest request) throws IOException
+                                {
 
-                        }
-                    }).setApplicationName(appName).build();
+                                }
+                            }).setApplicationName(appName).build();
 
                     YouTube.Search.List searchList;
                     YouTube.Videos.List videosList;
@@ -182,9 +186,11 @@ public class YouTubeSearch
                     videosList.setFields("items(contentDetails/duration,statistics/viewCount)");
                     videosList.set("hl", language);
 
+
                     // search Response
-                    SearchListResponse searchListResponse = searchList.execute();
-                    List<SearchResult> searchResults = searchListResponse.getItems();
+                    final SearchListResponse searchListResponse = searchList.execute();
+                    final List<SearchResult> searchResults = searchListResponse.getItems();
+
 
                     // Save all ids from searchList list in order to find video list
                     StringBuilder contentDetails = new StringBuilder();
@@ -192,7 +198,7 @@ public class YouTubeSearch
                     int ii = 0;
                     for (SearchResult result : searchResults) {
                         contentDetails.append(result.getId().getVideoId());
-                        if (ii < 49)
+                        if (ii < searchResults.size() - 1)
                             contentDetails.append(",");
                         ii++;
                     }
@@ -204,24 +210,25 @@ public class YouTubeSearch
 
                     // Make items for displaying in listView
                     ArrayList<YouTubeVideo> items = new ArrayList<>();
-                    for (int i = 0; i < searchResults.size(); i++) {
+                    int index = 0;
+                    for (SearchResult result : searchResults) {
                         YouTubeVideo item = new YouTubeVideo();
 
                         // SearchList list info
-                        item.setTitle(searchResults.get(i).getSnippet().getTitle());
-                        item.setThumbnailURL(searchResults.get(i).getSnippet().getThumbnails()
+                        item.setTitle(result.getSnippet().getTitle());
+                        item.setThumbnailURL(result.getSnippet().getThumbnails()
                                 .getDefault().getUrl());
-                        item.setId(searchResults.get(i).getId().getVideoId());
+                        item.setId(result.getId().getVideoId());
                         // Video info
-                        if (videoResults.get(i) != null) {
-                            if (videoResults.get(i).getStatistics() != null) {
-                                BigInteger viewsNumber = videoResults.get(i).getStatistics()
+                        if (videoResults.get(index) != null) {
+                            if (videoResults.get(index).getStatistics() != null) {
+                                BigInteger viewsNumber = videoResults.get(index).getStatistics()
                                         .getViewCount();
                                 String viewsFormatted = NumberFormat.getIntegerInstance().format
                                         (viewsNumber) + " views";
                                 item.setViewCount(viewsFormatted);
                             }
-                            String isoTime = videoResults.get(i).getContentDetails().getDuration();
+                            String isoTime = videoResults.get(index).getContentDetails().getDuration();
                             String time = Utils.convertISO8601DurationToNormalTime(isoTime);
                             item.setDuration(time);
                         } else {
@@ -230,6 +237,7 @@ public class YouTubeSearch
 
                         // Add to the list
                         items.add(item);
+                        index++;
                     }
 
                     youTubeVideoReceiver.onVideosReceived(items);
@@ -244,7 +252,6 @@ public class YouTubeSearch
     }
 
     /**
-     *
      * Search playlist for a current user
      */
     public void searchPlaylist()
@@ -276,7 +283,7 @@ public class YouTubeSearch
                     searchList.setChannelId(channel.getId());
                     searchList.setFields("items(id,snippet/title,snippet/thumbnails/default/url," +
                             "contentDetails/itemCount,status)");
-                    searchList.setMaxResults((long) 50);
+                    searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
                     searchList.set("hl", language);
 
                     PlaylistListResponse playListResponse = searchList.execute();
@@ -350,7 +357,7 @@ public class YouTubeSearch
                 youtube = new YouTube.Builder(transport, jsonFactory, credential)
                         .setApplicationName(appName).build();
 
-                ArrayList<PlaylistItem> playlistItemList = new ArrayList<PlaylistItem>();
+                ArrayList<PlaylistItem> playlistItemList = new ArrayList<>();
                 ArrayList<YouTubeVideo> playlistItems = new ArrayList<>();
 
                 String nextToken = "";
@@ -359,7 +366,7 @@ public class YouTubeSearch
                 try {
                     playlistItemRequest = youtube.playlistItems().list("id,contentDetails,snippet");
                     playlistItemRequest.setPlaylistId(playlistId);
-                    playlistItemRequest.setMaxResults(50l);
+                    playlistItemRequest.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
                     playlistItemRequest.setFields("items(contentDetails/videoId,snippet/title," +
                             "snippet/thumbnails/default/url),nextPageToken");
                     playlistItemRequest.set("hl", language);

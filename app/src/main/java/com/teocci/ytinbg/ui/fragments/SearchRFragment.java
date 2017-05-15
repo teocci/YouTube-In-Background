@@ -33,21 +33,39 @@ import java.util.ArrayList;
  * @author teocci@yandex.com on 2017/Apr/11
  */
 
-public class SearchRVFragment extends RecyclerFragment implements YouTubeVideoReceiver
+public class SearchRFragment extends RecyclerFragment implements YouTubeVideoReceiver
 {
-    private static final String TAG = LogHelper.makeLogTag(SearchRVFragment.class);
+    private static final String TAG = LogHelper.makeLogTag(SearchRFragment.class);
 
     private Handler handler;
     private YouTubeSearch youTubeSearch;
     private ProgressBar loadingProgressBar;
-    private NetworkConf networkConf;
 
-    public static SearchRVFragment newInstance()
+    public static SearchRFragment newInstance()
     {
-        SearchRVFragment fragment = new SearchRVFragment();
+        SearchRFragment fragment = new SearchRFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+
+        handler = new Handler();
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState)
+    {
+        // Inflate the layout for this fragment
+        View rootView = super.onCreateView(inflater, container, savedInstanceState);
+        loadingProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
+
+        return rootView;
     }
 
     @Override
@@ -85,34 +103,13 @@ public class SearchRVFragment extends RecyclerFragment implements YouTubeVideoRe
         ).show();
 
         YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
-                .create(videosAdapter.getYouTubeVideos(position));
+                .create(videoListAdapter.getYouTubeVideos(position));
 
         Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
         serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
         serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videosAdapter.getYouTubeVideos(position));
+        serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideos(position));
         getActivity().startService(serviceIntent);
-    }
-
-
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-
-        handler = new Handler();
-        networkConf = new NetworkConf(getActivity());
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState)
-    {
-        // Inflate the layout for this fragment
-        View rootView = super.onCreateView(inflater, container, savedInstanceState);
-        loadingProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
-
-        return rootView;
     }
 
     @Override
@@ -172,13 +169,13 @@ public class SearchRVFragment extends RecyclerFragment implements YouTubeVideoRe
     @Override
     public void onVideosReceived(final ArrayList<YouTubeVideo> youTubeVideos)
     {
-        if (videosAdapter != null) {
+        if (videoListAdapter != null) {
             Log.e(TAG, youTubeVideos.toString());
             getActivity().runOnUiThread(new Runnable()
             {
                 public void run()
                 {
-                    videosAdapter.setYouTubeVideos(youTubeVideos);
+                    videoListAdapter.setYouTubeVideos(youTubeVideos);
                 }
 
             });

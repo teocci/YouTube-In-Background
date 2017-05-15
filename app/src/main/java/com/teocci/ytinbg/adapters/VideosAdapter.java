@@ -220,7 +220,12 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
     private static final NavigableMap<Long, String> suffixes = new TreeMap<>();
 
     static {
-        suffixes.put(1_000L, " K");
+        suffixes.put(1_000L, "K");
+        suffixes.put(1_000_000L, "M");
+        suffixes.put(1_000_000_000L, "B");
+        suffixes.put(1_000_000_000_000L, "Q");
+        suffixes.put(1_000_000_000_000_000L, "P");
+        suffixes.put(1_000_000_000_000_000_000L, "S");
     }
 
     private String formatViewCount(String viewCounts)
@@ -228,9 +233,28 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         String[] split = viewCounts.split(" ");
         String[] segments = split[0].split(",");
 
+//        return formatSting(segments) + " " + split[1];
+        return formatLong(segmentToLong(segments)) + " " + split[1];
+    }
+
+    private long segmentToLong(String[] segments)
+    {
+        long number = 0;
+        int count = segments.length - 1;
+        for (String segment : segments) {
+            number += Integer.parseInt(segment) * Math.pow(10, 3 * count--);
+            Log.e(TAG, "segment: " + segment + " --> " + number);
+        }
+
+        Log.e(TAG, "number: " + number);
+        return number;
+    }
+
+    private String formatSting(String[] segments)
+    {
         int count = segments.length;
-        String suffix = count > 2 ? " M" : count > 1  ? " K" : "";
-        count = count > 2 ? count - 2 : count > 1  ?  count - 1 :  count;
+        String suffix = count > 2 ? " M" : count > 1 ? " K" : "";
+        count = count > 2 ? count - 2 : count > 1 ? count - 1 : count;
         String number = "";
         for (String segment : segments) {
             number += segment;
@@ -240,8 +264,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         }
 
         Log.e(TAG, "number: " + number);
-
-        return number + suffix + " " + split[1];
+        return number + suffix;
     }
 
     private String formatLong(long value)

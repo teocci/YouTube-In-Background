@@ -33,11 +33,12 @@ import com.teocci.ytinbg.JsonAsyncTask;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
+import com.teocci.ytinbg.ui.fragments.FavoriteRFragment;
 import com.teocci.ytinbg.ui.fragments.FavoritesFragment;
 import com.teocci.ytinbg.ui.fragments.PlaylistFragment;
 import com.teocci.ytinbg.ui.fragments.RecentlyWatchedFragment;
-import com.teocci.ytinbg.ui.fragments.SearchFragment;
-import com.teocci.ytinbg.ui.fragments.SearchRVFragment;
+import com.teocci.ytinbg.ui.fragments.RecentlyWatchedRFragment;
+import com.teocci.ytinbg.ui.fragments.SearchRFragment;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
 
@@ -59,8 +60,8 @@ public class MainActivity extends AppCompatActivity
 
     private int initialColors[] = new int[2];
 
-    private SearchRVFragment searchFragment;
-    private RecentlyWatchedFragment recentlyPlayedFragment;
+    private SearchRFragment searchFragment;
+    private RecentlyWatchedRFragment recentlyPlayedFragment;
 
     private int[] tabIcons = {
             R.drawable.ic_favorite_tab_icon,
@@ -158,9 +159,9 @@ public class MainActivity extends AppCompatActivity
     {
         PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager());
 
-        searchFragment = SearchRVFragment.newInstance();
-        recentlyPlayedFragment = new RecentlyWatchedFragment();
-        pagerAdapter.addFragment(new FavoritesFragment(), getString(R.string.fragment_tab_favorites));
+        searchFragment = SearchRFragment.newInstance();
+        recentlyPlayedFragment = RecentlyWatchedRFragment.newInstance();
+        pagerAdapter.addFragment(FavoriteRFragment.newInstance(), getString(R.string.fragment_tab_favorites));
         pagerAdapter.addFragment(recentlyPlayedFragment, getString(R.string
                 .fragment_tab_recently_watched));
         pagerAdapter.addFragment(searchFragment, getString(R.string.fragment_tab_search));
