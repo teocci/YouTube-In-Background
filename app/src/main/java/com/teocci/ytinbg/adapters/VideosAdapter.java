@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -16,21 +18,21 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.nhaarman.listviewanimations.itemmanipulation.swipedismiss.undo.UndoAdapter;
-import com.nhaarman.listviewanimations.util.Swappable;
 import com.squareup.picasso.Picasso;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
+import com.teocci.ytinbg.interfaces.ItemTouchListener;
+import com.teocci.ytinbg.interfaces.OnLoadMoreListener;
+import com.teocci.ytinbg.interfaces.OnStartDragListener;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.DownloadActivity;
 import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
+import com.teocci.ytinbg.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
@@ -38,7 +40,8 @@ import javax.annotation.Nullable;
  * Custom ArrayAdapter which enables setup of a videoList view row views
  * Created by teocci on 8.2.16..
  */
-public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewHolder> implements Swappable, UndoAdapter
+public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewHolder>
+        implements ItemTouchListener
 {
     private static final String TAG = LogHelper.makeLogTag(VideosAdapter.class);
 
@@ -48,6 +51,8 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
     private boolean isFavoriteList;
 
     private AdapterView.OnItemClickListener onItemClickListener;
+    private OnStartDragListener onStartDragListener;
+    private OnLoadMoreListener onLoadMoreListener;
 
     public VideosAdapter(Activity context, boolean isFavoriteList)
     {
@@ -55,6 +60,8 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         this.favorites = new ArrayList<>();
         this.context = context;
         this.isFavoriteList = isFavoriteList;
+        this.onItemClickListener = null;
+        this.onStartDragListener = null;
     }
 
     public VideosAdapter(Activity context, List<YouTubeVideo> videoList, boolean isFavoriteList)
@@ -63,6 +70,8 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         this.favorites = new ArrayList<>();
         this.context = context;
         this.isFavoriteList = isFavoriteList;
+        this.onItemClickListener = null;
+        this.onStartDragListener = null;
     }
 
     @Override
@@ -75,7 +84,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
     }
 
     @Override
-    public void onBindViewHolder(VideoViewHolder videoViewHolder, final int position)
+    public void onBindViewHolder(final VideoViewHolder videoViewHolder, int position)
     {
         final YouTubeVideo searchResult = videoList.get(position);
 
@@ -86,7 +95,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
                 .into(videoViewHolder.thumbnail);
         videoViewHolder.title.setText(searchResult.getTitle());
         videoViewHolder.duration.setText(searchResult.getDuration());
-        videoViewHolder.viewCount.setText(formatViewCount(searchResult.getViewCount()));
+        videoViewHolder.viewCount.setText(Utils.formatViewCount(searchResult.getViewCount()));
 
         //set checked if exists in database
         boolean isFavorite = YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
@@ -114,7 +123,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
                     YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).delete
                             (searchResult.getId());
                     if (isFavoriteList) {
-                        videoList.remove(position);
+                        videoList.remove(videoViewHolder.getAdapterPosition());
                         notifyDataSetChanged();
                     }
                 }
@@ -153,6 +162,24 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         return videoList.size();
     }
 
+    @Override
+    public boolean onItemMove(int fromPosition, int toPosition)
+    {
+        Collections.swap(videoList, fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
+        return true;
+    }
+
+    @Override
+    public void onItemDismiss(int position)
+    {
+        if (position >= videoList.size()) return;
+        YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                .delete(videoList.get(position).getId());
+        videoList.remove(position);
+        notifyItemRemoved(position);
+    }
+
     public YouTubeVideo getYouTubeVideos(int position)
     {
         if (position >= videoList.size()) return null;
@@ -160,7 +187,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
     }
 
     /**
-     * A common adapter modification or reset mechanism. As with ListAdapter,
+     * A common adapter UPDATE mechanism. As with VideosAdapter,
      * calling notifyDataSetChanged() will trigger the RecyclerView to update
      * the view. However, this method will not trigger any of the RecyclerView
      * animation features.
@@ -169,7 +196,30 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
     {
         videoList.clear();
         videoList.addAll(youTubeVideos);
+        notifyDataSetChanged();
+    }
 
+    /**
+     * Inserting a new item at the head of the list. This uses a specialized
+     * RecyclerView method, notifyItemInserted(), to trigger any enabled item
+     * animations in addition to updating the view.
+     */
+    public void addMoreYouTubeVideos(ArrayList<YouTubeVideo> youTubeVideos)
+    {
+        videoList.addAll(youTubeVideos);
+        Log.e(TAG, "Adding " + youTubeVideos.size() + " more elements. Total: " + videoList.size());
+        notifyDataSetChanged();
+    }
+
+    /**
+     * A common adapter reset mechanism. As with VideosAdapter,
+     * calling notifyDataSetChanged() will trigger the RecyclerView to update
+     * the view. However, this method will not trigger any of the RecyclerView
+     * animation features.
+     */
+    public void clearYouTubeVideos()
+    {
+        videoList.clear();
         notifyDataSetChanged();
     }
 
@@ -199,8 +249,6 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         notifyDataSetChanged();
     }
 
-    @NonNull
-    @Override
     public View getUndoView(int i, @Nullable View convertView, @NonNull ViewGroup viewGroup)
     {
         View view = convertView;
@@ -209,78 +257,9 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         }
         return view;
     }
-
-    @NonNull
-    @Override
     public View getUndoClickView(@NonNull View view)
     {
         return view.findViewById(R.id.button_undo_row);
-    }
-
-    private static final NavigableMap<Long, String> suffixes = new TreeMap<>();
-
-    static {
-        suffixes.put(1_000L, "K");
-        suffixes.put(1_000_000L, "M");
-        suffixes.put(1_000_000_000L, "B");
-        suffixes.put(1_000_000_000_000L, "Q");
-        suffixes.put(1_000_000_000_000_000L, "P");
-        suffixes.put(1_000_000_000_000_000_000L, "S");
-    }
-
-    private String formatViewCount(String viewCounts)
-    {
-        String[] split = viewCounts.split(" ");
-        String[] segments = split[0].split(",");
-
-//        return formatSting(segments) + " " + split[1];
-        return formatLong(segmentToLong(segments)) + " " + split[1];
-    }
-
-    private long segmentToLong(String[] segments)
-    {
-        long number = 0;
-        int count = segments.length - 1;
-        for (String segment : segments) {
-            number += Integer.parseInt(segment) * Math.pow(10, 3 * count--);
-            Log.e(TAG, "segment: " + segment + " --> " + number);
-        }
-
-        Log.e(TAG, "number: " + number);
-        return number;
-    }
-
-    private String formatSting(String[] segments)
-    {
-        int count = segments.length;
-        String suffix = count > 2 ? " M" : count > 1 ? " K" : "";
-        count = count > 2 ? count - 2 : count > 1 ? count - 1 : count;
-        String number = "";
-        for (String segment : segments) {
-            number += segment;
-            if (count-- == 1) break;
-            number += ",";
-            Log.e(TAG, "segment: " + segment + " --> " + number);
-        }
-
-        Log.e(TAG, "number: " + number);
-        return number + suffix;
-    }
-
-    private String formatLong(long value)
-    {
-        //Long.MIN_VALUE == -Long.MIN_VALUE so we need an adjustment here
-        if (value == Long.MIN_VALUE) return formatLong(Long.MIN_VALUE + 1);
-        if (value < 0) return "-" + formatLong(-value);
-        if (value < 1000) return Long.toString(value); //deal with easy case
-
-        Map.Entry<Long, String> e = suffixes.floorEntry(value);
-        Long divideBy = e.getKey();
-        String suffix = e.getValue();
-
-        long truncated = value / (divideBy / 10); //the number part of the output times 10
-        boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);
-        return hasDecimal ? (truncated / 10d) + suffix : (truncated / 10) + suffix;
     }
 
     private void doShareLink(String text, String link)
@@ -291,11 +270,10 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, context.getResources().getString(R.string.app_name));
-            shareIntent.putExtra(Intent.EXTRA_TEXT, text + " https://youtu.be/" + link);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, text + " " + Config.YT_PREFIX_LINK + link);
         } else {
-
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, context.getResources().getString(R.string.app_name));
-            shareIntent.putExtra(Intent.EXTRA_TEXT, "https://youtu.be/" + link);
+            shareIntent.putExtra(Intent.EXTRA_TEXT, Config.YT_PREFIX_LINK + link);
         }
 
 //        chooserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -305,7 +283,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
     private void doDownloadVideo(String link)
     {
         Intent downloadIntent = new Intent(context, DownloadActivity.class);
-        downloadIntent.putExtra(Config.YOUTUBE_LINK, "https://youtu.be/" + link);
+        downloadIntent.putExtra(Config.YOUTUBE_LINK, Config.YT_PREFIX_LINK + link);
         context.startActivity(downloadIntent);
     }
 
@@ -322,10 +300,42 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         }
     }
 
+    public void setOnStartDragListener(OnStartDragListener onStartDragListener)
+    {
+        this.onStartDragListener = onStartDragListener;
+    }
+
+    private void onItemHolderStartDrag(VideoViewHolder itemHolder)
+    {
+        if (onStartDragListener != null) {
+            onStartDragListener.onStartDrag(itemHolder);
+        }
+    }
+
+    public void setOnLoadMoreListener(OnLoadMoreListener onLoadMoreListener)
+    {
+        this.onLoadMoreListener = onLoadMoreListener;
+    }
+
+    public void removeOnLoadMoreListener()
+    {
+        if (onLoadMoreListener != null) {
+            onLoadMoreListener = null;
+        }
+    }
+
+    public void onItemHolderOnLoadMore()
+    {
+        if (onLoadMoreListener != null) {
+            onLoadMoreListener.onLoadMore();
+        }
+    }
+
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder
-    public static class VideoViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener
+    public static class VideoViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,
+            View.OnTouchListener
     {
         public ImageView thumbnail;
         public TextView title;
@@ -357,6 +367,16 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         public void onClick(View v)
         {
             videosAdapter.onItemHolderClick(this);
+        }
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event)
+        {
+            // Start a drag whenever the handle view it touched
+            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
+                videosAdapter.onItemHolderStartDrag(this);
+            }
+            return false;
         }
     }
 }

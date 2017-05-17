@@ -6,6 +6,10 @@ import com.teocci.ytinbg.model.YouTubeVideo;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 /**
  * Helper methods
@@ -14,6 +18,70 @@ import java.util.List;
 public class Utils
 {
     private static final String TAG = "Utils";
+
+    private static final NavigableMap<Long, String> suffixes = new TreeMap<>();
+
+    static {
+        suffixes.put(1_000L, "K");
+        suffixes.put(1_000_000L, "M");
+        suffixes.put(1_000_000_000L, "B");
+        suffixes.put(1_000_000_000_000L, "Q");
+        suffixes.put(1_000_000_000_000_000L, "P");
+        suffixes.put(1_000_000_000_000_000_000L, "S");
+    }
+
+    public static String formatViewCount(String viewCounts)
+    {
+        String[] split = viewCounts.split(" ");
+        String[] segments = split[0].split(",");
+
+//        return formatSting(segments) + " " + split[1];
+//        조회수 173,893회
+
+        return formatLong(segmentToLong(segments)) + " " + split[1];
+    }
+
+    private static long segmentToLong(String[] segments)
+    {
+        long number = 0;
+        int count = segments.length - 1;
+        for (String segment : segments) {
+            number += Integer.parseInt(segment) * Math.pow(10, 3 * count--);
+        }
+
+        return number;
+    }
+
+    public static String formatSting(String[] segments)
+    {
+        int count = segments.length;
+        String suffix = count > 2 ? " M" : count > 1 ? " K" : "";
+        count = count > 2 ? count - 2 : count > 1 ? count - 1 : count;
+        String number = "";
+        for (String segment : segments) {
+            number += segment;
+            if (count-- == 1) break;
+            number += ",";
+        }
+
+        return number + suffix;
+    }
+
+    public static String formatLong(long value)
+    {
+        //Long.MIN_VALUE == -Long.MIN_VALUE so we need an adjustment here
+        if (value == Long.MIN_VALUE) return formatLong(Long.MIN_VALUE + 1);
+        if (value < 0) return "-" + formatLong(-value);
+        if (value < 1000) return Long.toString(value); //deal with easy case
+
+        Map.Entry<Long, String> e = suffixes.floorEntry(value);
+        Long divideBy = e.getKey();
+        String suffix = e.getValue();
+
+        long truncated = value / (divideBy / 10); //the number part of the output times 10
+        boolean hasDecimal = truncated < 100 && (truncated / 10d) != (truncated / 10);
+        return hasDecimal ? (truncated / 10d) + suffix : (truncated / 10) + suffix;
+    }
 
     /**
      * Converting ISO8601 formatted duration to normal readable time

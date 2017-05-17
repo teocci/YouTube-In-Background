@@ -3,52 +3,57 @@ package com.teocci.ytinbg.ui.fragments;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.ListFragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.nhaarman.listviewanimations.appearance.simple.SwingBottomInAnimationAdapter;
-import com.nhaarman.listviewanimations.itemmanipulation.DynamicListView;
+import com.google.api.services.youtube.YouTube;
 import com.teocci.ytinbg.BackgroundAudioService;
 import com.teocci.ytinbg.R;
-import com.teocci.ytinbg.VideosAdapter;
 import com.teocci.ytinbg.YouTubeSearch;
-import com.teocci.ytinbg.model.YouTubeVideo;
+import com.teocci.ytinbg.adapters.VideosAdapter;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
+import com.teocci.ytinbg.interfaces.OnLoadMoreListener;
 import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
+import com.teocci.ytinbg.model.YouTubeVideo;
+import com.teocci.ytinbg.ui.decoration.DividerDecoration;
 import com.teocci.ytinbg.utils.Config;
-import com.teocci.ytinbg.utils.LogHelper;
-import com.teocci.ytinbg.utils.NetworkConf;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
- * Class that handles list of the videos searched on YouTube
- * Created by Teocci on 7.3.16..
+ * Created by teocci.
+ *
+ * @author teocci@yandex.com on 2017/Apr/11
  */
-public class SearchFragment extends ListFragment implements YouTubeVideoReceiver
-{
-    private static final String TAG = LogHelper.makeLogTag(SearchFragment.class);
 
-    private DynamicListView videosFoundListView;
+public class SearchFragment extends RecyclerFragment implements YouTubeVideoReceiver, OnLoadMoreListener
+{
+    private static final String TAG = SearchFragment.class.getSimpleName();
+
     private Handler handler;
-    private ArrayList<YouTubeVideo> searchResultsList;
-    private ArrayList<YouTubeVideo> scrollResultsList;
-    private VideosAdapter videoListAdapter;
     private YouTubeSearch youTubeSearch;
     private ProgressBar loadingProgressBar;
-    private NetworkConf networkConf;
 
-    private int onScrollIndex = 0;
-    private int mPrevTotalItemCount = 0;
+    private String currentQuery;
+    private String nextPageToken;
+    private int visibleThreshold = 1;
+    private int lastVisibleItem, totalItemCount;
+    private boolean isLoading;
 
-    public SearchFragment() {}
+    public static SearchFragment newInstance()
+    {
+        SearchFragment fragment = new SearchFragment();
+        Bundle args = new Bundle();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -56,9 +61,6 @@ public class SearchFragment extends ListFragment implements YouTubeVideoReceiver
         super.onCreate(savedInstanceState);
 
         handler = new Handler();
-        searchResultsList = new ArrayList<>();
-        scrollResultsList = new ArrayList<>();
-        networkConf = new NetworkConf(getActivity());
     }
 
     @Override
@@ -66,10 +68,71 @@ public class SearchFragment extends ListFragment implements YouTubeVideoReceiver
                              Bundle savedInstanceState)
     {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_search, container, false);
+        View rootView = super.onCreateView(inflater, container, savedInstanceState);
         loadingProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
 
+        final LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
+        {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy)
+            {
+                super.onScrolled(recyclerView, dx, dy);
+                totalItemCount = linearLayoutManager.getItemCount();
+                lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
+//                Log.e(TAG, "totalItemCount: " + totalItemCount + " lastVisibleItem: " + lastVisibleItem);
+                if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
+                    videoListAdapter.onItemHolderOnLoadMore();
+                    isLoading = true;
+                }
+            }
+        });
+
         return rootView;
+    }
+
+    @Override
+    protected RecyclerView.LayoutManager getLayoutManager()
+    {
+        return new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
+    }
+
+    @Override
+    protected RecyclerView.ItemDecoration getItemDecoration()
+    {
+        //We must draw dividers ourselves if we want them in a list
+        return new DividerDecoration(getActivity());
+    }
+
+    @Override
+    protected VideosAdapter getAdapter()
+    {
+        return new VideosAdapter(getActivity(), false);
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+    {
+        // Check network connectivity
+        if (!networkConf.isNetworkAvailable()) {
+            networkConf.createNetErrorDialog();
+            return;
+        }
+
+        Toast.makeText(
+                getContext(),
+                getResources().getString(R.string.toast_message_loading),
+                Toast.LENGTH_SHORT
+        ).show();
+
+        YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                .create(videoListAdapter.getYouTubeVideos(position));
+
+        Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
+        serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
+        serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
+        serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideos(position));
+        getActivity().startService(serviceIntent);
     }
 
     @Override
@@ -101,21 +164,7 @@ public class SearchFragment extends ListFragment implements YouTubeVideoReceiver
     public void onActivityCreated(Bundle savedInstanceState)
     {
         super.onActivityCreated(savedInstanceState);
-        videosFoundListView = (DynamicListView) getListView();
-        setupListViewAndAdapter();
-        addListeners();
-    }
-
-    /**
-     * Setups custom adapter which enables animations when adding elements
-     */
-    private void setupListViewAndAdapter()
-    {
-        videoListAdapter = new VideosAdapter(getActivity(), searchResultsList, false);
-        SwingBottomInAnimationAdapter animationAdapter = new SwingBottomInAnimationAdapter
-                (videoListAdapter);
-        animationAdapter.setAbsListView(videosFoundListView);
-        videosFoundListView.setAdapter(animationAdapter);
+//        videosFoundListView = (DynamicListView) getListView();
     }
 
     /**
@@ -125,73 +174,15 @@ public class SearchFragment extends ListFragment implements YouTubeVideoReceiver
      */
     public void searchQuery(String query)
     {
+        currentQuery = query;
         // Check network connectivity
         if (!networkConf.isNetworkAvailable()) {
             networkConf.createNetErrorDialog();
             return;
         }
-
+        videoListAdapter.clearYouTubeVideos();
         loadingProgressBar.setVisibility(View.VISIBLE);
-        onScrollIndex = 0;
-        youTubeSearch.searchVideos(query);
-    }
-
-    /**
-     * Adds listener for item list selection and starts BackgroundAudioService
-     */
-    private void addListeners()
-    {
-        videosFoundListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
-        {
-
-            @Override
-            public void onItemClick(AdapterView<?> av, View v, int pos,
-                                    long id)
-            {
-                // Check network connectivity
-                if (!networkConf.isNetworkAvailable()) {
-                    networkConf.createNetErrorDialog();
-                    return;
-                }
-
-                Toast.makeText(
-                        getContext(),
-                        getResources().getString(R.string.toast_message_loading),
-                        Toast.LENGTH_SHORT
-                ).show();
-
-                YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
-                        .create(searchResultsList.get(pos));
-
-                Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
-                serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
-                serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
-                serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, searchResultsList.get(pos));
-                getActivity().startService(serviceIntent);
-            }
-        });
-
-        videosFoundListView.setOnScrollListener(new AbsListView.OnScrollListener()
-        {
-            @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) { }
-
-            @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,
-                                 int totalItemCount)
-            {
-
-                // Whenever reaches the quote of added videos, do not load more
-                if (totalItemCount < Config.NUMBER_OF_VIDEOS_RETURNED) {
-                    if (view.getAdapter() != null &&
-                            ((firstVisibleItem + visibleItemCount) >= totalItemCount) &&
-                            totalItemCount != mPrevTotalItemCount) {
-                        mPrevTotalItemCount = totalItemCount;
-                        addMoreData();
-                    }
-                }
-            }
-        });
+        youTubeSearch.searchVideos(currentQuery);
     }
 
     /**
@@ -200,12 +191,41 @@ public class SearchFragment extends ListFragment implements YouTubeVideoReceiver
      * @param youTubeVideos - videos to be shown in list view
      */
     @Override
-    public void onVideosReceived(ArrayList<YouTubeVideo> youTubeVideos)
+    public void onVideosReceived(final ArrayList<YouTubeVideo> youTubeVideos,
+                                 final YouTube.Search.List searchList,
+                                 String nextPageToken)
     {
-        videosFoundListView.smoothScrollToPosition(0);
-        searchResultsList.clear();
-        scrollResultsList.clear();
-        scrollResultsList.addAll(youTubeVideos);
+        if (videoListAdapter != null) {
+            getActivity().runOnUiThread(new Runnable()
+            {
+                public void run()
+                {
+                    if (searchList.getPageToken() == null) {
+                        Log.e(TAG, "Adding First Page Videos");
+                        videoListAdapter.setYouTubeVideos(youTubeVideos);
+                        recyclerView.smoothScrollToPosition(0);
+                    } else {
+                        Log.e(TAG, "Adding Next Page Videos");
+                        videoListAdapter.addMoreYouTubeVideos(youTubeVideos);
+                    }
+                }
+
+            });
+
+            this.nextPageToken = nextPageToken;
+            if (nextPageToken != null) {
+                Log.e(TAG, "Adding setOnLoadMoreListener");
+                videoListAdapter.setOnLoadMoreListener(this);
+            } else {
+                Log.e(TAG, "Removing setOnLoadMoreListener");
+                videoListAdapter.removeOnLoadMoreListener();
+            }
+        }
+
+//        recyclerView.smoothScrollToPosition(0);
+//        searchResultsList.clear();
+//        scrollResultsList.clear();
+//        scrollResultsList.addAll(youTubeVideos);
 
         handler.post(new Runnable()
         {
@@ -214,8 +234,6 @@ public class SearchFragment extends ListFragment implements YouTubeVideoReceiver
                 loadingProgressBar.setVisibility(View.INVISIBLE);
             }
         });
-
-        addMoreData();
     }
 
     /**
@@ -228,34 +246,21 @@ public class SearchFragment extends ListFragment implements YouTubeVideoReceiver
     @Override
     public void onPlaylistNotFound(String playlistId, int errorCode) { }
 
-    /**
-     * Adds 10 items at the bottom of the list when list is scrolled to the end (10th element)
-     * 50 is max number of videos
-     * If number is between, so no full step is available (step is 10), add elements:
-     * scrollResultsList.size() % 10
-     */
-    private void addMoreData()
+    @Override
+    public void onLoadMore()
     {
-        List<YouTubeVideo> subList;
-        if (scrollResultsList.size() < (onScrollIndex + 10)) {
-            subList = scrollResultsList.subList(onScrollIndex, scrollResultsList.size());
-            onScrollIndex += (scrollResultsList.size() % 10);
-        } else {
-            subList = scrollResultsList.subList(onScrollIndex, onScrollIndex + 10);
-            onScrollIndex += 10;
-        }
+        //Here adding null object to last position,check the condition in getItemViewType() method,if object is null then display progress
+//        dataModels.add(null);
+//        simpleAdapter.notifyItemInserted(dataModels.size() - 1);
 
-        if (!subList.isEmpty()) {
-            searchResultsList.addAll(subList);
-            handler.post(new Runnable()
+        new Handler().postDelayed(new Runnable()
+        {
+            @Override
+            public void run()
             {
-                public void run()
-                {
-                    if (videoListAdapter != null) {
-                        videoListAdapter.notifyDataSetChanged();
-                    }
-                }
-            });
-        }
+                youTubeSearch.searchNextVideos(currentQuery, nextPageToken);
+                isLoading = false;
+            }
+        }, 1000);
     }
 }

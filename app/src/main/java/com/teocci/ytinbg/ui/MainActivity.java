@@ -33,12 +33,11 @@ import com.teocci.ytinbg.JsonAsyncTask;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
-import com.teocci.ytinbg.ui.fragments.FavoriteRFragment;
 import com.teocci.ytinbg.ui.fragments.FavoritesFragment;
 import com.teocci.ytinbg.ui.fragments.PlaylistFragment;
 import com.teocci.ytinbg.ui.fragments.RecentlyWatchedFragment;
-import com.teocci.ytinbg.ui.fragments.RecentlyWatchedRFragment;
-import com.teocci.ytinbg.ui.fragments.SearchRFragment;
+import com.teocci.ytinbg.ui.fragments.SearchFragment;
+import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
 
@@ -53,15 +52,15 @@ import java.util.List;
  */
 public class MainActivity extends AppCompatActivity
 {
-    private static final String TAG = LogHelper.makeLogTag(MainActivity.class);
+    private static final String TAG = MainActivity.class.getSimpleName();
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
     private int initialColors[] = new int[2];
 
-    private SearchRFragment searchFragment;
-    private RecentlyWatchedRFragment recentlyPlayedFragment;
+    private SearchFragment searchFragment;
+    private RecentlyWatchedFragment recentlyPlayedFragment;
 
     private int[] tabIcons = {
             R.drawable.ic_favorite_tab_icon,
@@ -159,13 +158,12 @@ public class MainActivity extends AppCompatActivity
     {
         PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager());
 
-        searchFragment = SearchRFragment.newInstance();
-        recentlyPlayedFragment = RecentlyWatchedRFragment.newInstance();
-        pagerAdapter.addFragment(FavoriteRFragment.newInstance(), getString(R.string.fragment_tab_favorites));
-        pagerAdapter.addFragment(recentlyPlayedFragment, getString(R.string
-                .fragment_tab_recently_watched));
-        pagerAdapter.addFragment(searchFragment, getString(R.string.fragment_tab_search));
-        pagerAdapter.addFragment(new PlaylistFragment(), getString(R.string.fragment_tab_playlist));
+        searchFragment = SearchFragment.newInstance();
+        recentlyPlayedFragment = RecentlyWatchedFragment.newInstance();
+        pagerAdapter.addFragment(FavoritesFragment.newInstance(), null);
+        pagerAdapter.addFragment(recentlyPlayedFragment, null);
+        pagerAdapter.addFragment(searchFragment, null);
+        pagerAdapter.addFragment(new PlaylistFragment(), null);
         viewPager.setAdapter(pagerAdapter);
     }
 
@@ -305,6 +303,14 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        MenuItem removeAccountItem = menu.findItem(R.id.action_remove_account);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
+
+        if (chosenAccountName != null) {
+            removeAccountItem.setVisible(true);
+        }
+
         return true;
     }
 
@@ -323,37 +329,48 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_about) {
-            DateFormat monthFormat = new SimpleDateFormat("MMMM");
-            DateFormat yearFormat = new SimpleDateFormat("yyyy");
-            Date date = new Date();
+        switch (id) {
+            case R.id.action_about:
+                DateFormat monthFormat = new SimpleDateFormat("MMMM");
+                DateFormat yearFormat = new SimpleDateFormat("yyyy");
+                Date date = new Date();
 
-            AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-            alertDialog.setTitle("Teocci");
-            alertDialog.setIcon(R.mipmap.ic_launcher);
-            alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@naver" +
-                    ".com\n\n" +
-                    monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                    new DialogInterface.OnClickListener()
-                    {
-                        public void onClick(DialogInterface dialog, int which)
+                AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+                alertDialog.setTitle("Teocci");
+                alertDialog.setIcon(R.mipmap.ic_launcher);
+                alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex" +
+                        ".com\n\n" +
+                        monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        new DialogInterface.OnClickListener()
                         {
-                            dialog.dismiss();
-                        }
-                    });
-            alertDialog.show();
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                dialog.dismiss();
+                            }
+                        });
+                alertDialog.show();
 
-            return true;
-        } else if (id == R.id.action_clear_list) {
-            YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
-                    .deleteAll();
-            recentlyPlayedFragment.clearRecentlyPlayedList();
-            return true;
-        } else if (id == R.id.action_search) {
-            MenuItemCompat.expandActionView(item);
-            return true;
+                return true;
+            case R.id.action_clear_list:
+                YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                        .deleteAll();
+                recentlyPlayedFragment.clearRecentlyPlayedList();
+                return true;
+            case R.id.action_remove_account:
+                SharedPreferences sp = PreferenceManager
+                        .getDefaultSharedPreferences(getApplicationContext());
+                String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
+
+                if (chosenAccountName != null) {
+                    sp.edit().remove(Config.ACCOUNT_NAME).apply();
+                }
+                return true;
+            case R.id.action_search:
+                MenuItemCompat.expandActionView(item);
+                return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 

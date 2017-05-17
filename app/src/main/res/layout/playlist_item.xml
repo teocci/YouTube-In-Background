@@ -9,7 +9,7 @@
     android:padding="16dp">
 
     <ImageView
-        android:id="@+id/video_thumbnail"
+        android:id="@+id/playlist_thumbnail"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_marginEnd="10dp"
@@ -32,7 +32,7 @@
             android:textSize="15sp" />
 
         <TextView
-            android:id="@+id/videos_number"
+            android:id="@+id/playlist_video_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center|start"
@@ -41,7 +41,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/privacy"
+            android:id="@+id/playlist_privacy"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|start"

@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.utils.Config;
-import com.teocci.ytinbg.utils.LogHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,16 +31,21 @@ import at.huber.youtubeExtractor.VideoMeta;
 import at.huber.youtubeExtractor.YouTubeExtractor;
 import at.huber.youtubeExtractor.YtFile;
 
+/**
+ * Created by teocci.
+ *
+ * @author teocci@yandex.com on 2017-May-15
+ */
+
 public class DownloadActivity extends Activity
 {
-    private static final String TAG = LogHelper.makeLogTag(DownloadActivity.class);
-    private static final int ITAG_FOR_AUDIO = 140;
+    private static final String TAG = DownloadActivity.class.getSimpleName();
 
-    private static String youtubeLink;
+    protected static String youtubeLink;
 
-    private LinearLayout mainLayout;
-    private ProgressBar mainProgressBar;
-    private List<YtFragmentedVideo> formatsToShowList;
+    protected LinearLayout mainLayout;
+    protected ProgressBar mainProgressBar;
+    protected List<YtFragmentedVideo> formatsToShowList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -53,10 +57,10 @@ public class DownloadActivity extends Activity
         mainProgressBar = (ProgressBar) findViewById(R.id.prgrBar);
         Intent intent = getIntent();
         String ytLink = intent.getStringExtra(Config.YOUTUBE_LINK); //if it's a string you stored.
+
         // Check how it was started and if we can get the youtube link
-        if (savedInstanceState == null && ytLink!=null && !ytLink.trim().isEmpty()) {
-            if (ytLink != null
-                    && (ytLink.contains("://youtu.be/") || ytLink.contains("youtube.com/watch?v="))) {
+        if (savedInstanceState == null && ytLink != null && !ytLink.trim().isEmpty()) {
+            if (ytLink != null && (ytLink.contains(Config.YT_SHORT_LINK) || ytLink.contains(Config.YT_WATCH_LINK))) {
                 youtubeLink = ytLink;
                 // We have a valid link
                 getYoutubeDownloadUrl(youtubeLink);
@@ -71,7 +75,7 @@ public class DownloadActivity extends Activity
         }
     }
 
-    private void getYoutubeDownloadUrl(String youtubeLink)
+    protected void getYoutubeDownloadUrl(String youtubeLink)
     {
         new YouTubeExtractor(this)
         {
@@ -110,7 +114,7 @@ public class DownloadActivity extends Activity
         }.extract(youtubeLink, true, false);
     }
 
-    private void addFormatToList(YtFile ytFile, SparseArray<YtFile> ytFiles)
+    protected void addFormatToList(YtFile ytFile, SparseArray<YtFile> ytFiles)
     {
         int height = ytFile.getFormat().getHeight();
         if (height != -1) {
@@ -126,7 +130,7 @@ public class DownloadActivity extends Activity
         if (ytFile.getFormat().isDashContainer()) {
             if (height > 0) {
                 frVideo.videoFile = ytFile;
-                frVideo.audioFile = ytFiles.get(ITAG_FOR_AUDIO);
+                frVideo.audioFile = ytFiles.get(Config.YT_ITAG_FOR_AUDIO);
             } else {
                 frVideo.audioFile = ytFile;
             }
@@ -136,16 +140,18 @@ public class DownloadActivity extends Activity
         formatsToShowList.add(frVideo);
     }
 
-
-    private void addButtonToMainLayout(final String videoTitle, final YtFragmentedVideo ytFrVideo)
+    protected void addButtonToMainLayout(final String videoTitle, final YtFragmentedVideo ytFragmentedVideo)
     {
         // Display some buttons and let the user choose the formatViewCount
         String btnText;
-        if (ytFrVideo.height == -1)
-            btnText = "Audio " + ytFrVideo.audioFile.getFormat().getAudioBitrate() + " kbit/s";
-        else
-            btnText = (ytFrVideo.videoFile.getFormat().getFps() == 60) ? ytFrVideo.height + "p60" :
-                    ytFrVideo.height + "p";
+        if (ytFragmentedVideo.height == -1) {
+            btnText = "Audio " + ytFragmentedVideo.audioFile.getFormat().getAudioBitrate() + " kbit/s";
+        } else {
+            btnText = (ytFragmentedVideo.videoFile.getFormat().getFps() == 60) ?
+                    ytFragmentedVideo.height + "p60" :
+                    ytFragmentedVideo.height + "p";
+        }
+
         Button btn = new Button(this);
         btn.setText(btnText);
         btn.setOnClickListener(new OnClickListener()
@@ -161,20 +167,20 @@ public class DownloadActivity extends Activity
                     filename = videoTitle;
                 }
                 filename = filename.replaceAll("\\\\|>|<|\"|\\||\\*|\\?|%|:|#|/", "");
-                filename += (ytFrVideo.height == -1) ? "" : "-" + ytFrVideo.height + "p";
+                filename += (ytFragmentedVideo.height == -1) ? "" : "-" + ytFragmentedVideo.height + "p";
                 String downloadIds = "";
                 boolean hideAudioDownloadNotification = false;
-                if (ytFrVideo.videoFile != null) {
-                    downloadIds += downloadFromUrl(ytFrVideo.videoFile.getUrl(), videoTitle,
-                            filename + "." + ytFrVideo.videoFile.getFormat().getExt(), false);
+                if (ytFragmentedVideo.videoFile != null) {
+                    downloadIds += downloadFromUrl(ytFragmentedVideo.videoFile.getUrl(), videoTitle,
+                            filename + "." + ytFragmentedVideo.videoFile.getFormat().getExt(), false);
                     downloadIds += "-";
                     hideAudioDownloadNotification = true;
                 }
-                if (ytFrVideo.audioFile != null) {
-                    downloadIds += downloadFromUrl(ytFrVideo.audioFile.getUrl(), videoTitle,
-                            filename + "." + ytFrVideo.audioFile.getFormat().getExt(), hideAudioDownloadNotification);
+                if (ytFragmentedVideo.audioFile != null) {
+                    downloadIds += downloadFromUrl(ytFragmentedVideo.audioFile.getUrl(), videoTitle,
+                            filename + "." + ytFragmentedVideo.audioFile.getFormat().getExt(), hideAudioDownloadNotification);
                 }
-                if (ytFrVideo.audioFile != null)
+                if (ytFragmentedVideo.audioFile != null)
                     cacheDownloadIds(downloadIds);
                 finish();
             }
@@ -182,7 +188,7 @@ public class DownloadActivity extends Activity
         mainLayout.addView(btn);
     }
 
-    private long downloadFromUrl(String youtubeDlUrl, String downloadTitle, String fileName, boolean hide)
+    protected long downloadFromUrl(String youtubeDlUrl, String downloadTitle, String fileName, boolean hide)
     {
         Uri uri = Uri.parse(youtubeDlUrl);
         DownloadManager.Request request = new DownloadManager.Request(uri);
@@ -199,7 +205,7 @@ public class DownloadActivity extends Activity
         return manager.enqueue(request);
     }
 
-    private void cacheDownloadIds(String downloadIds)
+    protected void cacheDownloadIds(String downloadIds)
     {
         File dlCacheFile = new File(this.getCacheDir().getAbsolutePath() + "/" + downloadIds);
         try {
@@ -209,7 +215,7 @@ public class DownloadActivity extends Activity
         }
     }
 
-    private class YtFragmentedVideo
+    protected class YtFragmentedVideo
     {
         int height;
         YtFile audioFile;
