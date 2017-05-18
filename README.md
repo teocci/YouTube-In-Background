@@ -7,7 +7,7 @@ This feature is against YouTube terms of service and could not be present on Goo
 YTinBG provides mechanisms for searching videos and playlists on YT, as well as logging into a Google account in order to acquire private playlists, which normally cannot be accessed.
 
 ## Download
-You can [download the APP here](https://goo.gl/lM2WKK)
+You can [download the APP here](https://goo.gl/GxpPt9)
 
 ## Install
 You can install the APK following the [next guide](https://github.com/teocci/YouTube-In-Background/blob/master/INSTALL.md)
