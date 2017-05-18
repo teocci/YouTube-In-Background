@@ -52,6 +52,10 @@ android {
         javaMaxHeapSize "4g"
     }
 
+    configurations {
+        compile.exclude group: "org.apache.httpcomponents", module: "httpclient"
+    }
+
     packagingOptions {
         pickFirst 'META-INF/maven/com.squareup.okhttp3/okhttp/pom.properties'
         pickFirst 'META-INF/maven/com.squareup.okhttp3/okhttp/pom.xml'
@@ -70,30 +74,32 @@ android {
 
 dependencies {
     provided fileTree(include: ['*.jar'], dir: 'libs')
-    compile(name: 'library-release', ext: 'aar')
     compile 'com.android.support:appcompat-v7:25.3.1'
-    compile 'com.android.support:design:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.android.support:recyclerview-v7:25.3.1'
-    compile 'com.google.android.gms:play-services-auth:10.2.4'
-    compile 'com.google.android.exoplayer:exoplayer:r2.4.0'
+    compile 'com.android.support:design:25.3.1'
+    compile 'com.google.android.gms:play-services-auth:10.2.6'
     compile 'com.google.code.gson:gson:2.7'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.fasterxml.jackson.core:jackson-core:2.8.7'
     compile 'org.aspectj:aspectjrt:1.8.8'
     compile 'com.googlecode.mp4parser:isoparser:1.1.17'
-    //    compile 'com.google.apis:google-api-services-youtube:v3-rev182-1.22.0'
+    compile 'com.google.api-client:google-api-client:1.22.0'
+    compile 'com.google.api-client:google-api-client-android:1.22.0'
+    compile 'com.google.http-client:google-http-client:1.22.0'
+    compile 'com.google.http-client:google-http-client-android:1.22.0'
+    compile 'com.google.http-client:google-http-client-jackson2:1.22.0'
+    compile 'com.google.apis:google-api-services-youtube:v3-rev182-1.22.0'
     compile project(':youtubeExtractor')
-    compile files('libs/nineoldandroids-2.4.0.jar')
-    compile files('libs/listviewanimations_lib-core-slh_3.1.0.jar')
-    compile files('libs/listviewanimations_lib-manipulation_3.1.0.jar')
-    compile files('libs/listviewanimations_lib-core_3.1.0.jar')
-    compile files('libs/google-http-client-1.21.0.jar')
-    compile files('libs/google-http-client-android-1.21.0.jar')
-    compile files('libs/google-http-client-jackson2-1.21.0.jar')
-    compile files('libs/google-api-client-1.21.0.jar')
-    compile files('libs/google-api-client-android-1.21.0.jar')
-    compile files('libs/google-api-services-youtube-v3-rev160-1.21.0.jar')
+    //    compile files('libs/listviewanimations_lib-core-slh_3.1.0.jar')
+    //    compile files('libs/listviewanimations_lib-manipulation_3.1.0.jar')
+    //    compile files('libs/listviewanimations_lib-core_3.1.0.jar')
+    //    compile files('libs/google-api-client-1.21.0.jar')
+    //    compile files('libs/google-api-client-android-1.21.0.jar')
+    //    compile files('libs/google-http-client-1.21.0.jar')
+    //    compile files('libs/google-http-client-android-1.21.0.jar')
+    //    compile files('libs/google-http-client-jackson2-1.21.0.jar')
+    //    compile files('libs/google-api-services-youtube-v3-rev160-1.21.0.jar')
     //    compile files('libs/google-oauth-client-1.21.0.jar')
     //    compile files('libs/jackson-core-2.1.3.jar')
     //    compile files('libs/jsr305-1.3.9.jar')

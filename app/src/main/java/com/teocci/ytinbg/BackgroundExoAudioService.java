@@ -12,11 +12,8 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.os.RemoteException;
 import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -28,9 +25,6 @@ import android.telephony.TelephonyManager;
 import android.util.SparseArray;
 import android.widget.Toast;
 
-import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 import com.teocci.ytinbg.model.YouTubeVideo;
@@ -41,13 +35,11 @@ import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.Utils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.ListIterator;
 
 import at.huber.youtubeExtractor.VideoMeta;
 import at.huber.youtubeExtractor.YouTubeExtractor;
-import at.huber.youtubeExtractor.YouTubeUriExtractor;
 import at.huber.youtubeExtractor.YtFile;
 
 /**

@@ -6,7 +6,7 @@ import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.google.api.client.extensions.android.http.AndroidHttp;
+
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
@@ -45,6 +45,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+
+import static com.google.api.client.extensions.android.http.AndroidHttp.newCompatibleTransport;
+
 
 /**
  * Class for sending YouTube DATA API V3 request and receiving data from it
@@ -85,7 +88,7 @@ public class YouTubeSearch
     private Handler handler;
     private Activity activity;
 
-    final HttpTransport transport = AndroidHttp.newCompatibleTransport();
+    final HttpTransport transport = newCompatibleTransport();
     final JacksonFactory jsonFactory = new JacksonFactory();
 
     private YouTube youtube;
