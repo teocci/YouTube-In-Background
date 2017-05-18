@@ -30,8 +30,8 @@ This is the most important step for installing APK files on your Android. Withou
 To enable Unknown Sources go to Settings > Security and check the box next to ”Unknown Sources“. 
 A dialogue box may pop-up asking you to confirm the action, just tap OK to confirm.
 
-<img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/device-2016-04-29-014339.png" alt="alt text" width="360" height="640">
-<img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/device-2016-04-29-014443.png" alt="alt text" width="360" height="640">
-<img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/device-2016-04-29-014509.png" alt="alt text" width="360" height="640">
-<img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/device-2016-04-29-015301.png" alt="alt text" width="360" height="640">
+<img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/step_01.png" alt="alt text" width="360" height="640">
+<img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/step_02.png" alt="alt text" width="360" height="640">
+<img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/step_03.png" alt="alt text" width="360" height="640">
+<img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/step_04.png" alt="alt text" width="360" height="640">
 
