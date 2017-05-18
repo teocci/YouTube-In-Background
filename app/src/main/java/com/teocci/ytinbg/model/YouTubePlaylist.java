@@ -15,7 +15,7 @@ public class YouTubePlaylist implements Serializable
     private String thumbnailURL;
     private String id;
     private long numberOfVideos;
-    private String status;
+    private String privacy;
 
 
     public YouTubePlaylist()
@@ -24,17 +24,17 @@ public class YouTubePlaylist implements Serializable
         this.thumbnailURL = "";
         this.id = "";
         this.numberOfVideos = 0;
-        this.status = "";
+        this.privacy = "";
     }
 
     public YouTubePlaylist(String title, String thumbnailURL, String id, long numberOfVideos,
-                           String status)
+                           String privacy)
     {
         this.title = title;
         this.thumbnailURL = thumbnailURL;
         this.id = id;
         this.numberOfVideos = numberOfVideos;
-        this.status = status;
+        this.privacy = privacy;
     }
 
     public long getNumberOfVideos()
@@ -77,14 +77,14 @@ public class YouTubePlaylist implements Serializable
         this.thumbnailURL = thumbnail;
     }
 
-    public String getStatus()
+    public String getPrivacy()
     {
-        return status;
+        return privacy;
     }
 
     public void setPrivacy(String status)
     {
-        this.status = status;
+        this.privacy = status;
     }
 
     @Override
@@ -94,7 +94,7 @@ public class YouTubePlaylist implements Serializable
                 "id='" + id + '\'' +
                 ", title='" + title + '\'' +
                 ", number of videos=" + numberOfVideos +
-                ", " + status +
+                ", " + privacy +
                 '}';
     }
 }

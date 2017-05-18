@@ -11,7 +11,6 @@ import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -39,9 +38,9 @@ import at.huber.youtubeExtractor.YtFile;
  * @author teocci@yandex.com on 2017-May-15
  */
 
-public class DownloadActivity extends Activity
+public class DownloadSharedLinkActivity extends Activity
 {
-    private static final String TAG = DownloadActivity.class.getSimpleName();
+    private static final String TAG = DownloadSharedLinkActivity.class.getSimpleName();
 
     private static String youtubeLink;
 
@@ -57,11 +56,13 @@ public class DownloadActivity extends Activity
         setContentView(R.layout.activity_download);
         mainLayout = (LinearLayout) findViewById(R.id.main_layout);
         mainProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
-        Intent intent = getIntent();
-        String ytLink = intent.getStringExtra(Config.YOUTUBE_LINK); //if it's a string you stored.
 
         // Check how it was started and if we can get the youtube link
-        if (savedInstanceState == null && ytLink != null && !ytLink.trim().isEmpty()) {
+        if (savedInstanceState == null && Intent.ACTION_SEND.equals(getIntent().getAction())
+                && getIntent().getType() != null && "text/plain".equals(getIntent().getType())) {
+
+            String ytLink = getIntent().getStringExtra(Intent.EXTRA_TEXT);
+
             if (ytLink != null && (ytLink.contains(Config.YT_SHORT_LINK) || ytLink.contains(Config.YT_WATCH_LINK))) {
                 youtubeLink = ytLink;
                 // We have a valid link
@@ -77,7 +78,7 @@ public class DownloadActivity extends Activity
         }
     }
 
-    private Context getActivityContext() { return DownloadActivity.this; }
+    private Context getActivityContext() { return DownloadSharedLinkActivity.this; }
 
     private void getYoutubeDownloadUrl(String youtubeLink)
     {
@@ -158,7 +159,7 @@ public class DownloadActivity extends Activity
 
         Button btn = new Button(this);
         btn.setText(btnText);
-        btn.setOnClickListener(new OnClickListener()
+        btn.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)

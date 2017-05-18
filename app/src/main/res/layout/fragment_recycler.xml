@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
@@ -7,9 +6,9 @@
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recently_played"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:dividerHeight="2dp"/>
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -18,6 +17,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:visibility="invisible"/>
+        android:visibility="invisible"
+        />
 
 </RelativeLayout>

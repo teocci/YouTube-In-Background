@@ -42,7 +42,6 @@
 
     <string name="removed_positions">Eliminado</string>
     <string name="user_playlist">Playlists</string>
-    <string name="clear_list">Vaciar lista de reproducción</string>
     <string name="tap_to_undo">Tap para deshacer</string>
     <string name="load_playlist">Cargar</string>
     <string name="item_deleted">Iten borrado</string>
@@ -52,4 +51,6 @@
     <string name="app_update">No se pudo extraer el video, tal vez necesites una update!</string>
     <string name="error_no_yt_link">No es un enlacce valido de YouTube!</string>
     <string name="share_image_button">Compartir:</string>
+    <string name="action_clear_list">Vaciar lista de reproducción</string>
+    <string name="action_remove_account">Remover cuenta registrada</string>
 </resources>

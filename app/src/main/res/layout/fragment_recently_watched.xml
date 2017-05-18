@@ -20,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="3dip" />
 
-    <com.nhaarman.listviewanimations.itemmanipulation.DynamicListView
+    <android.support.v7.widget.RecyclerView
         android:id="@+id/recently_played"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

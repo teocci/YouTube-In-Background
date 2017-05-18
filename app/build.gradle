@@ -8,7 +8,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
-        versionName "2.02"
+        versionName "2.2"
     }
 
     signingConfigs {
@@ -71,12 +71,13 @@ android {
 dependencies {
     provided fileTree(include: ['*.jar'], dir: 'libs')
     compile(name: 'library-release', ext: 'aar')
-    compile 'com.android.support:appcompat-v7:25.2.0'
-    compile 'com.android.support:design:25.2.0'
-    compile 'com.android.support:support-v4:25.2.0'
-    compile 'com.android.support:recyclerview-v7:25.2.0'
-    compile 'com.google.android.gms:play-services-auth:10.2.0'
-    compile 'com.google.code.gson:gson:2.4'
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:design:25.3.1'
+    compile 'com.android.support:support-v4:25.3.1'
+    compile 'com.android.support:recyclerview-v7:25.3.1'
+    compile 'com.google.android.gms:play-services-auth:10.2.4'
+    compile 'com.google.android.exoplayer:exoplayer:r2.4.0'
+    compile 'com.google.code.gson:gson:2.7'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.fasterxml.jackson.core:jackson-core:2.8.7'
     compile 'org.aspectj:aspectjrt:1.8.8'

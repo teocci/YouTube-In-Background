@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.coremedia.iso.boxes.Box;
 import com.coremedia.iso.boxes.ChunkOffsetBox;
@@ -41,7 +42,8 @@ import java.util.regex.Pattern;
 
 public class DownloadFinishedReceiver extends BroadcastReceiver
 {
-    private static final String TAG = LogHelper.makeLogTag(DownloadFinishedReceiver.class);
+    private static final String TAG = DownloadFinishedReceiver.class.getSimpleName();
+
     private static final String TEMP_FILE_NAME = "tmp-";
     private static final Pattern ARTIST_TITLE_PATTERN =
             Pattern.compile("(.+?)(\\s*?)-(\\s*?)(\"|)(\\S(.+?))\\s*?([&\\*+,-/:;<=>@_\\|]+?\\s*?|)(\\z|\"|\\(|\\[|lyric|official)",
@@ -83,6 +85,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver
                             }
                         }
                     }
+                    Toast.makeText(context, "Download Complete", Toast.LENGTH_LONG).show();
                 } else if (status == DownloadManager.STATUS_FAILED) {
                     removeTempOnFailure(context, downloadId);
                 }

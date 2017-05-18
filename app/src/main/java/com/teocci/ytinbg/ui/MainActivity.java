@@ -33,6 +33,11 @@ import com.teocci.ytinbg.JsonAsyncTask;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
+import com.teocci.ytinbg.ui.fragments.FavoritesFragment;
+import com.teocci.ytinbg.ui.fragments.PlaylistFragment;
+import com.teocci.ytinbg.ui.fragments.RecentlyWatchedFragment;
+import com.teocci.ytinbg.ui.fragments.SearchFragment;
+import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
 
@@ -47,7 +52,7 @@ import java.util.List;
  */
 public class MainActivity extends AppCompatActivity
 {
-    private static final String TAG = LogHelper.makeLogTag(MainActivity.class);
+    private static final String TAG = MainActivity.class.getSimpleName();
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private ViewPager viewPager;
@@ -78,7 +83,9 @@ public class MainActivity extends AppCompatActivity
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        }
 
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setOffscreenPageLimit(3);
@@ -149,29 +156,34 @@ public class MainActivity extends AppCompatActivity
      */
     private void setupViewPager(ViewPager viewPager)
     {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager());
 
-        searchFragment = new SearchFragment();
-        recentlyPlayedFragment = new RecentlyWatchedFragment();
-        adapter.addFragment(new FavoritesFragment(), getString(R.string.fragment_tab_favorites));
-        adapter.addFragment(recentlyPlayedFragment, getString(R.string
-                .fragment_tab_recently_watched));
-        adapter.addFragment(searchFragment, getString(R.string.fragment_tab_search));
-        adapter.addFragment(new PlaylistFragment(), getString(R.string.fragment_tab_playlist));
-        viewPager.setAdapter(adapter);
+        searchFragment = SearchFragment.newInstance();
+        recentlyPlayedFragment = RecentlyWatchedFragment.newInstance();
+        pagerAdapter.addFragment(FavoritesFragment.newInstance(), null);
+        pagerAdapter.addFragment(recentlyPlayedFragment, null);
+        pagerAdapter.addFragment(searchFragment, null);
+        pagerAdapter.addFragment(new PlaylistFragment(), null);
+        viewPager.setAdapter(pagerAdapter);
     }
 
     /**
      * Class which provides adapter for fragment pager
      */
-    class ViewPagerAdapter extends FragmentPagerAdapter
+    class PagerAdapter extends FragmentPagerAdapter
     {
         private final List<Fragment> fragmentList = new ArrayList<>();
-        private final List<String> fragmentTitleList = new ArrayList<>();
+        private final List<String> titleList = new ArrayList<>();
 
-        ViewPagerAdapter(FragmentManager manager)
+        PagerAdapter(FragmentManager manager)
         {
             super(manager);
+        }
+
+        @Override
+        public int getCount()
+        {
+            return fragmentList.size();
         }
 
         @Override
@@ -181,21 +193,15 @@ public class MainActivity extends AppCompatActivity
         }
 
         @Override
-        public int getCount()
+        public CharSequence getPageTitle(int position)
         {
-            return fragmentList.size();
+            return titleList.get(position);
         }
 
         void addFragment(Fragment fragment, String title)
         {
             fragmentList.add(fragment);
-            fragmentTitleList.add(title);
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position)
-        {
-            return fragmentTitleList.get(position);
+            titleList.add(title);
         }
     }
 
@@ -297,6 +303,14 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        MenuItem removeAccountItem = menu.findItem(R.id.action_remove_account);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
+
+        if (chosenAccountName != null) {
+            removeAccountItem.setVisible(true);
+        }
+
         return true;
     }
 
@@ -315,37 +329,48 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_about) {
-            DateFormat monthFormat = new SimpleDateFormat("MMMM");
-            DateFormat yearFormat = new SimpleDateFormat("yyyy");
-            Date date = new Date();
+        switch (id) {
+            case R.id.action_about:
+                DateFormat monthFormat = new SimpleDateFormat("MMMM");
+                DateFormat yearFormat = new SimpleDateFormat("yyyy");
+                Date date = new Date();
 
-            AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-            alertDialog.setTitle("Teocci");
-            alertDialog.setIcon(R.mipmap.ic_launcher);
-            alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@naver" +
-                    ".com\n\n" +
-                    monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
-            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                    new DialogInterface.OnClickListener()
-                    {
-                        public void onClick(DialogInterface dialog, int which)
+                AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+                alertDialog.setTitle("Teocci");
+                alertDialog.setIcon(R.mipmap.ic_launcher);
+                alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex" +
+                        ".com\n\n" +
+                        monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        new DialogInterface.OnClickListener()
                         {
-                            dialog.dismiss();
-                        }
-                    });
-            alertDialog.show();
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                dialog.dismiss();
+                            }
+                        });
+                alertDialog.show();
 
-            return true;
-        } else if (id == R.id.action_clear_list) {
-            YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
-                    .deleteAll();
-            recentlyPlayedFragment.clearRecentlyPlayedList();
-            return true;
-        } else if (id == R.id.action_search) {
-            MenuItemCompat.expandActionView(item);
-            return true;
+                return true;
+            case R.id.action_clear_list:
+                YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                        .deleteAll();
+                recentlyPlayedFragment.clearRecentlyPlayedList();
+                return true;
+            case R.id.action_remove_account:
+                SharedPreferences sp = PreferenceManager
+                        .getDefaultSharedPreferences(getApplicationContext());
+                String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
+
+                if (chosenAccountName != null) {
+                    sp.edit().remove(Config.ACCOUNT_NAME).apply();
+                }
+                return true;
+            case R.id.action_search:
+                MenuItemCompat.expandActionView(item);
+                return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -388,7 +413,8 @@ public class MainActivity extends AppCompatActivity
         initialColors[1] = textColor;
     }
 
-    private  boolean checkAndRequestPermissions() {
+    private boolean checkAndRequestPermissions()
+    {
         int writeStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         int readStorage = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
         int getAccounts = ContextCompat.checkSelfPermission(this, Manifest.permission.GET_ACCOUNTS);
@@ -416,8 +442,7 @@ public class MainActivity extends AppCompatActivity
         if (accessWIFIState != PackageManager.PERMISSION_GRANTED) {
             listPermissionsNeeded.add(android.Manifest.permission.ACCESS_WIFI_STATE);
         }
-        if (!listPermissionsNeeded.isEmpty())
-        {
+        if (!listPermissionsNeeded.isEmpty()) {
             ActivityCompat.requestPermissions(
                     this,
                     listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),

@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">YTInBG</string>
-    <string name="action_about">About me</string>
     <string name="recently_watched_tab">Recently watched</string>
     <string name="search_tab">Search YouTube</string>
     <string name="playlist_tab">Search Playlist</string>
@@ -47,8 +46,13 @@
     <string name="item_deleted">Item deleted</string>
     <string name="load_playlist">Load</string>
     <string name="user_playlist">Playlist</string>
-    <string name="clear_list">Clear recently played list</string>
     <string name="video_thumbnail">Video Thumbnail</string>
+    조회수 173,893회
+
+    <!-- Menu -->
+    <string name="action_clear_list">Clear recently played list</string>
+    <string name="action_remove_account">Remove registered account</string>
+    <string name="action_about">About me</string>
 
     <!-- Image Buttons -->
     <string name="share_image_button">Share:</string>

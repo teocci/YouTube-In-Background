@@ -242,7 +242,7 @@ public class YouTubeSqlDb
             values.put(YouTubePlaylistEntry.COLUMN_TITLE, youTubePlaylist.getTitle());
             values.put(YouTubePlaylistEntry.COLUMN_VIDEOS_NUMBER, youTubePlaylist
                     .getNumberOfVideos());
-            values.put(YouTubePlaylistEntry.COLUMN_STATUS, youTubePlaylist.getStatus());
+            values.put(YouTubePlaylistEntry.COLUMN_STATUS, youTubePlaylist.getPrivacy());
             values.put(YouTubePlaylistEntry.COLUMN_THUMBNAIL_URL, youTubePlaylist.getThumbnailURL
                     ());
 

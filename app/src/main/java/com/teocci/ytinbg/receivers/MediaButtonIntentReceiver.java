@@ -18,6 +18,6 @@ public class MediaButtonIntentReceiver extends BroadcastReceiver
     @Override
     public void onReceive(Context context, Intent intent)
     {
-        LogHelper.d(TAG, "onReceive");
+        LogHelper.e(TAG, "onReceive");
     }
 }
