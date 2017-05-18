@@ -16,6 +16,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -40,10 +41,13 @@ import javax.annotation.Nullable;
  * Custom ArrayAdapter which enables setup of a videoList view row views
  * Created by teocci on 8.2.16..
  */
-public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewHolder>
+public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         implements ItemTouchListener
 {
     private static final String TAG = LogHelper.makeLogTag(VideosAdapter.class);
+
+    private final int VIEW_TYPE_ITEM = 0;
+    private final int VIEW_TYPE_LOADER = 1;
 
     private Activity context;
     private final List<YouTubeVideo> videoList;
@@ -75,78 +79,93 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
     }
 
     @Override
-    public VideoViewHolder onCreateViewHolder(ViewGroup container, int viewType)
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup container, int viewType)
     {
         LayoutInflater inflater = LayoutInflater.from(container.getContext());
-        View root = inflater.inflate(R.layout.video_item, container, false);
+        if (viewType == VIEW_TYPE_ITEM) {
+            View root = inflater.inflate(R.layout.video_item, container, false);
 
-        return new VideoViewHolder(root, this);
+            return new VideoViewHolder(root, this);
+        } else if (viewType == VIEW_TYPE_LOADER) {
+            View root = inflater.inflate(R.layout.loading_item, container, false);
+
+            return new LoaderViewHolder(root);
+        }
+
+        return null;
+
     }
 
     @Override
-    public void onBindViewHolder(final VideoViewHolder videoViewHolder, int position)
+    public void onBindViewHolder(RecyclerView.ViewHolder itemHolder, int position)
     {
-        final YouTubeVideo searchResult = videoList.get(position);
+        if (itemHolder instanceof VideoViewHolder) {
+            final YouTubeVideo searchResult = videoList.get(position);
 
-        Picasso.with(context)
-                .load(searchResult.getThumbnailURL())
-                .centerCrop()
-                .fit()
-                .into(videoViewHolder.thumbnail);
-        videoViewHolder.title.setText(searchResult.getTitle());
-        videoViewHolder.duration.setText(searchResult.getDuration());
-        videoViewHolder.viewCount.setText(Utils.formatViewCount(searchResult.getViewCount()));
+            final VideoViewHolder videoViewHolder = (VideoViewHolder) itemHolder;
+            Picasso.with(context)
+                    .load(searchResult.getThumbnailURL())
+                    .centerCrop()
+                    .fit()
+                    .into(videoViewHolder.thumbnail);
+            videoViewHolder.title.setText(searchResult.getTitle());
+            videoViewHolder.duration.setText(searchResult.getDuration());
+            videoViewHolder.viewCount.setText(Utils.formatViewCount(searchResult.getViewCount()));
 
-        //set checked if exists in database
-        boolean isFavorite = YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
-                .FAVORITE).checkIfExists(searchResult.getId());
-        if (isFavorite) favorites.add(searchResult.getId());
-        videoViewHolder.checkBoxFavorite.setChecked(isFavorite);
+            //set checked if exists in database
+            boolean isFavorite = YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
+                    .FAVORITE).checkIfExists(searchResult.getId());
+            if (isFavorite) favorites.add(searchResult.getId());
+            videoViewHolder.checkBoxFavorite.setChecked(isFavorite);
 
-        videoViewHolder.checkBoxFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
-        {
-            public void onCheckedChanged(CompoundButton btn, boolean isChecked)
+            videoViewHolder.checkBoxFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
             {
-                if (!isChecked) favorites.remove(searchResult.getId());
-            }
-        });
+                public void onCheckedChanged(CompoundButton btn, boolean isChecked)
+                {
+                    if (!isChecked) favorites.remove(searchResult.getId());
+                }
+            });
 
-        videoViewHolder.checkBoxFavorite.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
+            videoViewHolder.checkBoxFavorite.setOnClickListener(new View.OnClickListener()
             {
-                if (((CheckBox) v).isChecked()) {
-                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).create
-                            (searchResult);
-                } else {
-                    YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).delete
-                            (searchResult.getId());
-                    if (isFavoriteList) {
-                        videoList.remove(videoViewHolder.getAdapterPosition());
-                        notifyDataSetChanged();
+                @Override
+                public void onClick(View v)
+                {
+                    if (((CheckBox) v).isChecked()) {
+                        YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).create
+                                (searchResult);
+                    } else {
+                        YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).delete
+                                (searchResult.getId());
+                        if (isFavoriteList) {
+                            videoList.remove(videoViewHolder.getAdapterPosition());
+                            notifyDataSetChanged();
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        videoViewHolder.imageButtonShare.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
+            videoViewHolder.imageButtonShare.setOnClickListener(new View.OnClickListener()
             {
-                doShareLink(searchResult.getTitle(), searchResult.getId());
-            }
-        });
+                @Override
+                public void onClick(View v)
+                {
+                    doShareLink(searchResult.getTitle(), searchResult.getId());
+                }
+            });
 
-        videoViewHolder.imageButtonDownload.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
+            videoViewHolder.imageButtonDownload.setOnClickListener(new View.OnClickListener()
             {
-                doDownloadVideo(searchResult.getId());
-            }
-        });
+                @Override
+                public void onClick(View v)
+                {
+                    doDownloadVideo(searchResult.getId());
+                }
+            });
+        } else if (itemHolder instanceof LoaderViewHolder) {
+            LoaderViewHolder loadingViewHolder = (LoaderViewHolder) itemHolder;
+            loadingViewHolder.progressBar.setIndeterminate(true);
+        }
     }
 
     @Override
@@ -157,9 +176,16 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
     }
 
     @Override
+    public int getItemViewType(int position)
+    {
+        if (position >= videoList.size()) return -1;
+        return videoList.get(position) == null ? VIEW_TYPE_LOADER : VIEW_TYPE_ITEM;
+    }
+
+    @Override
     public int getItemCount()
     {
-        return videoList.size();
+        return videoList == null ? 0 : videoList.size();
     }
 
     @Override
@@ -224,6 +250,25 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
     }
 
     /**
+     * Adds a null object to the last position, so the getItemViewType()
+     * method will check if the new added object is null then the progressbar
+     * will be displayed
+     */
+    public void addLoader() {
+
+        videoList.add(null);
+        notifyItemInserted(videoList.size() - 1);
+    }
+
+    /**
+     * Removes the progressbar added by addLoader()
+     */
+    public void removeLoader() {
+        videoList.remove(videoList.size() - 1);
+        notifyItemRemoved(videoList.size());
+    }
+
+    /**
      * Inserting a new item at the head of the list. This uses a specialized
      * RecyclerView method, notifyItemRemoved(), to trigger any enabled item
      * animations in addition to updating the view.
@@ -257,6 +302,7 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         }
         return view;
     }
+
     public View getUndoClickView(@NonNull View view)
     {
         return view.findViewById(R.id.button_undo_row);
@@ -331,10 +377,21 @@ public class VideosAdapter extends RecyclerView.Adapter<VideosAdapter.VideoViewH
         }
     }
 
+    protected static class LoaderViewHolder extends RecyclerView.ViewHolder
+    {
+        private ProgressBar progressBar;
+
+        private LoaderViewHolder(View convertView)
+        {
+            super(convertView);
+            progressBar = (ProgressBar) convertView.findViewById(R.id.progress_bar);
+        }
+    }
+
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder
-    public static class VideoViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,
+    protected static class VideoViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener,
             View.OnTouchListener
     {
         public ImageView thumbnail;

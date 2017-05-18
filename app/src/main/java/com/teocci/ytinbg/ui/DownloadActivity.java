@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.method.LinkMovementMethod;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -18,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.teocci.ytinbg.R;
+import com.teocci.ytinbg.model.YouTubeFragmentedVideo;
 import com.teocci.ytinbg.utils.Config;
 
 import java.io.File;
@@ -41,11 +43,11 @@ public class DownloadActivity extends Activity
 {
     private static final String TAG = DownloadActivity.class.getSimpleName();
 
-    protected static String youtubeLink;
+    private static String youtubeLink;
 
-    protected LinearLayout mainLayout;
-    protected ProgressBar mainProgressBar;
-    protected List<YtFragmentedVideo> formatsToShowList;
+    private LinearLayout mainLayout;
+    private ProgressBar mainProgressBar;
+    private List<YouTubeFragmentedVideo> formatsToShowList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -54,7 +56,7 @@ public class DownloadActivity extends Activity
 
         setContentView(R.layout.activity_download);
         mainLayout = (LinearLayout) findViewById(R.id.main_layout);
-        mainProgressBar = (ProgressBar) findViewById(R.id.prgrBar);
+        mainProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
         Intent intent = getIntent();
         String ytLink = intent.getStringExtra(Config.YOUTUBE_LINK); //if it's a string you stored.
 
@@ -75,7 +77,9 @@ public class DownloadActivity extends Activity
         }
     }
 
-    protected void getYoutubeDownloadUrl(String youtubeLink)
+    private Context getActivityContext() { return DownloadActivity.this; }
+
+    private void getYoutubeDownloadUrl(String youtubeLink)
     {
         new YouTubeExtractor(this)
         {
@@ -84,7 +88,7 @@ public class DownloadActivity extends Activity
             {
                 mainProgressBar.setVisibility(View.GONE);
                 if (ytFiles == null) {
-                    TextView tv = new TextView(DownloadActivity.this);
+                    TextView tv = new TextView(getActivityContext());
                     tv.setText(R.string.app_update);
                     tv.setMovementMethod(LinkMovementMethod.getInstance());
                     mainLayout.addView(tv);
@@ -99,33 +103,33 @@ public class DownloadActivity extends Activity
                         addFormatToList(ytFile, ytFiles);
                     }
                 }
-                Collections.sort(formatsToShowList, new Comparator<YtFragmentedVideo>()
+                Collections.sort(formatsToShowList, new Comparator<YouTubeFragmentedVideo>()
                 {
                     @Override
-                    public int compare(YtFragmentedVideo lhs, YtFragmentedVideo rhs)
+                    public int compare(YouTubeFragmentedVideo lhs, YouTubeFragmentedVideo rhs)
                     {
                         return lhs.height - rhs.height;
                     }
                 });
-                for (YtFragmentedVideo files : formatsToShowList) {
+                for (YouTubeFragmentedVideo files : formatsToShowList) {
                     addButtonToMainLayout(vMeta.getTitle(), files);
                 }
             }
         }.extract(youtubeLink, true, false);
     }
 
-    protected void addFormatToList(YtFile ytFile, SparseArray<YtFile> ytFiles)
+    private void addFormatToList(YtFile ytFile, SparseArray<YtFile> ytFiles)
     {
         int height = ytFile.getFormat().getHeight();
         if (height != -1) {
-            for (YtFragmentedVideo frVideo : formatsToShowList) {
+            for (YouTubeFragmentedVideo frVideo : formatsToShowList) {
                 if (frVideo.height == height && (frVideo.videoFile == null ||
                         frVideo.videoFile.getFormat().getFps() == ytFile.getFormat().getFps())) {
                     return;
                 }
             }
         }
-        YtFragmentedVideo frVideo = new YtFragmentedVideo();
+        YouTubeFragmentedVideo frVideo = new YouTubeFragmentedVideo();
         frVideo.height = height;
         if (ytFile.getFormat().isDashContainer()) {
             if (height > 0) {
@@ -140,7 +144,7 @@ public class DownloadActivity extends Activity
         formatsToShowList.add(frVideo);
     }
 
-    protected void addButtonToMainLayout(final String videoTitle, final YtFragmentedVideo ytFragmentedVideo)
+    private void addButtonToMainLayout(final String videoTitle, final YouTubeFragmentedVideo ytFragmentedVideo)
     {
         // Display some buttons and let the user choose the formatViewCount
         String btnText;
@@ -156,7 +160,6 @@ public class DownloadActivity extends Activity
         btn.setText(btnText);
         btn.setOnClickListener(new OnClickListener()
         {
-
             @Override
             public void onClick(View v)
             {
@@ -186,9 +189,11 @@ public class DownloadActivity extends Activity
             }
         });
         mainLayout.addView(btn);
+
+        Log.e(TAG, "YouTubeFragmentedVideo added");
     }
 
-    protected long downloadFromUrl(String youtubeDlUrl, String downloadTitle, String fileName, boolean hide)
+    private long downloadFromUrl(String youtubeDlUrl, String downloadTitle, String fileName, boolean hide)
     {
         Uri uri = Uri.parse(youtubeDlUrl);
         DownloadManager.Request request = new DownloadManager.Request(uri);
@@ -205,7 +210,7 @@ public class DownloadActivity extends Activity
         return manager.enqueue(request);
     }
 
-    protected void cacheDownloadIds(String downloadIds)
+    private void cacheDownloadIds(String downloadIds)
     {
         File dlCacheFile = new File(this.getCacheDir().getAbsolutePath() + "/" + downloadIds);
         try {
@@ -213,12 +218,5 @@ public class DownloadActivity extends Activity
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    protected class YtFragmentedVideo
-    {
-        int height;
-        YtFile audioFile;
-        YtFile videoFile;
     }
 }

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.coremedia.iso.boxes.Box;
 import com.coremedia.iso.boxes.ChunkOffsetBox;
@@ -84,6 +85,7 @@ public class DownloadFinishedReceiver extends BroadcastReceiver
                             }
                         }
                     }
+                    Toast.makeText(context, "Download Complete", Toast.LENGTH_LONG).show();
                 } else if (status == DownloadManager.STATUS_FAILED) {
                     removeTempOnFailure(context, downloadId);
                 }

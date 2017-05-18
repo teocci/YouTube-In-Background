@@ -79,11 +79,13 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
             {
                 super.onScrolled(recyclerView, dx, dy);
                 totalItemCount = linearLayoutManager.getItemCount();
-                lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
+                if (totalItemCount > Config.NUMBER_OF_VIDEOS_RETURNED - visibleThreshold) {
+                    lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
 //                Log.e(TAG, "totalItemCount: " + totalItemCount + " lastVisibleItem: " + lastVisibleItem);
-                if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
-                    videoListAdapter.onItemHolderOnLoadMore();
-                    isLoading = true;
+                    if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
+                        videoListAdapter.onItemHolderOnLoadMore();
+                        isLoading = true;
+                    }
                 }
             }
         });
@@ -206,7 +208,10 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
                         recyclerView.smoothScrollToPosition(0);
                     } else {
                         Log.e(TAG, "Adding Next Page Videos");
+//                        int prevLastPosition = videoListAdapter.getItemCount();
+                        videoListAdapter.removeLoader();
                         videoListAdapter.addMoreYouTubeVideos(youTubeVideos);
+//                        recyclerView.smoothScrollToPosition(prevLastPosition + 1);
                     }
                 }
 
@@ -221,11 +226,6 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
                 videoListAdapter.removeOnLoadMoreListener();
             }
         }
-
-//        recyclerView.smoothScrollToPosition(0);
-//        searchResultsList.clear();
-//        scrollResultsList.clear();
-//        scrollResultsList.addAll(youTubeVideos);
 
         handler.post(new Runnable()
         {
@@ -249,10 +249,7 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
     @Override
     public void onLoadMore()
     {
-        //Here adding null object to last position,check the condition in getItemViewType() method,if object is null then display progress
-//        dataModels.add(null);
-//        simpleAdapter.notifyItemInserted(dataModels.size() - 1);
-
+        videoListAdapter.addLoader();
         new Handler().postDelayed(new Runnable()
         {
             @Override
@@ -261,6 +258,6 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
                 youTubeSearch.searchNextVideos(currentQuery, nextPageToken);
                 isLoading = false;
             }
-        }, 1000);
+        }, 200);
     }
 }
