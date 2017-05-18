@@ -852,7 +852,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private void newExtractUrlAndPlay()
     {
-        LogHelper.e(TAG, "extractUrlAndPlay: extracting url for video id=" + currentVideo.getId());
+//        LogHelper.e(TAG, "extractUrlAndPlay: extracting url for video id=" + currentVideo.getId());
         final String youtubeLink = "https://youtube.com/watch?v=" + currentVideo.getId();
 //        LogHelper.e(TAG, youtubeLink);
 
@@ -861,11 +861,10 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
             @Override
             public void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta videoMeta)
             {
-
                 if (ytFiles == null) {
                     Toast.makeText(
                             getApplicationContext(),
-                            getResources().getString(R.string.toast_message_error_extracting, currentVideoTitle),
+                            getResources().getString(R.string.toast_message_error_extracting, videoMeta.getTitle()),
                             Toast.LENGTH_SHORT
                     ).show();
                     return;
@@ -873,6 +872,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
                 if (ytFiles != null) {
                     YtFile ytFile = getBestStream(ytFiles);
+                    LogHelper.e(TAG, ytFile.getUrl());
                     if (ytFile != null && validateUrl(ytFile.getUrl())) {
                         playOnFocusGain = true;
                         currentPosition = 0;
@@ -883,8 +883,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                         relaxResources(false); // release everything except MediaPlayer
 
                         try {
-                            LogHelper.e(TAG, ytFile.getUrl());
-                            LogHelper.e(TAG, "extractUrlAndPlay: Start playback");
+//                            LogHelper.e(TAG, "extractUrlAndPlay: Start playback");
 
                             createMediaPlayerIfNeeded();
 
@@ -907,14 +906,14 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                             // sleep while the song is playing.
                             wifiLock.acquire();
                         } catch (IOException io) {
-                            LogHelper.e(TAG, io, "extractUrlAndPlay: Exception playing song");
+//                            LogHelper.e(TAG, io, "extractUrlAndPlay: Exception playing song");
                             io.printStackTrace();
                         }
                     } else {
-                        Log.e(TAG, "No Link found");
+//                        Log.e(TAG, "No Link found");
                         Toast.makeText(
                                 getApplicationContext(),
-                                getResources().getString(R.string.toast_message_error_extracting, currentVideoTitle),
+                                getResources().getString(R.string.toast_message_error_playing_url, videoMeta.getTitle()),
                                 Toast.LENGTH_SHORT
                         ).show();
                     }
@@ -933,7 +932,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private void extractUrlAndPlay()
     {
-        LogHelper.e(TAG, "extractUrlAndPlay: extracting url for video id=" + currentVideo.getId());
+//        LogHelper.e(TAG, "extractUrlAndPlay: extracting url for video id=" + currentVideo.getId());
         final String youtubeLink = "http://youtube.com/watch?v=" + currentVideo.getId();
 //        LogHelper.e(TAG, youtubeLink);
 
@@ -954,8 +953,8 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                     relaxResources(false); // Release everything except MediaPlayer
 
                     try {
-                        LogHelper.e(TAG, ytFile.getUrl());
-                        LogHelper.e(TAG, "extractUrlAndPlay: Start playback");
+//                        LogHelper.e(TAG, ytFile.getUrl());
+//                        LogHelper.e(TAG, "extractUrlAndPlay: Start playback");
 
                         createMediaPlayerIfNeeded();
 
@@ -983,7 +982,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 //                            callback.onPlaybackStatusChanged(playState);
 //                        }
                     } catch (IOException io) {
-                        LogHelper.e(TAG, io, "extractUrlAndPlay: Exception playing song");
+//                        LogHelper.e(TAG, io, "extractUrlAndPlay: Exception playing song");
                         io.printStackTrace();
                     }
                 }
@@ -1095,7 +1094,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
     public void seekTo(int position)
     {
-        LogHelper.d(TAG, "seekTo called with ", position);
+//        LogHelper.d(TAG, "seekTo called with ", position);
 
         if (mediaPlayer == null) {
             // If we do not have a current media player, simply update the current position
@@ -1116,7 +1115,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     @Override
     public void onSeekComplete(MediaPlayer mp)
     {
-        LogHelper.d(TAG, "onSeekComplete from MediaPlayer:", mp.getCurrentPosition());
+//        LogHelper.d(TAG, "onSeekComplete from MediaPlayer:", mp.getCurrentPosition());
         currentPosition = mp.getCurrentPosition();
         if (playState == PlaybackStateCompat.STATE_BUFFERING) {
             registerAudioNoisyReceiver();

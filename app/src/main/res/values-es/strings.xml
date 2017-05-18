@@ -53,4 +53,5 @@
     <string name="share_image_button">Compartir:</string>
     <string name="action_clear_list">Vaciar lista de reproducción</string>
     <string name="action_remove_account">Remover cuenta registrada</string>
+    <string name="toast_message_error_playing_url">Error URL Protegida: %1$s</string>
 </resources>

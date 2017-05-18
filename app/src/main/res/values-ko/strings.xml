@@ -28,7 +28,6 @@
     <string name="fragment_title_playlist">내 플레이 리스트</string>
 
     <!-- toast messages -->
-    <string name="toast_message_loading">오디오 불러오기</string>
     <string name="toast_message_hello">"반갑습니다!"</string>
     <string name="toast_message_playlist_empty">플레이 리스트가 비어있습니다.</string>
     <string name="toast_message_playlist_not_exist">플레이 리스트가 존재하지 않습니다.</string>
@@ -47,10 +46,12 @@
 
     <string name="video_thumbnail">영상 썸네일</string>
     <string name="toast_message_playing">재생 중: %1$s</string>
-    <string name="toast_message_error_extracting">Error Extracting Audio: %1$s</string>
+    <string name="toast_message_error_extracting">오디오 추출 중 오류 발생: %1$s</string>
     <string name="app_update">업데이트에 필요한 URL을 추출할 수 없습니다.</string>
     <string name="error_no_yt_link">유효한 YouTube 링크가 아닙니다.</string>
     <string name="share_image_button">공유:</string>
     <string name="action_clear_list">최근 본 영상 비우기</string>
     <string name="action_remove_account">등록된 계정을 제거하다</string>
+    <string name="toast_message_error_playing_url">오류 URL 보호됨: %1$s</string>
+    <string name="toast_message_loading">오디오로드 중</string>
 </resources>

@@ -31,6 +31,7 @@
     <string name="toast_message_hello">"Hi "</string>
     <string name="toast_message_loading">Loading Audio</string>
     <string name="toast_message_error_extracting">Error Extracting Audio: %1$s</string>
+    <string name="toast_message_error_playing_url">Error URL Protected: %1$s</string>
     <string name="toast_message_playing">Playing: %1$s</string>
     <string name="toast_message_playlist_empty">Playlist is empty!</string>
     <string name="toast_message_playlist_not_exist">Playlist does not exist!</string>
