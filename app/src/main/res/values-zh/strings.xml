@@ -41,7 +41,6 @@
     <string name="load_playlist">装载</string>
 
     <string name="user_playlist">播放列表</string>
-    <string name="clear_list">清除最近播放列表</string>
     <string name="video_thumbnail">视频缩略图</string>
     <string name="tap_to_undo">点击撤销</string>
     <string name="toast_message_loading">正在加载音频</string>
@@ -49,4 +48,6 @@
     <string name="app_update">无法提取网址，您可能需要更新！</string>
     <string name="error_no_yt_link">不是有效的YouTube连结！</string>
     <string name="share_image_button">分享：</string>
+    <string name="action_clear_list">清除最近播放列表</string>
+    <string name="action_remove_account">删除注册账号</string>
 </resources>

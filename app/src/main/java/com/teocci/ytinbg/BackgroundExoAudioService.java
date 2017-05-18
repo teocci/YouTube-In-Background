@@ -13,6 +13,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -24,13 +25,16 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.util.SparseArray;
 import android.widget.Toast;
 
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 import com.teocci.ytinbg.model.YouTubeVideo;
+import com.teocci.ytinbg.player.AudioPlayer;
 import com.teocci.ytinbg.receivers.MediaButtonIntentReceiver;
 import com.teocci.ytinbg.ui.MainActivity;
 import com.teocci.ytinbg.utils.Config;
@@ -50,10 +54,10 @@ import at.huber.youtubeExtractor.YtFile;
  * Service class for background youtube playback
  * Created by Teocci on 9.3.16..
  */
-public class BackgroundAudioService extends Service implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener,
-        MediaPlayer.OnErrorListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnSeekCompleteListener
+public class BackgroundExoAudioService extends Service implements AudioManager.OnAudioFocusChangeListener
+
 {
-    private static final String TAG = LogHelper.makeLogTag(BackgroundAudioService.class);
+    private static final String TAG = LogHelper.makeLogTag(BackgroundExoAudioService.class);
 
     private static final int NOTIFICATION_ID = 412;
 
@@ -79,7 +83,6 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     private static final int YOUTUBE_ITAG_43 = 43;      // webm - stereo, 44.1 KHz 128 Kbps (vortis)
     private static final int YOUTUBE_ITAG_22 = 22;      // mp4 - stereo, 44.1 KHz 192 Kbps (aac)
     private static final int YOUTUBE_ITAG_18 = 18;      // mp4 - stereo, 44.1 KHz 96 Kbps (aac)
-    private static final int YOUTUBE_ITAG_36 = 36;      // mp4 - stereo, 44.1 KHz 32 Kbps (aac)
     private static final int YOUTUBE_ITAG_17 = 17;      // mp4 - stereo, 44.1 KHz 24 Kbps (aac)
 
     public static final String ACTION_PLAY = "action_play";
@@ -93,12 +96,12 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     public static final String MODE_REPEAT_NONE = "mode_repeat_none";
     public static final String MODE_SHUFFLE = "mode_shuffle";
 
-    private BackgroundAudioService backgroundAudioService = this;
+    private BackgroundExoAudioService backgroundAudioService = this;
 
     // Type of audio focus we have:
     private int audioFocus = AUDIO_NO_FOCUS_NO_DUCK;
     private AudioManager audioManager;
-    private MediaPlayer mediaPlayer;
+    private AudioPlayer mediaPlayer;
     private MediaSessionCompat mediaSession;
     private MediaControllerCompat mediaController;
 
@@ -239,21 +242,15 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     {
         LogHelper.e(TAG, "createMediaPlayerIfNeeded. needed? ", (mediaPlayer == null));
         if (mediaPlayer == null) {
-            mediaPlayer = new MediaPlayer();
+            mediaPlayer = new AudioPlayer();
 
             // Make sure the media player will acquire a wake-lock while
             // playing. If we don't do that, the CPU might go to sleep while the
             // song is playing, causing playback to stop.
-            mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+//            mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
 
-            // we want the media player to notify us when it's ready preparing,
-            // and when it's done playing:
-            mediaPlayer.setOnPreparedListener(this);
-            mediaPlayer.setOnCompletionListener(this);
-            mediaPlayer.setOnErrorListener(this);
-            mediaPlayer.setOnSeekCompleteListener(this);
         } else {
-            mediaPlayer.reset();
+//            mediaPlayer.reset();
         }
     }
 
@@ -360,7 +357,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                             NotificationManager notificationManager = (NotificationManager)
                                     getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
                             notificationManager.cancel(NOTIFICATION_ID);
-                            Intent intent = new Intent(getApplicationContext(), BackgroundAudioService.class);
+                            Intent intent = new Intent(getApplicationContext(), BackgroundExoAudioService.class);
                             stopService(intent);
                         }
 
@@ -463,7 +460,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         switch (intentMediaType) {
             // Video has been paused. It is not necessary a new playback requests
             case Config.YOUTUBE_MEDIA_NO_NEW_REQUEST:
-                mediaPlayer.start();
+                mediaPlayer.play();
                 break;
             case Config.YOUTUBE_MEDIA_TYPE_VIDEO:
                 mediaType = Config.YOUTUBE_MEDIA_TYPE_VIDEO;
@@ -497,7 +494,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     {
         final NotificationCompat.MediaStyle style = new NotificationCompat.MediaStyle();
 
-        Intent intent = new Intent(getApplicationContext(), BackgroundAudioService.class);
+        Intent intent = new Intent(getApplicationContext(), BackgroundExoAudioService.class);
         intent.setAction(ACTION_STOP);
         PendingIntent stopPendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
 
@@ -617,7 +614,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     private NotificationCompat.Action generateAction(int icon, String title, String intentAction)
     {
         Context context = getApplicationContext();
-        Intent intent = new Intent(context, BackgroundAudioService.class);
+        Intent intent = new Intent(context, BackgroundExoAudioService.class);
         intent.setAction(intentAction);
         PendingIntent pendingIntent = PendingIntent.getService(context, 1, intent, 0);
 
@@ -633,7 +630,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     private NotificationCompat.Action generateIntentAction(String intentAction)
     {
         Context context = getApplicationContext();
-        Intent intent = new Intent(context, BackgroundAudioService.class);
+        Intent intent = new Intent(context, BackgroundExoAudioService.class);
         intent.setAction(intentAction);
         PendingIntent pendingIntent = PendingIntent.getService(context, 1, intent, 0);
 
@@ -735,7 +732,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
             // Pause media player and cancel the 'foreground service' state.
             if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
-                currentPosition = mediaPlayer.getCurrentPosition();
+                currentPosition = Integer.parseInt(mediaPlayer.getCurrentPosition()+"");
             }
             // while paused, retain the MediaPlayer but give up audio focus
             relaxResources(false);
@@ -771,7 +768,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         // The service needs to continue running even after the bound client (usually a
         // MediaController) disconnects, otherwise the music playback will stop.
         // Calling startService(Intent) will keep the service running until it is explicitly killed.
-        startService(new Intent(getApplicationContext(), BackgroundAudioService.class));
+        startService(new Intent(getApplicationContext(), BackgroundExoAudioService.class));
         configMediaPlayerState();
         Toast.makeText(
                 getApplicationContext(),
@@ -824,7 +821,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
         // stop and release the Media Player, if it's available
         if (releaseMediaPlayer && mediaPlayer != null) {
-            mediaPlayer.reset();
+//            mediaPlayer.reset();
             mediaPlayer.release();
             mediaPlayer = null;
         }
@@ -853,7 +850,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
     private void newExtractUrlAndPlay()
     {
         LogHelper.e(TAG, "extractUrlAndPlay: extracting url for video id=" + currentVideo.getId());
-        final String youtubeLink = "https://youtube.com/watch?v=" + currentVideo.getId();
+        final String youtubeLink = "http://youtube.com/watch?v=" + currentVideo.getId();
 //        LogHelper.e(TAG, youtubeLink);
 
         new YouTubeExtractor(this)
@@ -873,85 +870,14 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
                 if (ytFiles != null) {
                     YtFile ytFile = getBestStream(ytFiles);
-                    if (ytFile != null && validateUrl(ytFile.getUrl())) {
-                        playOnFocusGain = true;
-                        currentPosition = 0;
-                        tryToGetAudioFocus();
-                        registerAudioNoisyReceiver();
-                        registerMediaButtonReceiver();
-                        playState = PlaybackStateCompat.STATE_STOPPED;
-                        relaxResources(false); // release everything except MediaPlayer
-
-                        try {
-                            LogHelper.e(TAG, ytFile.getUrl());
-                            LogHelper.e(TAG, "extractUrlAndPlay: Start playback");
-
-                            createMediaPlayerIfNeeded();
-
-                            playState = PlaybackStateCompat.STATE_BUFFERING;
-
-                            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                            mediaPlayer.setDataSource(ytFile.getUrl());
-                            mediaPlayer.setOnPreparedListener(backgroundAudioService);
-                            currentVideoTitle = videoMeta.getTitle();
-
-                            // Starts preparing the media player in the background. When
-                            // it's done, it will call our OnPreparedListener (that is,
-                            // the onPrepared() method on this class, since we set the
-                            // listener to 'this'). Until the media player is prepared,
-                            // we *cannot* call start() on it!
-                            mediaPlayer.prepareAsync();
-
-                            // If we are streaming from the internet, we want to hold a
-                            // Wifi lock, which prevents the Wifi radio from going to
-                            // sleep while the song is playing.
-                            wifiLock.acquire();
-                        } catch (IOException io) {
-                            LogHelper.e(TAG, io, "extractUrlAndPlay: Exception playing song");
-                            io.printStackTrace();
-                        }
-                    } else {
-                        Log.e(TAG, "No Link found");
-                        Toast.makeText(
-                                getApplicationContext(),
-                                getResources().getString(R.string.toast_message_error_extracting, currentVideoTitle),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                }
-            }
-        }.extract(youtubeLink, true, true);
-    }
-
-    private boolean validateUrl(String url) {
-        // https://r8---sn-3u-bh2ee.googlevideo.com/videoplayback
-        return url.contains(".googlevideo.com/videoplayback");
-    }
-
-    /**
-     * Extracts link from youtube video ID, so mediaPlayer can play it
-     */
-    private void extractUrlAndPlay()
-    {
-        LogHelper.e(TAG, "extractUrlAndPlay: extracting url for video id=" + currentVideo.getId());
-        final String youtubeLink = "http://youtube.com/watch?v=" + currentVideo.getId();
-//        LogHelper.e(TAG, youtubeLink);
-
-        YouTubeUriExtractor ytEx = new YouTubeUriExtractor(this)
-        {
-            @Override
-            public void onUrisAvailable(String videoId, final String videoTitle,
-                                        SparseArray<YtFile> ytFiles)
-            {
-                if (ytFiles != null) {
-                    YtFile ytFile = getBestStream(ytFiles);
 
                     playOnFocusGain = true;
                     currentPosition = 0;
                     tryToGetAudioFocus();
                     registerAudioNoisyReceiver();
+                    registerMediaButtonReceiver();
                     playState = PlaybackStateCompat.STATE_STOPPED;
-                    relaxResources(false); // Release everything except MediaPlayer
+                    relaxResources(false); // release everything except MediaPlayer
 
                     try {
                         LogHelper.e(TAG, ytFile.getUrl());
@@ -959,42 +885,30 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
                         createMediaPlayerIfNeeded();
 
-                        playState = PlaybackStateCompat.STATE_BUFFERING;
-
-                        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                         mediaPlayer.setDataSource(ytFile.getUrl());
-                        mediaPlayer.setOnPreparedListener(backgroundAudioService);
-                        currentVideoTitle = videoTitle;
+                        currentVideoTitle = videoMeta.getTitle();
 
                         // Starts preparing the media player in the background. When
                         // it's done, it will call our OnPreparedListener (that is,
                         // the onPrepared() method on this class, since we set the
                         // listener to 'this'). Until the media player is prepared,
                         // we *cannot* call start() on it!
-                        mediaPlayer.prepareAsync();
+//                        mediaPlayer.prepareAsync();
 
                         // If we are streaming from the internet, we want to hold a
                         // Wifi lock, which prevents the Wifi radio from going to
                         // sleep while the song is playing.
                         wifiLock.acquire();
-//                            mediaPlayer.start();
-
-//                        if (callback != null) {
-//                            callback.onPlaybackStatusChanged(playState);
-//                        }
-                    } catch (IOException io) {
+                    } catch (Exception io) {
                         LogHelper.e(TAG, io, "extractUrlAndPlay: Exception playing song");
                         io.printStackTrace();
                     }
                 }
             }
-        };
-        // Ignore the webm container formatViewCount
-//         ytEx.setIncludeWebM(false);
-//         ytEx.setParseDashManifest(true);
-        // Lets execute the request
-        ytEx.execute(youtubeLink);
+        }.extract(youtubeLink, true, true);
     }
+
+
 
     /**
      * Get the best available audio stream
@@ -1004,7 +918,6 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private YtFile getBestStream(SparseArray<YtFile> ytFiles)
     {
-        Log.e(TAG,  "ytFiles: " + ytFiles);
         if (ytFiles.get(YOUTUBE_ITAG_141) != null) {
             LogHelper.e(TAG, " gets YOUTUBE_ITAG_141");
             return ytFiles.get(YOUTUBE_ITAG_141);
@@ -1032,9 +945,6 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         } else if (ytFiles.get(YOUTUBE_ITAG_43) != null) {
             LogHelper.e(TAG, " gets YOUTUBE_ITAG_43");
             return ytFiles.get(YOUTUBE_ITAG_43);
-        } else if (ytFiles.get(YOUTUBE_ITAG_36) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_36");
-            return ytFiles.get(YOUTUBE_ITAG_36);
         }
 
         LogHelper.e(TAG, " gets YOUTUBE_ITAG_17");
@@ -1052,82 +962,6 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context
                 .NOTIFICATION_SERVICE);
         notificationManager.cancel(NOTIFICATION_ID);
-    }
-
-    @Override
-    public void onCompletion(MediaPlayer _mediaPlayer)
-    {
-        if (mediaType == Config.YOUTUBE_MEDIA_TYPE_PLAYLIST) {
-            playNext();
-            updateAction(ACTION_PAUSE);
-//            buildNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
-        } else {
-            restartVideo();
-            updateAction(ACTION_PAUSE);
-        }
-    }
-
-    @Override
-    public void onPrepared(MediaPlayer mp)
-    {
-        isStarting = false;
-//        mp.start();
-//        playState = PlaybackStateCompat.STATE_PLAYING;
-
-
-        // The service needs to continue running even after the bound client (usually a
-        // MediaController) disconnects, otherwise the music playback will stop.
-        // Calling startService(Intent) will keep the service running until it is explicitly killed.
-        startService(new Intent(getApplicationContext(), BackgroundAudioService.class));
-        configMediaPlayerState();
-        Toast.makeText(
-                getApplicationContext(),
-                getResources().getString(R.string.toast_message_playing, currentVideoTitle),
-                Toast.LENGTH_SHORT
-        ).show();
-    }
-
-    @Override
-    public boolean onError(MediaPlayer mp, int what, int extra)
-    {
-        return false;
-    }
-
-    public void seekTo(int position)
-    {
-        LogHelper.d(TAG, "seekTo called with ", position);
-
-        if (mediaPlayer == null) {
-            // If we do not have a current media player, simply update the current position
-            currentPosition = position;
-        } else {
-            if (mediaPlayer.isPlaying()) {
-                playState = PlaybackStateCompat.STATE_BUFFERING;
-            }
-            registerAudioNoisyReceiver();
-            registerMediaButtonReceiver();
-            mediaPlayer.seekTo(position);
-//            if (callback != null) {
-//                callback.onPlaybackStatusChanged(playState);
-//            }
-        }
-    }
-
-    @Override
-    public void onSeekComplete(MediaPlayer mp)
-    {
-        LogHelper.d(TAG, "onSeekComplete from MediaPlayer:", mp.getCurrentPosition());
-        currentPosition = mp.getCurrentPosition();
-        if (playState == PlaybackStateCompat.STATE_BUFFERING) {
-            registerAudioNoisyReceiver();
-            registerMediaButtonReceiver();
-            mediaPlayer.start();
-            playState = PlaybackStateCompat.STATE_PLAYING;
-            updateAction(ACTION_PAUSE);
-        }
-//        if (callback != null) {
-//            callback.onPlaybackStatusChanged(playState);
-//        }
     }
 
 
@@ -1195,7 +1029,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                     if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
                         LogHelper.e(TAG, "configMediaPlayerState startMediaPlayer. seeking to ", currentPosition);
                         if (currentPosition == mediaPlayer.getCurrentPosition()) {
-                            mediaPlayer.start();
+                            mediaPlayer.play();
                             updateAction(ACTION_PAUSE);
                             playState = PlaybackStateCompat.STATE_PLAYING;
                         } else {
@@ -1216,7 +1050,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
     /**
      * Called by AudioManager on audio focus changes.
-     * Implementation of {@link android.media.AudioManager.OnAudioFocusChangeListener}
+     * Implementation of {@link AudioManager.OnAudioFocusChangeListener}
      */
     @Override
     public void onAudioFocusChange(int focusChange)

@@ -214,7 +214,8 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
         try {
             reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
             streamMap = reader.readLine();
-
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             if (reader != null)
                 reader.close();

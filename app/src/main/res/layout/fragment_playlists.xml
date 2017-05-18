@@ -34,7 +34,8 @@
 
     <Space
         android:layout_width="match_parent"
-        android:layout_height="3dip" />
+        android:layout_height="3dip"
+        />
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -44,11 +45,12 @@
             android:id="@+id/swipeToRefresh"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <com.nhaarman.listviewanimations.itemmanipulation.DynamicListView
-                android:id="@+id/playlist_list"
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/playlists"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:dividerHeight="3dp" />
+                />
         </android.support.v4.widget.SwipeRefreshLayout>
     </FrameLayout>
 </LinearLayout>
