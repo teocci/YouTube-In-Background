@@ -46,7 +46,7 @@ public class Utils
         long number = 0;
         int count = segments.length - 1;
         for (String segment : segments) {
-            Log.e(TAG, "segment");
+//            Log.e(TAG, "segment");
             number += Integer.parseInt(segment) * Math.pow(10, 3 * count--);
         }
 

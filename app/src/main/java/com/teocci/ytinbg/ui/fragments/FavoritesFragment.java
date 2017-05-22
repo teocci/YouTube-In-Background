@@ -90,7 +90,7 @@ public class FavoritesFragment extends RecyclerFragment
     @Override
     protected VideosAdapter getAdapter()
     {
-        return new VideosAdapter(getActivity(), false);
+        return new VideosAdapter(getActivity(), true);
     }
 
     @Override

@@ -51,7 +51,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     private Activity context;
     private final List<YouTubeVideo> videoList;
-    private List<String> favorites;
+//    private List<String> favorites;
     private boolean isFavoriteList;
 
     private AdapterView.OnItemClickListener onItemClickListener;
@@ -61,7 +61,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     public VideosAdapter(Activity context, boolean isFavoriteList)
     {
         this.videoList = new ArrayList<>();
-        this.favorites = new ArrayList<>();
+//        this.favorites = new ArrayList<>();
         this.context = context;
         this.isFavoriteList = isFavoriteList;
         this.onItemClickListener = null;
@@ -71,7 +71,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     public VideosAdapter(Activity context, List<YouTubeVideo> videoList, boolean isFavoriteList)
     {
         this.videoList = videoList;
-        this.favorites = new ArrayList<>();
+//        this.favorites = new ArrayList<>();
         this.context = context;
         this.isFavoriteList = isFavoriteList;
         this.onItemClickListener = null;
@@ -113,16 +113,19 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             videoViewHolder.viewCount.setText(Utils.formatViewCount(searchResult.getViewCount()));
 
             //set checked if exists in database
-            boolean isFavorite = YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
-                    .FAVORITE).checkIfExists(searchResult.getId());
-            if (isFavorite) favorites.add(searchResult.getId());
+            boolean isFavorite = YouTubeSqlDb
+                    .getInstance()
+                    .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
+                    .checkIfExists(searchResult.getId());
+//            if (isFavorite) favorites.add(searchResult.getId());
+
             videoViewHolder.checkBoxFavorite.setChecked(isFavorite);
 
             videoViewHolder.checkBoxFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
             {
                 public void onCheckedChanged(CompoundButton btn, boolean isChecked)
                 {
-                    if (!isChecked) favorites.remove(searchResult.getId());
+//                    if (!isChecked) favorites.remove(searchResult.getId());
                 }
             });
 
@@ -131,17 +134,23 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 @Override
                 public void onClick(View v)
                 {
-                    if (((CheckBox) v).isChecked()) {
-                        YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).create
-                                (searchResult);
+                    final boolean isChecked = ((CheckBox) v).isChecked();
+                    Log.e(TAG, "isChecked: " + isChecked + " | isFavoriteList: " + isFavoriteList);
+                    if (isChecked) {
+                        YouTubeSqlDb
+                                .getInstance()
+                                .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
+                                .create(searchResult);
                     } else {
-                        YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE).delete
-                                (searchResult.getId());
+                        YouTubeSqlDb
+                                .getInstance()
+                                .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
+                                .delete(searchResult.getId());
                         if (isFavoriteList) {
-                            videoList.remove(videoViewHolder.getAdapterPosition());
-                            notifyDataSetChanged();
+                            removeVideo(videoViewHolder.getAdapterPosition());
                         }
                     }
+
                 }
             });
 
@@ -225,6 +234,14 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         notifyDataSetChanged();
     }
 
+    public void addYouTubeVideo(YouTubeVideo youTubeVideo, int position)
+    {
+        if (position > videoList.size()) return;
+
+        videoList.add(youTubeVideo);
+        notifyItemInserted(position);
+    }
+
     /**
      * Inserting a new item at the head of the list. This uses a specialized
      * RecyclerView method, notifyItemInserted(), to trigger any enabled item
@@ -254,7 +271,8 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
      * method will check if the new added object is null then the progressbar
      * will be displayed
      */
-    public void addLoader() {
+    public void addLoader()
+    {
 
         videoList.add(null);
         notifyItemInserted(videoList.size() - 1);
@@ -263,7 +281,8 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     /**
      * Removes the progressbar added by addLoader()
      */
-    public void removeLoader() {
+    public void removeLoader()
+    {
         videoList.remove(videoList.size() - 1);
         notifyItemRemoved(videoList.size());
     }
