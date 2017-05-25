@@ -16,14 +16,14 @@ You can [download the APP here](https://goo.gl/GxpPt9)
 ### Install
 You can install the APK following the [next guide](https://github.com/teocci/YouTube-In-Background/blob/master/INSTALL.md)
 
-## Credits
-* [Android based YouTube url extractor][1]
-
 ### Pre-requisites
     
 - Android SDK 25
 - Android Build Tools v25.0.2
 - Android Support Repository
+
+## Credits
+* [Android based YouTube url extractor][1]
 
 ## License
 
@@ -31,7 +31,7 @@ The code supplied here is covered under the MIT Open Source License.
 
 [1]: https://github.com/HaarigerHarald/android-youtubeExtractor
 
-### Contribute
+## Contribute
 You can contribute to YouTube-In-Background by different means. You can help find bugs (and report them in the [issue tracker](https://github.com/teocci/YouTube-In-Background/issues)), help with the translation to different languages or you can try and implement new things yourself.
 
 <img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/favorites.png" alt="Favorites" width="360" height="640">
