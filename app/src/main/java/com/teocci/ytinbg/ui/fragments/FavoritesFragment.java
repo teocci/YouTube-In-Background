@@ -27,7 +27,7 @@ import java.util.ArrayList;
  */
 public class FavoritesFragment extends RecyclerFragment
 {
-    private static final String TAG = LogHelper.makeLogTag(FavoritesFragment.class);
+    private static final String TAG = FavoritesFragment.class.getSimpleName();
 
     private ArrayList<YouTubeVideo> favoriteVideos;
 

@@ -44,7 +44,7 @@ import javax.annotation.Nullable;
 public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         implements ItemTouchListener
 {
-    private static final String TAG = LogHelper.makeLogTag(VideosAdapter.class);
+    private static final String TAG = VideosAdapter.class.getSimpleName();
 
     private final int VIEW_TYPE_ITEM = 0;
     private final int VIEW_TYPE_LOADER = 1;
@@ -135,7 +135,6 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 public void onClick(View v)
                 {
                     final boolean isChecked = ((CheckBox) v).isChecked();
-                    Log.e(TAG, "isChecked: " + isChecked + " | isFavoriteList: " + isFavoriteList);
                     if (isChecked) {
                         YouTubeSqlDb
                                 .getInstance()
@@ -148,7 +147,6 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                                 .delete(youTubeVideo.getId());
                         if (isFavoriteList) {
                             removeVideo(videoViewHolder.getAdapterPosition());
-                            printVideoList();
                         }
                     }
 
@@ -224,8 +222,6 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     public YouTubeVideo getYouTubeVideo(int position)
     {
         if (position >= videoList.size()) return null;
-
-        Log.e(TAG, "Video: " + videoList.get(position).getId());
         return videoList.get(position);
     }
 
@@ -258,7 +254,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     public void addMoreYouTubeVideos(ArrayList<YouTubeVideo> youTubeVideos)
     {
         videoList.addAll(youTubeVideos);
-        Log.e(TAG, "Adding " + youTubeVideos.size() + " more elements. Total: " + videoList.size());
+//        Log.e(TAG, "Adding " + youTubeVideos.size() + " more elements. Total: " + videoList.size());
         notifyDataSetChanged();
     }
 
