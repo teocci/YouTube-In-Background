@@ -113,7 +113,10 @@ public class RecentlyWatchedFragment extends RecyclerFragment implements
 
         recentlyPlayedVideos.clear();
         recentlyPlayedVideos.addAll(
-                YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED).readAll()
+                YouTubeSqlDb
+                        .getInstance()
+                        .videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                        .readAll()
         );
 
         if (videoListAdapter != null) {
@@ -160,12 +163,12 @@ public class RecentlyWatchedFragment extends RecyclerFragment implements
         ).show();
 
         YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
-                .create(recentlyPlayedVideos.get(position));
+                .create(videoListAdapter.getYouTubeVideo(position));
 
         Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
         serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
         serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, recentlyPlayedVideos.get(position));
+        serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
         getActivity().startService(serviceIntent);
     }
 

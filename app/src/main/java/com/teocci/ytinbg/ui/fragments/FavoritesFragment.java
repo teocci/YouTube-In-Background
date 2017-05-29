@@ -102,8 +102,12 @@ public class FavoritesFragment extends RecyclerFragment
             //do nothing for now
         }
         favoriteVideos.clear();
-        favoriteVideos.addAll(YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE
-                .FAVORITE).readAll());
+        favoriteVideos.addAll(
+                YouTubeSqlDb
+                        .getInstance()
+                        .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
+                        .readAll()
+        );
 
         if (videoListAdapter != null) {
             getActivity().runOnUiThread(new Runnable()
@@ -145,9 +149,19 @@ public class FavoritesFragment extends RecyclerFragment
                 Toast.LENGTH_SHORT
         ).show();
 
+        favoriteVideos.clear();
+        favoriteVideos.addAll(
+                YouTubeSqlDb
+                        .getInstance()
+                        .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
+                        .readAll()
+        );
+
         // Adds items in the recently watched list
-        YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
-                .create(favoriteVideos.get(position));
+        YouTubeSqlDb
+                .getInstance()
+                .videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                .create(videoListAdapter.getYouTubeVideo(position));
 
         Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
         serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);

@@ -128,12 +128,12 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
         ).show();
 
         YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
-                .create(videoListAdapter.getYouTubeVideos(position));
+                .create(videoListAdapter.getYouTubeVideo(position));
 
         Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
         serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
         serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideos(position));
+        serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
         getActivity().startService(serviceIntent);
     }
 

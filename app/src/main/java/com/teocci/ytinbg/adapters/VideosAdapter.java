@@ -51,7 +51,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     private Activity context;
     private final List<YouTubeVideo> videoList;
-//    private List<String> favorites;
+    //    private List<String> favorites;
     private boolean isFavoriteList;
 
     private AdapterView.OnItemClickListener onItemClickListener;
@@ -100,24 +100,24 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     public void onBindViewHolder(RecyclerView.ViewHolder itemHolder, int position)
     {
         if (itemHolder instanceof VideoViewHolder) {
-            final YouTubeVideo searchResult = videoList.get(position);
+            final YouTubeVideo youTubeVideo = videoList.get(position);
 
             final VideoViewHolder videoViewHolder = (VideoViewHolder) itemHolder;
             Picasso.with(context)
-                    .load(searchResult.getThumbnailURL())
+                    .load(youTubeVideo.getThumbnailURL())
                     .centerCrop()
                     .fit()
                     .into(videoViewHolder.thumbnail);
-            videoViewHolder.title.setText(searchResult.getTitle());
-            videoViewHolder.duration.setText(searchResult.getDuration());
-            videoViewHolder.viewCount.setText(Utils.formatViewCount(searchResult.getViewCount()));
+            videoViewHolder.title.setText(youTubeVideo.getTitle());
+            videoViewHolder.duration.setText(youTubeVideo.getDuration());
+            videoViewHolder.viewCount.setText(Utils.formatViewCount(youTubeVideo.getViewCount()));
 
             //set checked if exists in database
             boolean isFavorite = YouTubeSqlDb
                     .getInstance()
                     .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
-                    .checkIfExists(searchResult.getId());
-//            if (isFavorite) favorites.add(searchResult.getId());
+                    .checkIfExists(youTubeVideo.getId());
+//            if (isFavorite) favorites.add(youTubeVideo.getId());
 
             videoViewHolder.checkBoxFavorite.setChecked(isFavorite);
 
@@ -125,7 +125,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             {
                 public void onCheckedChanged(CompoundButton btn, boolean isChecked)
                 {
-//                    if (!isChecked) favorites.remove(searchResult.getId());
+//                    if (!isChecked) favorites.remove(youTubeVideo.getId());
                 }
             });
 
@@ -140,14 +140,15 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                         YouTubeSqlDb
                                 .getInstance()
                                 .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
-                                .create(searchResult);
+                                .create(youTubeVideo);
                     } else {
                         YouTubeSqlDb
                                 .getInstance()
                                 .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
-                                .delete(searchResult.getId());
+                                .delete(youTubeVideo.getId());
                         if (isFavoriteList) {
                             removeVideo(videoViewHolder.getAdapterPosition());
+                            printVideoList();
                         }
                     }
 
@@ -159,7 +160,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 @Override
                 public void onClick(View v)
                 {
-                    doShareLink(searchResult.getTitle(), searchResult.getId());
+                    doShareLink(youTubeVideo.getTitle(), youTubeVideo.getId());
                 }
             });
 
@@ -168,7 +169,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 @Override
                 public void onClick(View v)
                 {
-                    doDownloadVideo(searchResult.getId());
+                    doDownloadVideo(youTubeVideo.getId());
                 }
             });
         } else if (itemHolder instanceof LoaderViewHolder) {
@@ -215,9 +216,16 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         notifyItemRemoved(position);
     }
 
-    public YouTubeVideo getYouTubeVideos(int position)
+    public List<YouTubeVideo> getYouTubeVideos()
+    {
+        return videoList;
+    }
+
+    public YouTubeVideo getYouTubeVideo(int position)
     {
         if (position >= videoList.size()) return null;
+
+        Log.e(TAG, "Video: " + videoList.get(position).getId());
         return videoList.get(position);
     }
 
@@ -298,6 +306,15 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
         videoList.remove(position);
         notifyItemRemoved(position);
+        notifyItemRangeChanged(position, videoList.size());
+    }
+
+    private void printVideoList()
+    {
+        Log.e(TAG, "videoList: ");
+        for (YouTubeVideo video : videoList) {
+            Log.e(TAG, video.getId());
+        }
     }
 
     public void swapItems(int positionA, int positionB)
@@ -360,8 +377,12 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private void onItemHolderClick(VideoViewHolder itemHolder)
     {
         if (onItemClickListener != null) {
-            onItemClickListener.onItemClick(null, itemHolder.itemView,
-                    itemHolder.getAdapterPosition(), itemHolder.getItemId());
+            onItemClickListener.onItemClick(
+                    null,
+                    itemHolder.itemView,
+                    itemHolder.getAdapterPosition(),
+                    itemHolder.getItemId()
+            );
         }
     }
 

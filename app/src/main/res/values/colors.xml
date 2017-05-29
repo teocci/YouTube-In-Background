@@ -2,6 +2,7 @@
 <resources>
     <color name="color_primary">#c23232</color>
     <color name="color_primary_dark">#c62826 </color>
+    <color name="contrast_background">#c23232</color>
     <color name="text_color_primary">#ffffff</color>
     <color name="window_background">#333333</color>
     <color name="navigation_bar_color">#000000</color>
