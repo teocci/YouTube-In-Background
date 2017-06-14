@@ -5,10 +5,11 @@ android {
     buildToolsVersion "25.0.2"
     defaultConfig {
         applicationId "com.teocci.ytinbg"
-        minSdkVersion 16
+        minSdkVersion 17
         targetSdkVersion 25
         versionCode 1
         versionName "2.2.3"
+        multiDexEnabled true
     }
 
     signingConfigs {
@@ -78,11 +79,14 @@ dependencies {
     compile 'com.android.support:support-v4:25.3.1'
     compile 'com.android.support:recyclerview-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
-    compile 'com.google.android.gms:play-services-auth:10.2.6'
+    compile 'com.google.android.gms:play-services-auth:11.0.0'
     compile 'com.google.code.gson:gson:2.7'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.fasterxml.jackson.core:jackson-core:2.8.7'
     compile 'org.aspectj:aspectjrt:1.8.8'
+
+    compile 'com.google.android.exoplayer:exoplayer:r2.4.1'
+
     compile 'com.googlecode.mp4parser:isoparser:1.1.17'
     compile 'com.google.api-client:google-api-client:1.22.0'
     compile 'com.google.api-client:google-api-client-android:1.22.0'

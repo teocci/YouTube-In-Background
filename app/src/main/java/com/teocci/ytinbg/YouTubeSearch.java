@@ -257,7 +257,7 @@ public class YouTubeSearch
                         index++;
                     }
 
-                    youTubeVideoReceiver.onVideosReceived(items, searchList, searchListResponse.getNextPageToken());
+                    youTubeVideoReceiver.onVideosReceived(items, searchList.getPageToken(), searchListResponse.getNextPageToken());
 
                 } catch (IOException e) {
                     Log.e(TAG, "Could not initialize: " + e);
@@ -271,7 +271,7 @@ public class YouTubeSearch
     /**
      * Search videos for a specific query
      *
-     * @param keywords - query
+     * @param keywords      - query
      * @param nextPageToken - contains the Page Token
      */
     public void searchNextVideos(final String keywords, final String nextPageToken)
@@ -314,10 +314,7 @@ public class YouTubeSearch
                     // application uses.
                     searchList.setFields(YOUTUBE_SEARCH_VIDEOS_FIELDS);
                     searchList.set("hl", language);
-
-                    if (nextPageToken != null){
-                        searchList.setPageToken(nextPageToken);
-                    }
+                    searchList.setPageToken(nextPageToken);
 
                     videosList = youtube.videos().list(YOUTUBE_VIDEO_LIST_PART);
                     videosList.setKey(Config.YOUTUBE_API_KEY);
@@ -382,7 +379,7 @@ public class YouTubeSearch
                         index++;
                     }
 
-                    youTubeVideoReceiver.onVideosReceived(items, searchList, searchListResponse.getNextPageToken());
+                    youTubeVideoReceiver.onVideosReceived(items, searchList.getPageToken(), searchListResponse.getNextPageToken());
 
                 } catch (IOException e) {
                     Log.e(TAG, "Could not initialize: " + e);
@@ -457,7 +454,7 @@ public class YouTubeSearch
                     e.printStackTrace();
                 } catch (GoogleJsonResponseException e) {
                     if (e.getStatusCode() == 404) {
-                        youTubeVideoReceiver.onPlaylistNotFound("empty", e.getStatusCode());
+                        youTubePlaylistReceiver.onPlaylistNotFound("empty", e.getStatusCode());
                         return;
                     } else {
                         e.printStackTrace();
@@ -521,7 +518,7 @@ public class YouTubeSearch
                     Log.d(TAG, "all items size: " + playlistItemList.size());
                 } catch (GoogleJsonResponseException e) {
                     if (e.getStatusCode() == 404) {
-                        youTubeVideoReceiver.onPlaylistNotFound(playlistId, e.getStatusCode());
+                        youTubePlaylistReceiver.onPlaylistNotFound(playlistId, e.getStatusCode());
                         return;
                     } else {
                         e.printStackTrace();

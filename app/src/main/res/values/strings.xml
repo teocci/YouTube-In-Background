@@ -41,14 +41,12 @@
     <string name="playlist_number_videos">Number of videos: %1$d</string>
     <string name="playlist_status">Status: %1$s</string>
 
-
     <string name="removed_positions">Removed</string>
     <string name="tap_to_undo">Tap to undo</string>
     <string name="item_deleted">Item deleted</string>
     <string name="load_playlist">Load</string>
     <string name="user_playlist">Playlist</string>
     <string name="video_thumbnail">Video Thumbnail</string>
-    조회수 173,893회
 
     <!-- Menu -->
     <string name="action_clear_list">Clear recently played list</string>
@@ -57,8 +55,26 @@
 
     <!-- Image Buttons -->
     <string name="share_image_button">Share:</string>
-    <string name="error_no_yt_link">Not a valid YouTube link!</string>
     <string name="app_update">Couldn\'t extract URLs you may need an update!</string>
 
+
+    <!-- Errors -->
+    <string name="error_no_yt_link">Not a valid YouTube link</string>
+    <string name="error_no_yt_video_retrieve">Error Loading YouTube link</string>
+    <string name="error_no_connection">Cannot connect to server. Please, check your Internet connectivity.</string>
+    <string name="error_loading_media">Error Loading Media</string>
+
     <!-- Permissions -->
+
+    <!-- Playback Controls -->
+    <string name="currently_playing">YouTube Video currently playing</string>
+    <string name="currently_playing_views_number">Artist of currently playing song</string>
+    <string name="currently_playing_extra_info">Extra info for currently playing song</string>
+
+    <string name="skip_next">skip to next</string>
+    <string name="skip_prev">skip to previous</string>
+
+    <!-- Playback Controls Description -->
+    <string name="play_pause">play or pause</string>
+
 </resources>

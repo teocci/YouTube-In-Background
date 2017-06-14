@@ -6,7 +6,9 @@ import java.io.Serializable;
 
 /**
  * YouTube video class
- * Created by teocci on 3.2.16..
+ * Created by Teocci
+ *
+ * @author teocci@yandex.com on 2016-Aug-18
  */
 public class YouTubeVideo implements Serializable
 {
@@ -27,6 +29,13 @@ public class YouTubeVideo implements Serializable
         this.viewCount = "";
     }
 
+    public YouTubeVideo(YouTubeVideo newVideo) {
+        this.id = newVideo.id;
+        this.title = newVideo.title;
+        this.thumbnailURL = newVideo.thumbnailURL;
+        this.duration = newVideo.duration;
+        this.viewCount = newVideo.viewCount;
+    }
     public YouTubeVideo(String id, String title, String thumbnailURL, String duration, String
             viewCount)
     {

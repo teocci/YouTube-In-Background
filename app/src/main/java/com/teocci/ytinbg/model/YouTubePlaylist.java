@@ -6,7 +6,9 @@ import java.io.Serializable;
 
 /**
  * YouTube playlist class
- * Created by Teocci on 8.3.16..
+ * Created by Teocci
+ *
+ * @author teocci@yandex.com on 2016-Aug-18
  */
 public class YouTubePlaylist implements Serializable
 {

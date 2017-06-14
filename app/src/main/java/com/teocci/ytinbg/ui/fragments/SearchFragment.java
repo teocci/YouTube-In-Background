@@ -13,10 +13,9 @@ import android.widget.AdapterView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.google.api.services.youtube.YouTube;
 import com.teocci.ytinbg.BackgroundAudioService;
+import com.teocci.ytinbg.BackgroundExoAudioService;
 import com.teocci.ytinbg.R;
-import com.teocci.ytinbg.YouTubeSearch;
 import com.teocci.ytinbg.adapters.VideosAdapter;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.interfaces.OnLoadMoreListener;
@@ -24,8 +23,9 @@ import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.decoration.DividerDecoration;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.youtube.YouTubeVideoLoader;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by teocci.
@@ -38,13 +38,13 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
     private static final String TAG = SearchFragment.class.getSimpleName();
 
     private Handler handler;
-    private YouTubeSearch youTubeSearch;
     private ProgressBar loadingProgressBar;
 
     private String currentQuery;
     private String nextPageToken;
-    private int visibleThreshold = 1;
+    private int visibleThreshold = 4;
     private int lastVisibleItem, totalItemCount;
+
     private boolean isLoading;
 
     public static SearchFragment newInstance()
@@ -61,6 +61,8 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
         super.onCreate(savedInstanceState);
 
         handler = new Handler();
+
+        isLoading = false;
     }
 
     @Override
@@ -130,8 +132,8 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
         YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
                 .create(videoListAdapter.getYouTubeVideo(position));
 
-        Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
-        serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
+        Intent serviceIntent = new Intent(getContext(), BackgroundExoAudioService.class);
+        serviceIntent.setAction(Config.ACTION_PLAY);
         serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
         serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
         getActivity().startService(serviceIntent);
@@ -157,9 +159,6 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
         if (!getUserVisibleHint()) {
             // Do nothing for now
         }
-
-        youTubeSearch = new YouTubeSearch(getActivity(), this);
-        youTubeSearch.setYouTubeVideoReceiver(this);
     }
 
     @Override
@@ -184,33 +183,39 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
         }
         videoListAdapter.clearYouTubeVideos();
         loadingProgressBar.setVisibility(View.VISIBLE);
-        youTubeSearch.searchVideos(currentQuery);
+
+        YouTubeVideoLoader youTubeVideoLoader = new YouTubeVideoLoader(getActivity());
+        youTubeVideoLoader.setYouTubeVideoReceiver(this);
+        youTubeVideoLoader.search(currentQuery);
     }
 
     /**
      * Called when video items are received
      *
-     * @param youTubeVideos - videos to be shown in list view
+     * @param ytVideos - videos to be shown in list view
+     * @param currentPageToken - videos to be shown in list view
+     * @param nextPageToken - videos to be shown in list view
      */
     @Override
-    public void onVideosReceived(final ArrayList<YouTubeVideo> youTubeVideos,
-                                 final YouTube.Search.List searchList,
-                                 String nextPageToken)
+    public void onVideosReceived(final List<YouTubeVideo> ytVideos,
+                                 final String currentPageToken,
+                                 final String nextPageToken)
     {
         if (videoListAdapter != null) {
             getActivity().runOnUiThread(new Runnable()
             {
                 public void run()
                 {
-                    if (searchList.getPageToken() == null) {
+                    if (currentPageToken == null || currentPageToken.equals("")) {
                         Log.e(TAG, "Adding First Page Videos");
-                        videoListAdapter.setYouTubeVideos(youTubeVideos);
+                        videoListAdapter.setYouTubeVideos(ytVideos);
                         recyclerView.smoothScrollToPosition(0);
                     } else {
                         Log.e(TAG, "Adding Next Page Videos");
 //                        int prevLastPosition = videoListAdapter.getItemCount();
                         videoListAdapter.removeLoader();
-                        videoListAdapter.addMoreYouTubeVideos(youTubeVideos);
+                        videoListAdapter.addMoreYouTubeVideos(ytVideos);
+                        isLoading = false;
 //                        recyclerView.smoothScrollToPosition(prevLastPosition + 1);
                     }
                 }
@@ -219,10 +224,8 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
 
             this.nextPageToken = nextPageToken;
             if (nextPageToken != null) {
-                Log.e(TAG, "Adding setOnLoadMoreListener");
                 videoListAdapter.setOnLoadMoreListener(this);
             } else {
-                Log.e(TAG, "Removing setOnLoadMoreListener");
                 videoListAdapter.removeOnLoadMoreListener();
             }
         }
@@ -235,28 +238,30 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
             }
         });
     }
-
-    /**
-     * Called when playlist cannot be found
-     * NOT USED in this fragment
-     *
-     * @param playlistId the playlist ID
-     * @param errorCode  the error code obtained
-     */
-    @Override
-    public void onPlaylistNotFound(String playlistId, int errorCode) { }
+//
+//    /**
+//     * Called when playlist cannot be found
+//     * NOT USED in this fragment
+//     *
+//     * @param playlistId the playlist ID
+//     * @param errorCode  the error code obtained
+//     */
+//    @Override
+//    public void onPlaylistNotFound(String playlistId, int errorCode) { }
 
     @Override
     public void onLoadMore()
     {
+        Log.e(TAG, "onLoadMore called");
         videoListAdapter.addLoader();
         new Handler().postDelayed(new Runnable()
         {
             @Override
             public void run()
             {
-                youTubeSearch.searchNextVideos(currentQuery, nextPageToken);
-                isLoading = false;
+                YouTubeVideoLoader youTubeVideoLoader = new YouTubeVideoLoader(getActivity());
+                youTubeVideoLoader.setYouTubeVideoReceiver(SearchFragment.this);
+                youTubeVideoLoader.search(currentQuery, nextPageToken);
             }
         }, 200);
     }

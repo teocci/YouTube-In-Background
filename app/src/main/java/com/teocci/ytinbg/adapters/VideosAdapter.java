@@ -231,7 +231,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
      * the view. However, this method will not trigger any of the RecyclerView
      * animation features.
      */
-    public void setYouTubeVideos(ArrayList<YouTubeVideo> youTubeVideos)
+    public void setYouTubeVideos(List<YouTubeVideo> youTubeVideos)
     {
         videoList.clear();
         videoList.addAll(youTubeVideos);
@@ -251,7 +251,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
      * RecyclerView method, notifyItemInserted(), to trigger any enabled item
      * animations in addition to updating the view.
      */
-    public void addMoreYouTubeVideos(ArrayList<YouTubeVideo> youTubeVideos)
+    public void addMoreYouTubeVideos(List<YouTubeVideo> youTubeVideos)
     {
         videoList.addAll(youTubeVideos);
 //        Log.e(TAG, "Adding " + youTubeVideos.size() + " more elements. Total: " + videoList.size());
@@ -277,7 +277,6 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
      */
     public void addLoader()
     {
-
         videoList.add(null);
         notifyItemInserted(videoList.size() - 1);
     }

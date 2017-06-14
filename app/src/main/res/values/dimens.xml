@@ -11,4 +11,14 @@
     <dimen name="card_insets">1dp</dimen>
     <dimen name="nav_drawer_width">260dp</dimen>
     <dimen name="text_margin">16dp</dimen>
+
+    <!-- playback controls -->
+    <dimen name="text_view_margin">16dp</dimen>
+    <dimen name="end_text_margin">16dp</dimen>
+
+    <dimen name="tab_padding_top">48dp</dimen>
+    <dimen name="controls_container_height">36dp</dimen>
+    <dimen name="playback_controls_video_thumbnail_horizontal_margin">8dp</dimen>
+    <dimen name="playback_controls_video_thumbnail_size">64dp</dimen>
+    <dimen name="playback_controls_padding">8dp</dimen>
 </resources>

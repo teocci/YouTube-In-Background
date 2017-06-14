@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.Toast;
 
 import com.teocci.ytinbg.BackgroundAudioService;
+import com.teocci.ytinbg.BackgroundExoAudioService;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.adapters.VideosAdapter;
 import com.teocci.ytinbg.callbacks.SimpleItemTouchCallback;
@@ -23,6 +24,8 @@ import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.NetworkConf;
 
 import java.util.ArrayList;
+
+import static com.teocci.ytinbg.utils.Config.ACTION_PLAY;
 
 /**
  * Class that handles list of the recently watched YouTube
@@ -165,8 +168,8 @@ public class RecentlyWatchedFragment extends RecyclerFragment implements
         YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
                 .create(videoListAdapter.getYouTubeVideo(position));
 
-        Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
-        serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
+        Intent serviceIntent = new Intent(getContext(), BackgroundExoAudioService.class);
+        serviceIntent.setAction(ACTION_PLAY);
         serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
         serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
         getActivity().startService(serviceIntent);

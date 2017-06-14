@@ -1,6 +1,7 @@
 package com.teocci.ytinbg.ui;
 
 import android.Manifest;
+import android.accounts.AccountManager;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -47,15 +48,26 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.teocci.ytinbg.youtube.YouTubeSingleton.getCredential;
+
 /**
  * Activity that manages fragments and action bar
  */
 public class MainActivity extends AppCompatActivity
 {
     private static final String TAG = MainActivity.class.getSimpleName();
+
+
+    public static final String PREF_ACCOUNT_NAME = "accountName";
+
+    static final int REQUEST_ACCOUNT_PICKER = 1000;
+    static final int REQUEST_PERMISSION_GET_ACCOUNTS = 1003;
+
     private Toolbar toolbar;
     private TabLayout tabLayout;
     private ViewPager viewPager;
+
+    private static Context context;
 
     private int initialColors[] = new int[2];
 
@@ -77,6 +89,8 @@ public class MainActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        context = getApplicationContext();
 
         YouTubeSqlDb.getInstance().init(this);
 
@@ -113,6 +127,38 @@ public class MainActivity extends AppCompatActivity
         setIntent(intent);
 
         handleIntent(intent);
+    }
+
+    /**
+     * Handles Google OAuth 2.0 authorization or account chosen result
+     *
+     * @param requestCode to use when launching the resolution activity
+     * @param resultCode  Standard activity result: operation succeeded.
+     * @param data        The received Intent includes an extra for KEY_ACCOUNT_NAME, specifying
+     *                    the account name (an email address) you must use to acquire the OAuth 2
+     *                    .0 token.
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ACCOUNT_PICKER) {
+            if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
+                String accountName = data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+                if (accountName != null) {
+                    SharedPreferences settings = getPreferences(Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = settings.edit();
+                    editor.putString(PREF_ACCOUNT_NAME, accountName);
+                    editor.apply();
+                    getCredential().setSelectedAccountName(accountName);
+                }
+            }
+        }
+    }
+
+    public static Context getYiBContext()
+    {
+        return context;
     }
 
     /**
@@ -446,7 +492,8 @@ public class MainActivity extends AppCompatActivity
             ActivityCompat.requestPermissions(
                     this,
                     listPermissionsNeeded.toArray(new String[listPermissionsNeeded.size()]),
-                    REQUEST_ID_MULTIPLE_PERMISSIONS);
+                    REQUEST_ID_MULTIPLE_PERMISSIONS
+            );
             return false;
         }
         return true;

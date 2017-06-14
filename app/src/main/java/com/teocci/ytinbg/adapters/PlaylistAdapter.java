@@ -142,7 +142,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
      * the view. However, this method will not trigger any of the RecyclerView
      * animation features.
      */
-    public void setYouTubePlaylists(ArrayList<YouTubePlaylist> ytPlaylists)
+    public void setYouTubePlaylists(List<YouTubePlaylist> ytPlaylists)
     {
         this.ytPlaylists.clear();
         this.ytPlaylists.addAll(ytPlaylists);

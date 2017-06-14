@@ -1,11 +1,7 @@
 package com.teocci.ytinbg.ui.fragments;
 
-import android.accounts.AccountManager;
-import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
@@ -17,40 +13,38 @@ import android.widget.AdapterView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.api.services.youtube.YouTube;
 import com.teocci.ytinbg.BackgroundAudioService;
 import com.teocci.ytinbg.R;
-import com.teocci.ytinbg.YouTubeSearch;
 import com.teocci.ytinbg.adapters.PlaylistAdapter;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
-import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.model.YouTubePlaylist;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.decoration.DividerDecoration;
 import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkConf;
+import com.teocci.ytinbg.youtube.YouTubePlaylistLoader;
+import com.teocci.ytinbg.youtube.YouTubePlaylistVideoLoader;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class that handles list of the playlistList acquired from YouTube
  * Created by teocci on 7.3.16..
  */
-public class PlaylistFragment extends Fragment implements AdapterView.OnItemClickListener, YouTubeVideoReceiver,
+public class PlaylistFragment extends Fragment implements AdapterView.OnItemClickListener,
         YouTubePlaylistReceiver
 {
-    private static final String TAG = LogHelper.makeLogTag(PlaylistFragment.class);
-
-    private static final int REQUEST_ACCOUNT_PICKER = 2;
-    private static final int REQUEST_AUTHORIZATION = 3;
+    private static final String TAG = PlaylistFragment.class.getSimpleName();
 
     private RecyclerView playlistListView;
     private PlaylistAdapter playlistAdapter;
     private String chosenAccountName;
 
-    private YouTubeSearch youTubeSearch;
+    private YouTubePlaylistLoader ytPlaylistLoader;
+    private YouTubePlaylistVideoLoader ytPlaylistVideoLoader;
     private TextView userNameTextView;
     private NetworkConf networkConf;
     private SwipeRefreshLayout swipeToRefresh;
@@ -65,12 +59,11 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
     {
         super.onCreate(savedInstanceState);
 
-//        handler = new Handler();
-//        playlistList = new ArrayList<>();
-//
-        youTubeSearch = new YouTubeSearch(getActivity(), this);
-        youTubeSearch.setYouTubePlaylistReceiver(this);
-        youTubeSearch.setYouTubeVideoReceiver(this);
+        ytPlaylistLoader = new YouTubePlaylistLoader(getActivity());
+        ytPlaylistLoader.setYouTubePlaylistReceiver(this);
+
+        ytPlaylistVideoLoader = new YouTubePlaylistVideoLoader(getActivity());
+        ytPlaylistVideoLoader.setYouTubePlaylistReceiver(this);
 
         networkConf = new NetworkConf(getActivity());
     }
@@ -103,33 +96,9 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
             @Override
             public void onRefresh()
             {
-                // Check network connectivity
-                if (!networkConf.isNetworkAvailable()) {
-                    networkConf.createNetErrorDialog();
-                    return;
-                }
-
-                if (chosenAccountName == null) {
-                    chooseAccount();
-                } else {
-                    youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
-                    youTubeSearch.searchPlaylist();
-                }
+                searchPlaylists();
             }
         });
-
-        if (savedInstanceState != null) {
-            chosenAccountName = savedInstanceState.getString(Config.ACCOUNT_NAME);
-            youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
-            userNameTextView.setText(extractUserName(chosenAccountName));
-            Toast.makeText(
-                    getContext(),
-                    getString(R.string.toast_message_hello) + extractUserName(chosenAccountName),
-                    Toast.LENGTH_SHORT
-            ).show();
-        } else {
-            loadAccount();
-        }
 
         return rootView;
     }
@@ -150,34 +119,9 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
         return new PlaylistAdapter(getActivity());
     }
 
-    /**
-     * Loads account saved in preferences
-     */
-    private void loadAccount()
+    public void searchPlaylists()
     {
-        SharedPreferences sp = PreferenceManager
-                .getDefaultSharedPreferences(getActivity());
-        chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
-
-        if (chosenAccountName != null) {
-            youTubeSearch.setAuthSelectedAccountName(chosenAccountName);
-            userNameTextView.setText(extractUserName(chosenAccountName));
-            Toast.makeText(
-                    getContext(),
-                    getResources().getString(R.string.toast_message_hello) + extractUserName(chosenAccountName),
-                    Toast.LENGTH_SHORT
-            ).show();
-        }
-    }
-
-    /**
-     * Save account in preferences for future usages
-     */
-    private void saveAccount()
-    {
-        LogHelper.e(TAG, "Saving account name... " + chosenAccountName);
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        sp.edit().putString(Config.ACCOUNT_NAME, chosenAccountName).apply();
+        ytPlaylistLoader.acquire();
     }
 
     @Override
@@ -208,67 +152,6 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
         }
     }
 
-    /**
-     * Handles Google OAuth 2.0 authorization or account chosen result
-     *
-     * @param requestCode to use when launching the resolution activity
-     * @param resultCode  Standard activity result: operation succeeded.
-     * @param data        The received Intent includes an extra for KEY_ACCOUNT_NAME, specifying
-     *                    the account name (an email address) you must use to acquire the OAuth 2
-     *                    .0 token.
-     */
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        switch (requestCode) {
-            case REQUEST_AUTHORIZATION:
-                if (resultCode != Activity.RESULT_OK) {
-                    chooseAccount();
-                }
-                break;
-            case REQUEST_ACCOUNT_PICKER:
-                if (resultCode == Activity.RESULT_OK && data != null
-                        && data.getExtras() != null) {
-                    String accountName = data.getExtras().getString(AccountManager
-                            .KEY_ACCOUNT_NAME);
-                    if (accountName != null) {
-                        chosenAccountName = accountName;
-                        youTubeSearch.setAuthSelectedAccountName(accountName);
-                        userNameTextView.setText(extractUserName(chosenAccountName));
-                        Toast.makeText(
-                                getContext(),
-                                getResources().getString(R.string.toast_message_hello) +
-                                        extractUserName(chosenAccountName),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                        saveAccount();
-                    }
-
-                    youTubeSearch.searchPlaylist();
-                }
-                break;
-        }
-    }
-
-    /**
-     * Choose Google account if OAuth 2.0 choosing is necessary
-     * acquiring YouTube private playlistList requires OAuth 2.0 authorization
-     */
-    private void chooseAccount()
-    {
-        try {
-//            Log.e(TAG, "getCredential()" + youTubeSearch.getCredential());
-            startActivityForResult(
-                    youTubeSearch.getCredential().newChooseAccountIntent(),
-                    REQUEST_ACCOUNT_PICKER
-            );
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
@@ -279,52 +162,24 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
         }
 
         // Results are in onVideosReceived callback method
-        youTubeSearch.acquirePlaylistVideos(playlistAdapter.getYouTubePlaylist(position).getId());
-    }
-
-    /**
-     * Called when playlistList video items are received
-     *
-     * @param youTubeVideos - list to be played in background service
-     */
-    @Override
-    public void onVideosReceived(ArrayList<YouTubeVideo> youTubeVideos,
-                                 YouTube.Search.List searchList,
-                                 String nextPageToken)
-    {
-        // Whenever the playlistList is empty, do not start service
-        if (youTubeVideos.isEmpty()) {
-            getActivity().runOnUiThread(new Runnable()
-            {
-                public void run()
-                {
-                    Toast.makeText(
-                            getContext(),
-                            getResources().getString(R.string.toast_message_playlist_empty),
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-            });
-        } else {
-            Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
-            serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
-            serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_PLAYLIST);
-            serviceIntent.putExtra(Config.YOUTUBE_TYPE_PLAYLIST, youTubeVideos);
-            getActivity().startService(serviceIntent);
-        }
+        ytPlaylistVideoLoader.acquire(playlistAdapter.getYouTubePlaylist(position).getId());
     }
 
     /**
      * Called when playlistList are received
      *
-     * @param ytPlaylists - list of playlistList to be shown in list view
+     * @param youTubePlaylistList - list of playlistList to be shown in list view
      */
     @Override
-    public void onPlaylistReceived(final ArrayList<YouTubePlaylist> ytPlaylists)
+    public void onPlaylistReceived(final List<YouTubePlaylist> youTubePlaylistList)
     {
+        if (youTubePlaylistList == null) {
+            swipeToRefresh.setRefreshing(false);
+            return;
+        }
         //refresh playlistList in database
         YouTubeSqlDb.getInstance().playlistModel().deleteAll();
-        for (YouTubePlaylist playlist : ytPlaylists) {
+        for (YouTubePlaylist playlist : youTubePlaylistList) {
             YouTubeSqlDb.getInstance().playlistModel().create(playlist);
         }
 
@@ -333,7 +188,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
             {
                 public void run()
                 {
-                    playlistAdapter.setYouTubePlaylists(ytPlaylists);
+                    playlistAdapter.setYouTubePlaylists(youTubePlaylistList);
                     swipeToRefresh.setRefreshing(false);
                 }
             });
@@ -358,6 +213,36 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
                 }
             }
         });
+    }
+
+    /**
+     * Called when playlistList video items are received
+     *
+     * @param youTubeVideos - videos to be shown in list view
+     */
+    @Override
+    public void onPlaylistVideoReceived(List<YouTubeVideo> youTubeVideos)
+    {
+        // Whenever the playlistList is empty, do not start service
+        if (youTubeVideos.isEmpty()) {
+            getActivity().runOnUiThread(new Runnable()
+            {
+                public void run()
+                {
+                    Toast.makeText(
+                            getContext(),
+                            getResources().getString(R.string.toast_message_playlist_empty),
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
+            });
+        } else {
+            Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
+            serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
+            serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_PLAYLIST);
+            serviceIntent.putExtra(Config.YOUTUBE_TYPE_PLAYLIST, (ArrayList) youTubeVideos);
+            getActivity().startService(serviceIntent);
+        }
     }
 
     /**

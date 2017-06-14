@@ -54,4 +54,7 @@
     <string name="action_clear_list">Vaciar lista de reproducción</string>
     <string name="action_remove_account">Remover cuenta registrada</string>
     <string name="toast_message_error_playing_url">Error URL Protegida: %1$s</string>
+    <string name="error_loading_media">Error cargando Me</string>
+    <string name="error_no_yt_video_retrieve">Error cargando el enlace de YouTube</string>
+    <string name="error_no_connection">No se pudo conectar al servidor. Por favor, verifique su conection a Internet.</string>
 </resources>

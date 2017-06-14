@@ -508,6 +508,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
         notificationBuilder = new NotificationCompat.Builder(this);
         notificationBuilder.setSmallIcon(R.drawable.ic_notification);
+        notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         notificationBuilder.setContentTitle(currentVideo.getTitle());
         notificationBuilder.setContentInfo(currentVideo.getDuration());
         notificationBuilder.setUsesChronometer(true);
@@ -516,7 +517,6 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 //        notificationBuilder.setOngoing(true);
         notificationBuilder.setSubText(Utils.formatViewCount(currentVideo.getViewCount()));
         notificationBuilder.setStyle(style);
-        notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
         //load bitmap for largeScreen
         if (currentVideo.getThumbnailURL() != null && !currentVideo.getThumbnailURL().isEmpty()) {
