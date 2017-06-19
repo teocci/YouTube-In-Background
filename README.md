@@ -50,6 +50,7 @@ The code supplied here is covered under the MIT Open Source License.
 ## Contribute
 You can contribute to YouTube-In-Background by different means. You can help find bugs (and report them in the [issue tracker](https://github.com/teocci/YouTube-In-Background/issues)), help with the translation to different languages or you can try and implement new things yourself.
 
+<img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/playback_control.png" alt="Favorites" width="360" height="640">
 <img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/favorites.png" alt="Favorites" width="360" height="640">
 <img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/recently_watched.png" alt="Recently Watched" width="360" height="640">
 <img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/search.png" alt="Search" width="360" height="640">
