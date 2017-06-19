@@ -60,6 +60,8 @@ public interface Playback
      */
     void updateLastKnownStreamPosition();
 
+    long getDuration();
+
     void play(YouTubeVideo item);
 
     void pause();

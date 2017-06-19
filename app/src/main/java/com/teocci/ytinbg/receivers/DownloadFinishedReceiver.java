@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 
 public class DownloadFinishedReceiver extends BroadcastReceiver
 {
-    private static final String TAG = DownloadFinishedReceiver.class.getSimpleName();
+    private static final String TAG = LogHelper.makeLogTag(DownloadFinishedReceiver.class);
 
     private static final String TEMP_FILE_NAME = "tmp-";
     private static final Pattern ARTIST_TITLE_PATTERN =

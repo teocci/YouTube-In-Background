@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.SparseArray;
 import android.widget.Toast;
 
@@ -61,7 +60,7 @@ import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_43;
 
 public class LocalPlayback implements Playback
 {
-    private static final String TAG = LocalPlayback.class.getSimpleName();
+    private static final String TAG = LogHelper.makeLogTag(LocalPlayback.class);
 
     // The volume we set the media player to when we lose audio focus, but are
     // allowed to reduce the volume instead of stopping playback.
@@ -215,6 +214,16 @@ public class LocalPlayback implements Playback
     }
 
     @Override
+    public long getDuration()
+    {
+        if (exoPlayer != null && exoPlayer.getPlayWhenReady()) {
+            LogHelper.e(TAG, "getDuration");
+            return exoPlayer.getDuration();
+        }
+        return -1;
+    }
+
+    @Override
     public void play(YouTubeVideo youTubeVideo)
     {
         LogHelper.e(TAG, "play");
@@ -227,7 +236,7 @@ public class LocalPlayback implements Playback
             currentYouTubeVideoId = youTubeVideoId;
         }
         if (videoHasChanged || exoPlayer == null) {
-            LogHelper.e(TAG, "play | calling: extractUrlAndPlay "  + (!isExtractingYTURL ? "true" : "false"));
+            LogHelper.e(TAG, "play | calling: extractUrlAndPlay " + (!isExtractingYTURL ? "true" : "false"));
             if (!isExtractingYTURL) extractUrlAndPlay();
         } else if (!isExtractingYTURL) {
             LogHelper.e(TAG, "play | calling: seekTo and configurePlayerState");

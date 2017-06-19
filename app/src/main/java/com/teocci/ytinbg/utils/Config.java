@@ -1,5 +1,7 @@
 package com.teocci.ytinbg.utils;
 
+import com.teocci.ytinbg.ui.MainActivity;
+
 /**
  * Basic configuration values used in app
  * Created by teocci on 2.2.16..
@@ -7,17 +9,24 @@ package com.teocci.ytinbg.utils;
 
 public final class Config
 {
+    // YouTube Media Type
     public static final int YOUTUBE_MEDIA_NO_NEW_REQUEST = -1;
     public static final int YOUTUBE_MEDIA_TYPE_VIDEO = 0;
     public static final int YOUTUBE_MEDIA_TYPE_PLAYLIST = 1;
 
+
+    public static final String KEY_YOUTUBE_TYPE = "YT_MEDIA_TYPE";
+    public static final String KEY_YOUTUBE_TYPE_VIDEO = "YT_VIDEO";
+    public static final String KEY_YOUTUBE_TYPE_PLAYLIST = "YT_PLAYLIST";
+    public static final String KEY_YOUTUBE_TYPE_PLAYLIST_VIDEO_POS = "YT_PLAYLIST_VIDEO_POS";
+
     public static final String YOUTUBE_LINK = "YT_DOWNLOAD_LINK";
-    public static final String YOUTUBE_TYPE = "YT_MEDIA_TYPE";
-    public static final String YOUTUBE_TYPE_VIDEO = "YT_VIDEO";
-    public static final String YOUTUBE_TYPE_PLAYLIST = "YT_PLAYLIST";
-    public static final String YOUTUBE_TYPE_PLAYLIST_VIDEO_POS = "YT_PLAYLIST_VIDEO_POS";
 
     public static final String YOUTUBE_API_KEY = "AIzaSyAN074XUjainWwyXkhv2hergNIlh2uTWUc";
+
+    // Media Session Token"
+    public static final String INTENT_SESSION_TOKEN = "com.teocci.ytinbg.SESSION_TOKEN";
+    public static final String KEY_SESSION_TOKEN = "SESSION_TOKEN";
 
     // Download properties
     public static final int YT_ITAG_FOR_AUDIO = 140;
@@ -56,7 +65,7 @@ public final class Config
 
     /**
      * Optionally used with {@link #EXTRA_START_FULLSCREEN} to carry a MediaDescription to
-     * the {@link FullScreenPlayerActivity}, speeding up the screen rendering
+     * the {@link MainActivity}, speeding up the screen rendering
      * while the {@link android.support.v4.media.session.MediaControllerCompat} is connecting.
      */
     public static final String EXTRA_CURRENT_MEDIA_DESCRIPTION = "com.teocci.ytinbg.CURRENT_MEDIA_DESCRIPTION";
@@ -66,6 +75,11 @@ public final class Config
     public static final String ACTION_PREV = "com.teocci.ytinbg.prev";
     public static final String ACTION_NEXT = "com.teocci.ytinbg.next";
     public static final String ACTION_STOP = "com.teocci.ytinbg.stop";
+
+    public static final String MODE_REPEAT_ONE = "mode_repeat_one";
+    public static final String MODE_REPEAT_ALL = "mode_repeat_all";
+    public static final String MODE_REPEAT_NONE = "mode_repeat_none";
+    public static final String MODE_SHUFFLE = "mode_shuffle";
 
 
     public static final String YOUTUBE_CHANNEL_LIST = "snippet";
@@ -94,8 +108,6 @@ public final class Config
     // video resource properties that the response will include.
     // selector specifying which fields to include in a partial response.
 
-
-
     public static final int YOUTUBE_ITAG_251 = 251;    // webm - stereo, 48 KHz 160 Kbps (opus)
     public static final int YOUTUBE_ITAG_250 = 250;    // webm - stereo, 48 KHz 64 Kbps (opus)
     public static final int YOUTUBE_ITAG_249 = 249;    // webm - stereo, 48 KHz 48 Kbps (opus)
@@ -107,8 +119,6 @@ public final class Config
     public static final int YOUTUBE_ITAG_18 = 18;      // mp4 - stereo, 44.1 KHz 96 Kbps (aac)
     public static final int YOUTUBE_ITAG_36 = 36;      // mp4 - stereo, 44.1 KHz 32 Kbps (aac)
     public static final int YOUTUBE_ITAG_17 = 17;      // mp4 - stereo, 44.1 KHz 24 Kbps (aac)
-
-
 
     public static final String LOG_PREFIX = "yib_";
 }

@@ -10,7 +10,7 @@ import android.widget.AdapterView;
 
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.adapters.VideosAdapter;
-import com.teocci.ytinbg.utils.NetworkConf;
+import com.teocci.ytinbg.utils.NetworkHelper;
 
 /**
  * Created by teocci.
@@ -23,13 +23,13 @@ public abstract class RecyclerFragment extends Fragment implements AdapterView.O
     protected RecyclerView recyclerView;
     protected VideosAdapter videoListAdapter;
 
-    protected NetworkConf networkConf;
+    protected NetworkHelper networkConf;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        networkConf = new NetworkConf(getActivity());
+        networkConf = new NetworkHelper(getActivity());
 //        setHasOptionsMenu(true);
     }
 

@@ -3,21 +3,30 @@ package com.teocci.ytinbg.ui;
 import android.Manifest;
 import android.accounts.AccountManager;
 import android.app.SearchManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.MatrixCursor;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.CursorAdapter;
@@ -35,12 +44,13 @@ import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
 import com.teocci.ytinbg.ui.fragments.FavoritesFragment;
+import com.teocci.ytinbg.ui.fragments.PlaybackControlsFragment;
 import com.teocci.ytinbg.ui.fragments.PlaylistFragment;
 import com.teocci.ytinbg.ui.fragments.RecentlyWatchedFragment;
 import com.teocci.ytinbg.ui.fragments.SearchFragment;
 import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
-import com.teocci.ytinbg.utils.NetworkConf;
+import com.teocci.ytinbg.utils.NetworkHelper;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -48,6 +58,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static com.teocci.ytinbg.utils.Config.INTENT_SESSION_TOKEN;
+import static com.teocci.ytinbg.utils.Config.KEY_SESSION_TOKEN;
 import static com.teocci.ytinbg.youtube.YouTubeSingleton.getCredential;
 
 /**
@@ -56,7 +68,6 @@ import static com.teocci.ytinbg.youtube.YouTubeSingleton.getCredential;
 public class MainActivity extends AppCompatActivity
 {
     private static final String TAG = MainActivity.class.getSimpleName();
-
 
     public static final String PREF_ACCOUNT_NAME = "accountName";
 
@@ -73,16 +84,89 @@ public class MainActivity extends AppCompatActivity
 
     private SearchFragment searchFragment;
     private RecentlyWatchedFragment recentlyPlayedFragment;
+    private PlaybackControlsFragment mControlsFragment;
+
+
+    private MediaSessionCompat.Token sessionToken;
+//    private MediaBrowserCompat mMediaBrowser;
 
     private int[] tabIcons = {
             R.drawable.ic_favorite_tab_icon,
-            android.R.drawable.ic_menu_recent_history,
-            android.R.drawable.ic_menu_search,
-            android.R.drawable.ic_menu_upload_you_tube
+            R.drawable.ic_recent_history_tab_icon,
+            R.drawable.ic_search_tab_icon,
+            R.drawable.ic_playlist_tab_icon
     };
 
-    private NetworkConf networkConf;
+    private NetworkHelper networkConf;
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
+
+    // Callback that ensures that we are showing the controls
+    private final MediaControllerCompat.Callback mMediaControllerCallback =
+            new MediaControllerCompat.Callback()
+            {
+                @Override
+                public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state)
+                {
+                    LogHelper.e(TAG, "onPlaybackStateChanged");
+                    if (shouldShowControls()) {
+                        showPlaybackControls();
+                    } else {
+                        LogHelper.e(TAG, "mediaControllerCallback.onPlaybackStateChanged: hiding controls because " +
+                                "state is ", state.getState());
+                        hidePlaybackControls();
+                    }
+                }
+
+                @Override
+                public void onMetadataChanged(MediaMetadataCompat metadata)
+                {
+                    LogHelper.e(TAG, "onMetadataChanged");
+                    if (shouldShowControls()) {
+                        showPlaybackControls();
+                    } else {
+                        LogHelper.e(TAG, "mediaControllerCallback.onMetadataChanged: hiding controls because " +
+                                "metadata is null");
+                        hidePlaybackControls();
+                    }
+                }
+            };
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            // Get extra data included in the Intent
+            LogHelper.e(TAG, "on BroadcastReceiver receive");
+            Bundle b = intent.getBundleExtra(KEY_SESSION_TOKEN);
+            sessionToken = b.getParcelable(KEY_SESSION_TOKEN);
+            if (sessionToken != null) {
+                LogHelper.e(TAG, "on sessionToken receive");
+                try {
+                    connectToSession(sessionToken);
+                } catch (RemoteException re) {
+                    LogHelper.e(TAG, re, "could not connect media controller");
+                    hidePlaybackControls();
+                }
+            }
+        }
+    };
+
+//    private final MediaBrowserCompat.ConnectionCallback mConnectionCallback =
+//            new MediaBrowserCompat.ConnectionCallback()
+//            {
+//                @Override
+//                public void onConnected()
+//                {
+//                    LogHelper.e(TAG, "onConnected");
+//                    try {
+//                        connectToSession(mMediaBrowser.getSessionToken());
+//                    } catch (RemoteException re) {
+//                        LogHelper.e(TAG, re, "could not connect media controller");
+//                        hidePlaybackControls();
+//                    }
+//                }
+//            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -109,10 +193,69 @@ public class MainActivity extends AppCompatActivity
         tabLayout.setupWithViewPager(viewPager);
 
         checkAndRequestPermissions();
-        networkConf = new NetworkConf(this);
+        networkConf = new NetworkHelper(this);
 
         setupTabIcons();
         loadColor();
+
+
+        // Connect a media browser just to get the media session token. There are other ways
+        // this can be done, for example by sharing the session token directly.
+//        mMediaBrowser = new MediaBrowserCompat(
+//                this,
+//                new ComponentName(this, BackgroundExoAudioService.class),
+//                mConnectionCallback, null
+//        );
+    }
+
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
+        LogHelper.e(TAG, "Main Activity onStart");
+
+        mControlsFragment = (PlaybackControlsFragment) getFragmentManager()
+                .findFragmentById(R.id.fragment_playback_controls);
+        if (mControlsFragment == null) {
+            throw new IllegalStateException("Missing fragment with id 'controls'. Cannot continue.");
+        }
+
+        IntentFilter filter = new IntentFilter(INTENT_SESSION_TOKEN);
+        registerReceiver(mMessageReceiver, filter);
+
+
+        hidePlaybackControls();
+
+        if (sessionToken != null) {
+            LogHelper.e(TAG, "on sessionToken receive");
+            try {
+                connectToSession(sessionToken);
+            } catch (RemoteException re) {
+                LogHelper.e(TAG, re, "could not connect media controller");
+                hidePlaybackControls();
+            }
+        }
+
+//        mMediaBrowser.connect();
+    }
+
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+        LogHelper.d(TAG, "Main Activity onStop");
+        MediaControllerCompat controller = MediaControllerCompat.getMediaController(this);
+        if (controller != null) {
+            controller.unregisterCallback(mMediaControllerCallback);
+        }
+
+//        mMediaBrowser.disconnect();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mMessageReceiver);
     }
 
     /**
@@ -154,6 +297,176 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         }
+    }
+
+    /**
+     * Options menu in action bar
+     *
+     * @param menu Menu options in the action bar
+     * @return boolean
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        // Inflate the menu; this adds items to the action bar if it is present.
+
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        if (searchView != null) {
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        }
+
+        // Suggestions
+        final CursorAdapter suggestionAdapter = new SimpleCursorAdapter(this,
+                R.layout.dropdown_menu,
+                null,
+                new String[]{SearchManager.SUGGEST_COLUMN_TEXT_1},
+                new int[]{android.R.id.text1},
+                0);
+        final List<String> suggestions = new ArrayList<>();
+
+        if (searchView != null) {
+            searchView.setSuggestionsAdapter(suggestionAdapter);
+            searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener()
+            {
+                @Override
+                public boolean onSuggestionSelect(int position)
+                {
+                    return false;
+                }
+
+                @Override
+                public boolean onSuggestionClick(int position)
+                {
+                    searchView.setQuery(suggestions.get(position), false);
+                    searchView.clearFocus();
+
+                    Intent suggestionIntent = new Intent(Intent.ACTION_SEARCH);
+                    suggestionIntent.putExtra(SearchManager.QUERY, suggestions.get(position));
+                    handleIntent(suggestionIntent);
+
+                    return true;
+                }
+            });
+        }
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
+        {
+            @Override
+            public boolean onQueryTextSubmit(String s)
+            {
+                return false; // Whenever is true, no new intent will be started
+            }
+
+            @Override
+            public boolean onQueryTextChange(String suggestion)
+            {
+                // Check network connection. If not available, do not query.
+                // This also disables onSuggestionClick triggering
+                if (suggestion.length() > 2) { //make suggestions after 3rd letter
+
+                    if (networkConf.isNetworkAvailable()) {
+
+                        new JsonAsyncTask(new JsonAsyncResponse()
+                        {
+                            @Override
+                            public void processFinish(ArrayList<String> result)
+                            {
+                                suggestions.clear();
+                                suggestions.addAll(result);
+                                String[] columns = {
+                                        BaseColumns._ID,
+                                        SearchManager.SUGGEST_COLUMN_TEXT_1
+                                };
+                                MatrixCursor cursor = new MatrixCursor(columns);
+
+                                for (int i = 0; i < result.size(); i++) {
+                                    String[] tmp = {Integer.toString(i), result.get(i)};
+                                    cursor.addRow(tmp);
+                                }
+                                suggestionAdapter.swapCursor(cursor);
+
+                            }
+                        }).execute(suggestion);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+
+        MenuItem removeAccountItem = menu.findItem(R.id.action_remove_account);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
+
+        if (chosenAccountName != null) {
+            removeAccountItem.setVisible(true);
+        }
+        return true;
+    }
+
+    /**
+     * Handles selected item from action bar
+     *
+     * @param item the selected item from the action bar
+     * @return boolean
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        switch (id) {
+            case R.id.action_about:
+                DateFormat monthFormat = new SimpleDateFormat("MMMM");
+                DateFormat yearFormat = new SimpleDateFormat("yyyy");
+                Date date = new Date();
+
+                AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+                alertDialog.setTitle("Teocci");
+                alertDialog.setIcon(R.mipmap.ic_launcher);
+                alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex" +
+                        ".com\n\n" +
+                        monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        new DialogInterface.OnClickListener()
+                        {
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                dialog.dismiss();
+                            }
+                        });
+                alertDialog.show();
+
+                return true;
+            case R.id.action_clear_list:
+                YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                        .deleteAll();
+                recentlyPlayedFragment.clearRecentlyPlayedList();
+                return true;
+            case R.id.action_remove_account:
+                SharedPreferences sp = PreferenceManager
+                        .getDefaultSharedPreferences(getApplicationContext());
+                String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
+
+                if (chosenAccountName != null) {
+                    sp.edit().remove(Config.ACCOUNT_NAME).apply();
+                }
+                return true;
+            case R.id.action_search:
+                MenuItemCompat.expandActionView(item);
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     public static Context getYiBContext()
@@ -251,173 +564,74 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    /**
-     * Options menu in action bar
-     *
-     * @param menu Menu options in the action bar
-     * @return boolean
-     */
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu)
+    protected void onMediaControllerConnected()
     {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        // empty implementation, can be overridden by clients.
+    }
 
-        MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-
-        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
-        if (searchView != null) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+    protected void showPlaybackControls()
+    {
+        LogHelper.e(TAG, "showPlaybackControls");
+        if (NetworkHelper.isNetworkAvailable(this)) {
+            getFragmentManager().beginTransaction()
+                    .show(mControlsFragment)
+                    .commit();
         }
+    }
 
-        // Suggestions
-        final CursorAdapter suggestionAdapter = new SimpleCursorAdapter(this,
-                R.layout.dropdown_menu,
-                null,
-                new String[]{SearchManager.SUGGEST_COLUMN_TEXT_1},
-                new int[]{android.R.id.text1},
-                0);
-        final List<String> suggestions = new ArrayList<>();
-
-        searchView.setSuggestionsAdapter(suggestionAdapter);
-
-        searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener()
-        {
-            @Override
-            public boolean onSuggestionSelect(int position)
-            {
-                return false;
-            }
-
-            @Override
-            public boolean onSuggestionClick(int position)
-            {
-                searchView.setQuery(suggestions.get(position), false);
-                searchView.clearFocus();
-
-                Intent suggestionIntent = new Intent(Intent.ACTION_SEARCH);
-                suggestionIntent.putExtra(SearchManager.QUERY, suggestions.get(position));
-                handleIntent(suggestionIntent);
-
-                return true;
-            }
-        });
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
-        {
-            @Override
-            public boolean onQueryTextSubmit(String s)
-            {
-                return false; // Whenever is true, no new intent will be started
-            }
-
-            @Override
-            public boolean onQueryTextChange(String suggestion)
-            {
-                // Check network connection. If not available, do not query.
-                // This also disables onSuggestionClick triggering
-                if (suggestion.length() > 2) { //make suggestions after 3rd letter
-
-                    if (networkConf.isNetworkAvailable()) {
-
-                        new JsonAsyncTask(new JsonAsyncResponse()
-                        {
-                            @Override
-                            public void processFinish(ArrayList<String> result)
-                            {
-                                suggestions.clear();
-                                suggestions.addAll(result);
-                                String[] columns = {
-                                        BaseColumns._ID,
-                                        SearchManager.SUGGEST_COLUMN_TEXT_1
-                                };
-                                MatrixCursor cursor = new MatrixCursor(columns);
-
-                                for (int i = 0; i < result.size(); i++) {
-                                    String[] tmp = {Integer.toString(i), result.get(i)};
-                                    cursor.addRow(tmp);
-                                }
-                                suggestionAdapter.swapCursor(cursor);
-
-                            }
-                        }).execute(suggestion);
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
-
-        MenuItem removeAccountItem = menu.findItem(R.id.action_remove_account);
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
-
-        if (chosenAccountName != null) {
-            removeAccountItem.setVisible(true);
-        }
-
-        return true;
+    protected void hidePlaybackControls()
+    {
+        LogHelper.e(TAG, "hidePlaybackControls");
+        getFragmentManager().beginTransaction()
+                .hide(mControlsFragment)
+                .commit();
     }
 
     /**
-     * Handles selected item from action bar
+     * Check if the MediaSession is active and in a "playback-able" state
+     * (not NONE and not STOPPED).
      *
-     * @param item the selected item from the action bar
-     * @return boolean
+     * @return true if the MediaSession's state requires playback controls to be visible.
      */
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item)
+    protected boolean shouldShowControls()
     {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        switch (id) {
-            case R.id.action_about:
-                DateFormat monthFormat = new SimpleDateFormat("MMMM");
-                DateFormat yearFormat = new SimpleDateFormat("yyyy");
-                Date date = new Date();
-
-                AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-                alertDialog.setTitle("Teocci");
-                alertDialog.setIcon(R.mipmap.ic_launcher);
-                alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex" +
-                        ".com\n\n" +
-                        monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
-                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                        new DialogInterface.OnClickListener()
-                        {
-                            public void onClick(DialogInterface dialog, int which)
-                            {
-                                dialog.dismiss();
-                            }
-                        });
-                alertDialog.show();
-
-                return true;
-            case R.id.action_clear_list:
-                YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
-                        .deleteAll();
-                recentlyPlayedFragment.clearRecentlyPlayedList();
-                return true;
-            case R.id.action_remove_account:
-                SharedPreferences sp = PreferenceManager
-                        .getDefaultSharedPreferences(getApplicationContext());
-                String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
-
-                if (chosenAccountName != null) {
-                    sp.edit().remove(Config.ACCOUNT_NAME).apply();
-                }
-                return true;
-            case R.id.action_search:
-                MenuItemCompat.expandActionView(item);
+        LogHelper.e(TAG, "shouldShowControls");
+        MediaControllerCompat mediaController = MediaControllerCompat.getMediaController(this);
+        if (mediaController == null ||
+                mediaController.getMetadata() == null ||
+                mediaController.getPlaybackState() == null) {
+            return false;
+        }
+        switch (mediaController.getPlaybackState().getState()) {
+            case PlaybackStateCompat.STATE_ERROR:
+            case PlaybackStateCompat.STATE_NONE:
+            case PlaybackStateCompat.STATE_STOPPED:
+                return false;
+            default:
                 return true;
         }
+    }
 
-        return super.onOptionsItemSelected(item);
+    private void connectToSession(MediaSessionCompat.Token token) throws RemoteException
+    {
+        LogHelper.e(TAG, "connectToSession");
+        MediaControllerCompat mediaController = new MediaControllerCompat(this, token);
+        MediaControllerCompat.setMediaController(this, mediaController);
+
+        mediaController.registerCallback(mMediaControllerCallback);
+
+        if (shouldShowControls()) {
+            showPlaybackControls();
+        } else {
+            LogHelper.e(TAG, "connectionCallback.onConnected: hiding controls because metadata is null");
+            hidePlaybackControls();
+        }
+
+        if (mControlsFragment != null) {
+            mControlsFragment.onConnected();
+        }
+
+        onMediaControllerConnected();
     }
 
     /**

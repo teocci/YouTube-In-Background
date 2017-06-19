@@ -11,7 +11,6 @@ import android.widget.AdapterView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.teocci.ytinbg.BackgroundAudioService;
 import com.teocci.ytinbg.BackgroundExoAudioService;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.adapters.VideosAdapter;
@@ -19,7 +18,6 @@ import com.teocci.ytinbg.database.YouTubeSqlDb;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.decoration.DividerDecoration;
 import com.teocci.ytinbg.utils.Config;
-import com.teocci.ytinbg.utils.LogHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +25,9 @@ import java.util.List;
 import static com.teocci.ytinbg.utils.Config.ACTION_PLAY;
 
 /**
- * Created by Teocci on 21.3.16..
+ * Created by teocci.
+ *
+ * @author teocci@yandex.com on 2017-Mar-21
  */
 public class FavoritesFragment extends RecyclerFragment
 {
@@ -169,9 +169,9 @@ public class FavoritesFragment extends RecyclerFragment
 
         Intent serviceIntent = new Intent(getContext(), BackgroundExoAudioService.class);
         serviceIntent.setAction(ACTION_PLAY);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_PLAYLIST);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE_PLAYLIST, (ArrayList)favoriteVideos);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, position);
+        serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_PLAYLIST);
+        serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE_PLAYLIST, (ArrayList)favoriteVideos);
+        serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, position);
         getActivity().startService(serviceIntent);
     }
 

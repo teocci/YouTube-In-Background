@@ -70,6 +70,7 @@
     <string name="currently_playing">YouTube Video currently playing</string>
     <string name="currently_playing_views_number">Artist of currently playing song</string>
     <string name="currently_playing_extra_info">Extra info for currently playing song</string>
+    <string name="loading">Loading…</string>
 
     <string name="skip_next">skip to next</string>
     <string name="skip_prev">skip to previous</string>

@@ -13,7 +13,6 @@ import android.widget.AdapterView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-import com.teocci.ytinbg.BackgroundAudioService;
 import com.teocci.ytinbg.BackgroundExoAudioService;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.adapters.VideosAdapter;
@@ -134,8 +133,8 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
 
         Intent serviceIntent = new Intent(getContext(), BackgroundExoAudioService.class);
         serviceIntent.setAction(Config.ACTION_PLAY);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
+        serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
+        serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
         getActivity().startService(serviceIntent);
     }
 

@@ -261,6 +261,18 @@ public class PlaybackManager implements Playback.Callback
         }
     }
 
+    public long getDuration()
+    {
+        long duration = this.playback.getDuration() > -1 ? this.playback.getDuration() : -1;
+        LogHelper.e(TAG, "getDuration: " + duration);
+        return duration;
+    }
+
+    public void updateYouTubeVideo()
+    {
+        queueManager.updateYouTubeVideo();
+    }
+
     private class MediaSessionCallback extends MediaSessionCompat.Callback
     {
         @Override
@@ -270,7 +282,6 @@ public class PlaybackManager implements Playback.Callback
             if (queueManager.getCurrentVideo() != null) {
                 handlePlayRequest();
             }
-
         }
 
         @Override

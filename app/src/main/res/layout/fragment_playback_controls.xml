@@ -3,6 +3,7 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="@color/playback_control_background"
                 android:padding="@dimen/playback_controls_padding">
     <RelativeLayout
         android:layout_width="match_parent"
@@ -14,7 +15,7 @@
         android:layout_alignParentStart="true"
         android:contentDescription="@string/video_thumbnail"
         android:scaleType="centerCrop"
-        tools:src="@drawable/ic_launcher"/>
+        tools:src="@mipmap/ic_launcher"/>
 
     <LinearLayout
         android:id="@+id/content"
@@ -65,8 +66,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/tab_padding_top"
-        android:orientation="vertical"
-        android:visibility="invisible">
+        android:orientation="vertical">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -80,7 +80,7 @@
                 android:layout_marginStart="@dimen/text_view_margin"
                 android:gravity="center_vertical"
                 android:maxLines="1"
-                android:textColor="@android:color/white"/>
+                android:textColor="@color/text_color_seekbar"/>
 
             <SeekBar
                 android:id="@+id/seekBar1"
@@ -102,7 +102,7 @@
                 android:layout_marginEnd="@dimen/end_text_margin"
                 android:gravity="center_vertical"
                 android:maxLines="1"
-                android:textColor="@android:color/white"/>
+                android:textColor="@color/text_color_seekbar"/>
 
         </RelativeLayout>
 
@@ -117,7 +117,7 @@
                 android:layout_weight="1"
                 android:background="?selectableItemBackgroundBorderless"
                 android:contentDescription="@string/skip_prev"
-                android:src="@drawable/ic_skip_previous_white_48dp"/>
+                android:src="@drawable/ic_skip_previous_white_24dp"/>
 
             <ImageView
                 android:id="@+id/play_pause"
@@ -126,7 +126,7 @@
                 android:layout_weight="2"
                 android:background="?selectableItemBackgroundBorderless"
                 android:contentDescription="@string/play_pause"
-                android:src="@drawable/ic_play_arrow_white_48dp"/>
+                android:src="@drawable/ic_play_arrow_white_24dp"/>
 
             <ImageView
                 android:id="@+id/next"
@@ -135,7 +135,7 @@
                 android:layout_weight="1"
                 android:background="?selectableItemBackgroundBorderless"
                 android:contentDescription="@string/skip_next"
-                android:src="@drawable/ic_skip_next_white_48dp"/>
+                android:src="@drawable/ic_skip_next_white_24dp"/>
 
         </LinearLayout>
 

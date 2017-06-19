@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Toast;
 
-import com.teocci.ytinbg.BackgroundAudioService;
 import com.teocci.ytinbg.BackgroundExoAudioService;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.adapters.VideosAdapter;
@@ -21,7 +20,7 @@ import com.teocci.ytinbg.interfaces.OnStartDragListener;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.decoration.DividerDecoration;
 import com.teocci.ytinbg.utils.Config;
-import com.teocci.ytinbg.utils.NetworkConf;
+import com.teocci.ytinbg.utils.NetworkHelper;
 
 import java.util.ArrayList;
 
@@ -55,7 +54,7 @@ public class RecentlyWatchedFragment extends RecyclerFragment implements
         super.onCreate(savedInstanceState);
 
         recentlyPlayedVideos = new ArrayList<>();
-        networkConf = new NetworkConf(getActivity());
+        networkConf = new NetworkHelper(getActivity());
     }
 
     @Override
@@ -170,8 +169,8 @@ public class RecentlyWatchedFragment extends RecyclerFragment implements
 
         Intent serviceIntent = new Intent(getContext(), BackgroundExoAudioService.class);
         serviceIntent.setAction(ACTION_PLAY);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
-        serviceIntent.putExtra(Config.YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
+        serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
+        serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
         getActivity().startService(serviceIntent);
     }
 

@@ -25,7 +25,23 @@ You can install the APK following the [next guide](https://github.com/teocci/You
 ## Credits
 * [Android based YouTube url extractor][1]
 * [RecyclerViewCodeSample][2]
+* Launcher icon and app icons using [AndroidAssetStudio][3]
 
+```
+Tab icons
+Asset size 32dp (128px)
+Asset padding 2dp
+Color #fff
+
+Video item icons
+Asset size 32dp (128px)
+Asset padding 6dp
+Color #707070 (gray icons)
+Color #3681FF (pressed icons)
+Color #fff (white icons)
+Color #e43333 (red icons)
+
+```
 ## License
 
 The code supplied here is covered under the MIT Open Source License.
@@ -42,5 +58,6 @@ You can contribute to YouTube-In-Background by different means. You can help fin
 
 [1]: https://github.com/HaarigerHarald/android-youtubeExtractor
 [2]: https://github.com/teocci/RecyclerviewCodeSample
+[3]: https://romannurik.github.io/AndroidAssetStudio
 
 

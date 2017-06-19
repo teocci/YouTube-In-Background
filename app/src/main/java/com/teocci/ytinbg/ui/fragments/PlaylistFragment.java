@@ -23,7 +23,7 @@ import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.decoration.DividerDecoration;
 import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
-import com.teocci.ytinbg.utils.NetworkConf;
+import com.teocci.ytinbg.utils.NetworkHelper;
 import com.teocci.ytinbg.youtube.YouTubePlaylistLoader;
 import com.teocci.ytinbg.youtube.YouTubePlaylistVideoLoader;
 
@@ -46,7 +46,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
     private YouTubePlaylistLoader ytPlaylistLoader;
     private YouTubePlaylistVideoLoader ytPlaylistVideoLoader;
     private TextView userNameTextView;
-    private NetworkConf networkConf;
+    private NetworkHelper networkConf;
     private SwipeRefreshLayout swipeToRefresh;
 
     public PlaylistFragment()
@@ -65,7 +65,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
         ytPlaylistVideoLoader = new YouTubePlaylistVideoLoader(getActivity());
         ytPlaylistVideoLoader.setYouTubePlaylistReceiver(this);
 
-        networkConf = new NetworkConf(getActivity());
+        networkConf = new NetworkHelper(getActivity());
     }
 
     @Override
@@ -239,8 +239,8 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
         } else {
             Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
             serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);
-            serviceIntent.putExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_PLAYLIST);
-            serviceIntent.putExtra(Config.YOUTUBE_TYPE_PLAYLIST, (ArrayList) youTubeVideos);
+            serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_PLAYLIST);
+            serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE_PLAYLIST, (ArrayList) youTubeVideos);
             getActivity().startService(serviceIntent);
         }
     }

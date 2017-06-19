@@ -1,4 +1,4 @@
-package com.teocci.ytinbg.noticication;
+package com.teocci.ytinbg.notification;
 
 import android.app.Notification;
 import android.app.PendingIntent;

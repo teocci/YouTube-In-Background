@@ -13,11 +13,11 @@ import android.support.v7.app.AlertDialog;
  * Checks whether internet connection is available or not
  * Created by Teocci on 17.3.16..
  */
-public class NetworkConf
+public class NetworkHelper
 {
     private Activity activity;
 
-    public NetworkConf(Activity activity)
+    public NetworkHelper(Activity activity)
     {
         this.activity = activity;
     }
@@ -35,14 +35,16 @@ public class NetworkConf
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public static boolean isNetworkAvailable(Context context) {
+    public static boolean isNetworkAvailable(Context context)
+    {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public void createNetErrorDialog() {
+    public void createNetErrorDialog()
+    {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setMessage("You need a network connection to use this application. Please turn on" +
