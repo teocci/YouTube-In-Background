@@ -27,6 +27,7 @@ import static com.teocci.ytinbg.utils.Config.YOUTUBE_SEARCH_LIST_PART;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_SEARCH_LIST_TYPE;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_VIDEO_LIST_FIELDS;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_VIDEO_LIST_PART;
+import static com.teocci.ytinbg.youtube.YouTubeSingleton.getInstance;
 import static com.teocci.ytinbg.youtube.YouTubeSingleton.getYouTube;
 
 /**
@@ -39,8 +40,8 @@ public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVide
 {
     private static final String TAG = YouTubeVideoLoader.class.getSimpleName();
 
-    private YouTube youtube = getYouTube();
     private Context context;
+    private YouTube youtube;
 
     private YouTube.Search.List searchList;
 
@@ -54,7 +55,9 @@ public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVide
 
     public YouTubeVideoLoader(Context context)
     {
+        getInstance(context);
         this.context = context;
+        this.youtube = getYouTube();
         this.keywords = null;
         this.currentPageToken = null;
         this.nextPageToken = null;

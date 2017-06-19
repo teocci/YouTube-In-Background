@@ -1,7 +1,6 @@
 package com.teocci.ytinbg.youtube;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpRequest;
@@ -10,10 +9,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.youtube.YouTube;
-import com.teocci.ytinbg.BuildConfig;
 import com.teocci.ytinbg.R;
-import com.teocci.ytinbg.YiBApplication;
-import com.teocci.ytinbg.ui.MainActivity;
 import com.teocci.ytinbg.utils.LogHelper;
 
 import java.io.IOException;
@@ -37,23 +33,23 @@ public class YouTubeSingleton
 
 
     // Create the instance
-    private static YouTubeSingleton instance;
+    private static YouTubeSingleton instance = null;
+    private static final Object mutex = new Object();
 
-    public static YouTubeSingleton getInstance()
+    public static YouTubeSingleton getInstance(Context context)
     {
         if (instance == null) {
-            synchronized(YouTubeSingleton.getInstance()) {
+            synchronized (mutex) {
                 if (instance == null)
-                    instance = new YouTubeSingleton();
+                    instance = new YouTubeSingleton(context);
             }
         }
         // Return the instance
         return instance;
     }
 
-    private YouTubeSingleton()
+    private YouTubeSingleton(Context context)
     {
-        Context context = YiBApplication.getYiBContext();
         String appName = context.getString(R.string.app_name);
         credential = GoogleAccountCredential
                 .usingOAuth2(context, Arrays.asList(SCOPES))

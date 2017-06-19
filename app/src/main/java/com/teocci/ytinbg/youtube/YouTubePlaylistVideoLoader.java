@@ -29,6 +29,7 @@ import static com.teocci.ytinbg.utils.Config.YOUTUBE_ACQUIRE_PLAYLIST_PART;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_API_KEY;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_PLAYLIST_VIDEO_FIELDS;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_PLAYLIST_VIDEO_PART;
+import static com.teocci.ytinbg.youtube.YouTubeSingleton.getInstance;
 import static com.teocci.ytinbg.youtube.YouTubeSingleton.getYouTube;
 
 /**
@@ -42,7 +43,7 @@ public class YouTubePlaylistVideoLoader extends AsyncTask<String, Void, List<You
 
     private final static String TAG = YouTubePlaylistVideoLoader.class.getSimpleName();
 
-    private YouTube youtube = getYouTube();
+    private YouTube youtube;
 
     private Context context;
     private String playlistId;
@@ -53,14 +54,18 @@ public class YouTubePlaylistVideoLoader extends AsyncTask<String, Void, List<You
 
     public YouTubePlaylistVideoLoader(Context context)
     {
+        getInstance(context);
         this.context = context;
+        this.youtube = getYouTube();
         this.playlistId = null;
         this.youTubePlaylistReceiver = null;
     }
 
     public YouTubePlaylistVideoLoader(Context context, String playlistId)
     {
+        getInstance(context);
         this.context = context;
+        this.youtube = getYouTube();
         this.playlistId = playlistId;
         this.youTubePlaylistReceiver = null;
     }
