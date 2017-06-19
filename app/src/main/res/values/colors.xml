@@ -5,8 +5,10 @@
     <color name="contrast_background">#c23232</color>
     <color name="text_color_primary">#ffffff</color>
     <color name="window_background">#333333</color>
+    <color name="playback_control_background">#CFCFCF</color>
+    <color name="text_color_seekbar">#333333</color>
     <color name="navigation_bar_color">#000000</color>
-    <color name="accent_color">#bfbfbf</color>
+    <color name="accent_color">#BFBFBF</color>
     <color name="undo_background">#888888</color>
     <color name="bt_accent">#00B8D4</color>
     <color name="media_item_icon_playing">@color/bt_accent</color>

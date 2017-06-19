@@ -20,7 +20,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/YTMaterialTheme">
+        android:theme="@style/YTMaterialTheme"
+        android:name="android.support.multidex.MultiDexApplication">
         <activity
             android:name="com.teocci.ytinbg.ui.MainActivity"
             android:configChanges="keyboardHidden|orientation|screenSize"
@@ -58,6 +59,11 @@
 
         <service
             android:name="com.teocci.ytinbg.BackgroundAudioService"
+            android:process=":youtube">
+        </service>
+
+        <service
+            android:name="com.teocci.ytinbg.BackgroundExoAudioService"
             android:process=":youtube">
         </service>
 

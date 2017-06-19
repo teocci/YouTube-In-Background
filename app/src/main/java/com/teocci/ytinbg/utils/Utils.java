@@ -2,6 +2,7 @@ package com.teocci.ytinbg.utils;
 
 import android.util.Log;
 
+import com.google.api.services.youtube.model.SearchResult;
 import com.teocci.ytinbg.model.YouTubeVideo;
 
 import java.util.Iterator;
@@ -46,8 +47,12 @@ public class Utils
         long number = 0;
         int count = segments.length - 1;
         for (String segment : segments) {
-//            Log.e(TAG, "segment");
-            number += Integer.parseInt(segment) * Math.pow(10, 3 * count--);
+//            Log.e(TAG, "segment: " + segment);
+            try {
+                number += Integer.parseInt(segment) * Math.pow(10, 3 * count--);
+            } catch (NumberFormatException nfe) {
+                nfe.printStackTrace();
+            }
         }
 
         return number;
@@ -174,8 +179,37 @@ public class Utils
         Log.d(TAG, "\n*************************************************************\n");
     }
 
-    public static boolean empty( final String s ) {
+    public static boolean empty(final String s)
+    {
         // Null-safe, short-circuit evaluation.
         return s == null || s.trim().isEmpty();
+    }
+
+    /**
+     * Concatenates provided ids in order to search for all of them at once and not in many iterations (slower)
+     *
+     * @param searchResults results acquired from search query
+     * @return concatenated ids
+     */
+    public static String concatenateIDs(List<SearchResult> searchResults)
+    {
+        StringBuilder contentDetails = new StringBuilder();
+        for (SearchResult result : searchResults) {
+            String id = result.getId().getVideoId();
+            if (id != null) {
+                contentDetails.append(id);
+                contentDetails.append(",");
+            }
+        }
+
+        if (contentDetails.length() == 0) {
+            return null;
+        }
+
+        if (contentDetails.toString().endsWith(",")) {
+            contentDetails.setLength(contentDetails.length() - 1); // remove last
+        }
+
+        return contentDetails.toString();
     }
 }

@@ -54,8 +54,8 @@ public class DownloadSharedLinkActivity extends Activity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_download);
-        mainLayout = (LinearLayout) findViewById(R.id.main_layout);
-        mainProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
+        mainLayout = findViewById(R.id.main_layout);
+        mainProgressBar = findViewById(R.id.progress_bar);
 
         // Check how it was started and if we can get the youtube link
         if (savedInstanceState == null && Intent.ACTION_SEND.equals(getIntent().getAction())

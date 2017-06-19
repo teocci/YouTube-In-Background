@@ -54,4 +54,7 @@
     <string name="action_remove_account">등록된 계정을 제거하다</string>
     <string name="toast_message_error_playing_url">오류 URL 보호됨: %1$s</string>
     <string name="toast_message_loading">오디오로드 중</string>
+    <string name="error_loading_media">미디어 로딩 에러</string>
+    <string name="error_no_connection">서버에 연결할 수 없습니다. 인터넷 연결 여부를 확인해보세요.</string>
+    <string name="error_no_yt_video_retrieve">YouTube link 로딩 에러</string>
 </resources>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/playback_control_background"
+                android:padding="@dimen/playback_controls_padding">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/tab_padding_top">
+    <ImageView
+        android:id="@+id/video_thumbnail"
+        android:layout_width="@dimen/playback_controls_video_thumbnail_size"
+        android:layout_height="@dimen/playback_controls_video_thumbnail_size"
+        android:layout_alignParentStart="true"
+        android:contentDescription="@string/video_thumbnail"
+        android:scaleType="centerCrop"
+        tools:src="@mipmap/ic_launcher"/>
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="@dimen/playback_controls_video_thumbnail_horizontal_margin"
+        android:layout_toEndOf="@id/video_thumbnail"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/video_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/currently_playing"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="?android:attr/textColorPrimary"
+            tools:text="The Best Music EVAH1111 THE BEST"/>
+
+        <TextView
+            android:id="@+id/views_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/currently_playing_views_number"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            tools:text="2.5B views"/>
+
+        <TextView
+            android:id="@+id/extra_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/currently_playing_extra_info"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:visibility="gone"
+            tools:text="casting to MyCast"/>
+    </LinearLayout>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/controllers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/tab_padding_top"
+        android:orientation="vertical">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/controls_container_height">
+
+            <TextView
+                android:id="@+id/startText"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_alignParentStart="true"
+                android:layout_marginStart="@dimen/text_view_margin"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:textColor="@color/text_color_seekbar"/>
+
+            <SeekBar
+                android:id="@+id/seekBar1"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_gravity="center"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_toEndOf="@+id/startText"
+                android:layout_toStartOf="@+id/endText"/>
+
+            <TextView
+                android:id="@+id/endText"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_alignParentEnd="true"
+                android:layout_alignWithParentIfMissing="true"
+                android:layout_marginEnd="@dimen/end_text_margin"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:textColor="@color/text_color_seekbar"/>
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/controls_container_height">
+
+            <ImageView
+                android:id="@+id/prev"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?selectableItemBackgroundBorderless"
+                android:contentDescription="@string/skip_prev"
+                android:src="@drawable/ic_skip_previous_white_24dp"/>
+
+            <ImageView
+                android:id="@+id/play_pause"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:background="?selectableItemBackgroundBorderless"
+                android:contentDescription="@string/play_pause"
+                android:src="@drawable/ic_play_arrow_white_24dp"/>
+
+            <ImageView
+                android:id="@+id/next"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="?selectableItemBackgroundBorderless"
+                android:contentDescription="@string/skip_next"
+                android:src="@drawable/ic_skip_next_white_24dp"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+</RelativeLayout>

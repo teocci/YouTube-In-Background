@@ -458,7 +458,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private void handleMedia(Intent intent)
     {
-        int intentMediaType = intent.getIntExtra(Config.YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_NO_NEW_REQUEST);
+        int intentMediaType = intent.getIntExtra(Config.KEY_YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_NO_NEW_REQUEST);
 
         switch (intentMediaType) {
             // Video has been paused. It is not necessary a new playback requests
@@ -467,7 +467,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
                 break;
             case Config.YOUTUBE_MEDIA_TYPE_VIDEO:
                 mediaType = Config.YOUTUBE_MEDIA_TYPE_VIDEO;
-                currentVideo = (YouTubeVideo) intent.getSerializableExtra(Config.YOUTUBE_TYPE_VIDEO);
+                currentVideo = (YouTubeVideo) intent.getSerializableExtra(Config.KEY_YOUTUBE_TYPE_VIDEO);
                 if (currentVideo.getId() != null) {
                     playVideo();
                 }
@@ -475,8 +475,8 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
             // New playlist playback request
             case Config.YOUTUBE_MEDIA_TYPE_PLAYLIST:
                 mediaType = Config.YOUTUBE_MEDIA_TYPE_PLAYLIST;
-                youTubeVideos = (ArrayList<YouTubeVideo>) intent.getSerializableExtra(Config.YOUTUBE_TYPE_PLAYLIST);
-                currentVideoPosition = intent.getIntExtra(Config.YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, 0);
+                youTubeVideos = (ArrayList<YouTubeVideo>) intent.getSerializableExtra(Config.KEY_YOUTUBE_TYPE_PLAYLIST);
+                currentVideoPosition = intent.getIntExtra(Config.KEY_YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, 0);
                 LogHelper.e(TAG, "currentVideoPosition: " + currentVideoPosition);
                 iterator = youTubeVideos.listIterator(currentVideoPosition);
                 playNext();
@@ -508,6 +508,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
         notificationBuilder = new NotificationCompat.Builder(this);
         notificationBuilder.setSmallIcon(R.drawable.ic_notification);
+        notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         notificationBuilder.setContentTitle(currentVideo.getTitle());
         notificationBuilder.setContentInfo(currentVideo.getDuration());
         notificationBuilder.setUsesChronometer(true);
@@ -516,7 +517,6 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 //        notificationBuilder.setOngoing(true);
         notificationBuilder.setSubText(Utils.formatViewCount(currentVideo.getViewCount()));
         notificationBuilder.setStyle(style);
-        notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
         //load bitmap for largeScreen
         if (currentVideo.getThumbnailURL() != null && !currentVideo.getThumbnailURL().isEmpty()) {
@@ -922,7 +922,8 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         }.extract(youtubeLink, true, true);
     }
 
-    private boolean validateUrl(String url) {
+    private boolean validateUrl(String url)
+    {
         // https://r8---sn-3u-bh2ee.googlevideo.com/videoplayback
         return url.contains(".googlevideo.com/videoplayback");
     }
@@ -1003,7 +1004,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
      */
     private YtFile getBestStream(SparseArray<YtFile> ytFiles)
     {
-        Log.e(TAG,  "ytFiles: " + ytFiles);
+        Log.e(TAG, "ytFiles: " + ytFiles);
         if (ytFiles.get(YOUTUBE_ITAG_141) != null) {
             LogHelper.e(TAG, " gets YOUTUBE_ITAG_141");
             return ytFiles.get(YOUTUBE_ITAG_141);

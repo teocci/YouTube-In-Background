@@ -51,4 +51,7 @@
     <string name="action_clear_list">清除最近播放列表</string>
     <string name="action_remove_account">删除注册账号</string>
     <string name="toast_message_error_playing_url">错误URL受保护: %1$s</string>
+    <string name="error_loading_media">加载介质时出错</string>
+    <string name="error_no_connection">无法连接到服务器。 请检查您的互联网连接。</string>
+    <string name="error_no_yt_video_retrieve">加载YouTube链接时出错</string>
 </resources>
