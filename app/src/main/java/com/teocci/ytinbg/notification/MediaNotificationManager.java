@@ -7,7 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationManagerCompat;
@@ -312,16 +314,6 @@ public class MediaNotificationManager extends BroadcastReceiver
                     backgroundExoAudioService.getString(R.string.action_next), nextIntent);
         }
 
-        //load bitmap for largeScreen
-        if (currentYouTubeVideo.getThumbnailURL() != null && !currentYouTubeVideo.getThumbnailURL().isEmpty()) {
-            target.setNotificationBuilder(notificationBuilder);
-            Picasso.with(backgroundExoAudioService)
-                    .load(currentYouTubeVideo.getThumbnailURL())
-                    .resize(Config.MAX_WIDTH_ICON, Config.MAX_HEIGHT_ICON)
-                    .centerCrop()
-                    .into(target);
-        }
-
         notificationBuilder
                 .setStyle(style)
 //                .setColor(mNotificationColor)
@@ -335,6 +327,15 @@ public class MediaNotificationManager extends BroadcastReceiver
 
         setNotificationPlaybackState(notificationBuilder);
 
+        //load bitmap
+        if (currentYouTubeVideo.getThumbnailURL() != null && !currentYouTubeVideo.getThumbnailURL().isEmpty()) {
+            target.setNotificationBuilder(notificationBuilder);
+            Picasso.with(backgroundExoAudioService)
+                    .load(currentYouTubeVideo.getThumbnailURL())
+                    .resize(Config.MAX_WIDTH_ICON, Config.MAX_HEIGHT_ICON)
+                    .centerCrop()
+                    .into(target);
+        }
         return notificationBuilder.build();
     }
 
@@ -392,7 +393,7 @@ public class MediaNotificationManager extends BroadcastReceiver
     private void updateNotificationLargeIcon(Bitmap bitmap, NotificationCompat.Builder builder)
     {
         // If the media is still the same, update the notification:
-        LogHelper.d(TAG, "fetchBitmapFromURLAsync: set bitmap to ", bitmap);
+        LogHelper.e(TAG, "updateNotificationLargeIcon: set bitmap");
         builder.setLargeIcon(bitmap);
         notificationManager.notify(NOTIFICATION_ID, builder.build());
     }

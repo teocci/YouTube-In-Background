@@ -22,7 +22,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -220,11 +219,17 @@ public class MainActivity extends AppCompatActivity
             throw new IllegalStateException("Missing fragment with id 'controls'. Cannot continue.");
         }
 
+        hidePlaybackControls();
+
+//        mMediaBrowser.connect();
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
         IntentFilter filter = new IntentFilter(INTENT_SESSION_TOKEN);
         registerReceiver(mMessageReceiver, filter);
-
-
-        hidePlaybackControls();
 
         if (sessionToken != null) {
             LogHelper.e(TAG, "on sessionToken receive");
@@ -235,8 +240,6 @@ public class MainActivity extends AppCompatActivity
                 hidePlaybackControls();
             }
         }
-
-//        mMediaBrowser.connect();
     }
 
     @Override
@@ -253,7 +256,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPause() {
+    protected void onPause()
+    {
         super.onPause();
         unregisterReceiver(mMessageReceiver);
     }
@@ -467,11 +471,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    public static Context getYiBContext()
-    {
-        return context;
     }
 
     /**

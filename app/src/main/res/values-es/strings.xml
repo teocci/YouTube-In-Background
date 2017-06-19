@@ -57,4 +57,11 @@
     <string name="error_loading_media">Error cargando Me</string>
     <string name="error_no_yt_video_retrieve">Error cargando el enlace de YouTube</string>
     <string name="error_no_connection">No se pudo conectar al servidor. Por favor, verifique su conection a Internet.</string>
+    <string name="currently_playing">Vídeo de YouTube que está en reproducción</string>
+    <string name="currently_playing_extra_info">Información adicional para la canción que se está reproduciendo actualmente</string>
+    <string name="currently_playing_views_number">Artista de la canción actual</string>
+    <string name="loading">Cargando…</string>
+    <string name="play_pause">reproducir o pausar</string>
+    <string name="skip_next">siguiente</string>
+    <string name="skip_prev">anterior</string>
 </resources>

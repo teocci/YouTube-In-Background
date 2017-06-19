@@ -1,6 +1,7 @@
 package com.teocci.ytinbg.youtube;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.http.HttpRequest;
@@ -9,8 +10,11 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.youtube.YouTube;
+import com.teocci.ytinbg.BuildConfig;
 import com.teocci.ytinbg.R;
+import com.teocci.ytinbg.YiBApplication;
 import com.teocci.ytinbg.ui.MainActivity;
+import com.teocci.ytinbg.utils.LogHelper;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -25,25 +29,32 @@ import static com.teocci.ytinbg.utils.Auth.SCOPES;
 
 public class YouTubeSingleton
 {
+    private static String TAG = LogHelper.makeLogTag(YouTubeSingleton.class);
+
     private static YouTube youTube;
     private static YouTube youTubeWithCredentials;
     private static GoogleAccountCredential credential;
-    private static Context context;
 
 
-    private static String appName;
-
-    private static YouTubeSingleton ourInstance = new YouTubeSingleton();
+    // Create the instance
+    private static YouTubeSingleton instance;
 
     public static YouTubeSingleton getInstance()
     {
-        return ourInstance;
+        if (instance == null) {
+            synchronized(YouTubeSingleton.getInstance()) {
+                if (instance == null)
+                    instance = new YouTubeSingleton();
+            }
+        }
+        // Return the instance
+        return instance;
     }
 
     private YouTubeSingleton()
     {
-        context = MainActivity.getYiBContext();
-        appName = context.getString(R.string.app_name);
+        Context context = YiBApplication.getYiBContext();
+        String appName = context.getString(R.string.app_name);
         credential = GoogleAccountCredential
                 .usingOAuth2(context, Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());

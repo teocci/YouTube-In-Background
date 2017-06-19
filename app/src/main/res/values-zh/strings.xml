@@ -54,4 +54,11 @@
     <string name="error_loading_media">加载介质时出错</string>
     <string name="error_no_connection">无法连接到服务器。 请检查您的互联网连接。</string>
     <string name="error_no_yt_video_retrieve">加载YouTube链接时出错</string>
+    <string name="currently_playing">YouTube Video currently playing</string>
+    <string name="currently_playing_extra_info">Extra info for currently playing song</string>
+    <string name="currently_playing_views_number">Artist of currently playing song</string>
+    <string name="loading">载入中...</string>
+    <string name="play_pause">玩或暂停</string>
+    <string name="skip_next">跳到下一个</string>
+    <string name="skip_prev">跳到上一个</string>
 </resources>

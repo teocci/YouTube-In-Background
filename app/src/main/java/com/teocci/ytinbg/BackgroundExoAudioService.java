@@ -122,7 +122,7 @@ public class BackgroundExoAudioService extends Service implements
         mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
 
         mServiceHandler.removeCallbacksAndMessages(null);
-        mServiceHandler.sendEmptyMessageDelayed(0, 100);
+        mServiceHandler.sendEmptyMessage(0);
         return START_STICKY;
     }
 
@@ -337,12 +337,12 @@ public class BackgroundExoAudioService extends Service implements
 
     private void sendSessionTokenToActivity()
     {
-        LogHelper.e(TAG, "sending: INTENT_SESSION_TOKEN");
+//        LogHelper.e(TAG, "ServiceHandler | handleMessage sending: INTENT_SESSION_TOKEN");
         Intent intent = new Intent(INTENT_SESSION_TOKEN);
         Bundle b = new Bundle();
         b.putParcelable(KEY_SESSION_TOKEN, getSessionToken());
         intent.putExtra(KEY_SESSION_TOKEN, b);
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+        sendBroadcast(intent);
     }
 
     /**
@@ -521,16 +521,11 @@ public class BackgroundExoAudioService extends Service implements
         @Override
         public void handleMessage(Message message)
         {
-            LogHelper.e(TAG, "ServiceHandler | handleMessage");
+//            LogHelper.e(TAG, "ServiceHandler | handleMessage");
             BackgroundExoAudioService service = weakReference.get();
             if (service != null && service.mPlaybackManager.getPlayback() != null) {
                 if (service.mPlaybackManager.getPlayback().isPlaying()) {
-                    LogHelper.e(TAG, "ServiceHandler | handleMessage sending: INTENT_SESSION_TOKEN");
-                    Intent intent = new Intent(INTENT_SESSION_TOKEN);
-                    Bundle b = new Bundle();
-                    b.putParcelable(KEY_SESSION_TOKEN, getSessionToken());
-                    intent.putExtra(KEY_SESSION_TOKEN, b);
-                    sendBroadcast(intent);
+                    sendSessionTokenToActivity();
                 }
             }
         }

@@ -57,4 +57,11 @@
     <string name="error_loading_media">미디어 로딩 에러</string>
     <string name="error_no_connection">서버에 연결할 수 없습니다. 인터넷 연결 여부를 확인해보세요.</string>
     <string name="error_no_yt_video_retrieve">YouTube link 로딩 에러</string>
+    <string name="currently_playing">YouTube Video currently playing</string>
+    <string name="currently_playing_extra_info">Extra info for currently playing song</string>
+    <string name="currently_playing_views_number">Artist of currently playing song</string>
+    <string name="loading">로드 중...</string>
+    <string name="play_pause">재생 또는 일시 중지</string>
+    <string name="skip_prev">이전으로 건너 뛰기</string>
+    <string name="skip_next">다음으로 건너 뛰기</string>
 </resources>

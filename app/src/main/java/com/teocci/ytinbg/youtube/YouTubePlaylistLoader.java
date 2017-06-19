@@ -13,7 +13,6 @@ import com.google.api.services.youtube.model.Playlist;
 import com.google.api.services.youtube.model.PlaylistListResponse;
 import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
 import com.teocci.ytinbg.model.YouTubePlaylist;
-import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.Config;
 
 import java.io.IOException;
@@ -86,6 +85,10 @@ public class YouTubePlaylistLoader extends AsyncTask<String, Void, List<YouTubeP
      */
     public List<YouTubePlaylist> searchPlaylist()
     {
+        if (getCredential() == null){
+            Log.e(TAG, "getCredential: is null!");
+            return Collections.emptyList();
+        }
         if (getCredential().getSelectedAccountName() == null) {
             Log.d(TAG, "loadInBackground: account not picked!");
             return Collections.emptyList();

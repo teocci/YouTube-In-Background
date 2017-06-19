@@ -91,6 +91,7 @@ public class LocalPlayback implements Playback
     private boolean exoPlayerNullIsStopped = false;
 
     private boolean isExtractingYTURL = false;
+    private boolean hasBeenExtracted = false;
 
     private final IntentFilter audioNoisyIntentFilter = new IntentFilter(
             AudioManager.ACTION_AUDIO_BECOMING_NOISY
@@ -233,13 +234,15 @@ public class LocalPlayback implements Playback
         String youTubeVideoId = youTubeVideo.getId();
         boolean videoHasChanged = !TextUtils.equals(youTubeVideoId, currentYouTubeVideoId);
         if (videoHasChanged) {
+//            LogHelper.e(TAG, "play | videoHasChanged");
+            hasBeenExtracted = false;
             currentYouTubeVideoId = youTubeVideoId;
         }
-        if (videoHasChanged || exoPlayer == null) {
-            LogHelper.e(TAG, "play | calling: extractUrlAndPlay " + (!isExtractingYTURL ? "true" : "false"));
+        if (videoHasChanged || exoPlayer == null || !hasBeenExtracted) {
+//            LogHelper.e(TAG, "play | calling: extractUrlAndPlay " + (!isExtractingYTURL ? "true" : "false"));
             if (!isExtractingYTURL) extractUrlAndPlay();
         } else if (!isExtractingYTURL) {
-            LogHelper.e(TAG, "play | calling: seekTo and configurePlayerState");
+//            LogHelper.e(TAG, "play | calling: seekTo and configurePlayerState");
             seekTo(0);
             configurePlayerState();
         }
@@ -305,14 +308,14 @@ public class LocalPlayback implements Playback
     {
         final String youtubeLink = "https://youtube.com/watch?v=" + currentYouTubeVideoId;
         isExtractingYTURL = true;
-        String ytSourceLink = null;
-        VideoMeta videoMeta = null;
 
+        LogHelper.e(TAG, "extractUrlAndPlay | called");
         new YouTubeExtractor(context)
         {
             @Override
             public void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta videoMeta)
             {
+//                LogHelper.e(TAG, "extractUrlAndPlay | started");
                 if (ytFiles == null) {
                     Toast.makeText(
                             context,
@@ -322,14 +325,16 @@ public class LocalPlayback implements Playback
                             ),
                             Toast.LENGTH_SHORT
                     ).show();
+//                    LogHelper.e(TAG, "extractUrlAndPlay | ended-error");
+                    isExtractingYTURL = false;
                     return;
                 }
                 YtFile ytFile = getBestStream(ytFiles);
                 LogHelper.e(TAG, ytFile.getUrl());
                 if (validateUrl(ytFile.getUrl())) {
-                    releaseResources(false); // Release everything except the player
+//                    LogHelper.e(TAG, "extractUrlAndPlay | validateUrl extracted");
 
-                    LogHelper.e(TAG, "extractUrlAndPlay | validateUrl extracted");
+                    releaseResources(false); // Release everything except the player
                     if (exoPlayer == null) {
                         exoPlayer = ExoPlayerFactory
                                 .newSimpleInstance(context, new DefaultTrackSelector(), new DefaultLoadControl());
@@ -347,20 +352,25 @@ public class LocalPlayback implements Playback
                     // Produces Extractor instances for parsing the media data.
                     ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
                     // The MediaSource represents the media to be played.
-                    MediaSource mediaSource =
-                            new ExtractorMediaSource(
-                                    Uri.parse(ytFile.getUrl()), dataSourceFactory, extractorsFactory, null, null);
+                    MediaSource mediaSource = new ExtractorMediaSource(
+                            Uri.parse(ytFile.getUrl()),
+                            dataSourceFactory,
+                            extractorsFactory,
+                            null,
+                            null
+                    );
 
                     // Prepares media to play (happens on background thread) and triggers
                     // {@code onPlayerStateChanged} callback when the stream is ready to play.
-                    LogHelper.e(TAG, "extractUrlAndPlay | exoPlayer calls: prepare");
+//                    LogHelper.e(TAG, "extractUrlAndPlay | exoPlayer calls: prepare");
                     exoPlayer.prepare(mediaSource);
                     // If we are streaming from the internet, we want to hold a
                     // Wifi lock, which prevents the Wifi radio from going to
                     // sleep while the song is playing.
                     wifiLock.acquire();
+                    hasBeenExtracted = true;
 
-                    LogHelper.e(TAG, "extractUrlAndPlay calls: configurePlayerState");
+//                    LogHelper.e(TAG, "extractUrlAndPlay calls: configurePlayerState");
                     configurePlayerState();
                 } else {
 //                        Log.e(TAG, "No Link found");
@@ -372,6 +382,7 @@ public class LocalPlayback implements Playback
                             ),
                             Toast.LENGTH_SHORT
                     ).show();
+//                    LogHelper.e(TAG, "extractUrlAndPlay | ended-error: No Link found");
                 }
 
                 isExtractingYTURL = false;

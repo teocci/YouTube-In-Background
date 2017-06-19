@@ -59,7 +59,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
     {
         super.onCreate(savedInstanceState);
 
-        ytPlaylistLoader = new YouTubePlaylistLoader(getActivity());
+        ytPlaylistLoader = new YouTubePlaylistLoader(getContext());
         ytPlaylistLoader.setYouTubePlaylistReceiver(this);
 
         ytPlaylistVideoLoader = new YouTubePlaylistVideoLoader(getActivity());
