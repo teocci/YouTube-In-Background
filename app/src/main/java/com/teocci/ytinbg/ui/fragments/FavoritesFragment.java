@@ -142,7 +142,7 @@ public class FavoritesFragment extends RecyclerFragment
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
         // Check network connectivity
-        if (!networkConf.isNetworkAvailable()) {
+        if (!networkConf.isNetworkAvailable(getActivity())) {
             networkConf.createNetErrorDialog();
             return;
         }

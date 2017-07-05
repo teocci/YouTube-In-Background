@@ -2,6 +2,7 @@ package com.teocci.ytinbg.ui;
 
 import android.Manifest;
 import android.accounts.AccountManager;
+import android.app.FragmentTransaction;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity
     private RecentlyWatchedFragment recentlyPlayedFragment;
     private PlaybackControlsFragment mControlsFragment;
 
+    private FragmentTransaction lastTransaction;
 
     private MediaSessionCompat.Token sessionToken;
 //    private MediaBrowserCompat mMediaBrowser;
@@ -235,6 +237,7 @@ public class MainActivity extends AppCompatActivity
             LogHelper.e(TAG, "on sessionToken receive");
             try {
                 connectToSession(sessionToken);
+                if (lastTransaction != null) lastTransaction.commit();
             } catch (RemoteException re) {
                 LogHelper.e(TAG, re, "could not connect media controller");
                 hidePlaybackControls();
@@ -372,9 +375,7 @@ public class MainActivity extends AppCompatActivity
                 // Check network connection. If not available, do not query.
                 // This also disables onSuggestionClick triggering
                 if (suggestion.length() > 2) { //make suggestions after 3rd letter
-
-                    if (networkConf.isNetworkAvailable()) {
-
+                    if (networkConf.isNetworkAvailable(getApplicationContext())) {
                         new JsonAsyncTask(new JsonAsyncResponse()
                         {
                             @Override
@@ -571,19 +572,34 @@ public class MainActivity extends AppCompatActivity
     protected void showPlaybackControls()
     {
         LogHelper.e(TAG, "showPlaybackControls");
-        if (NetworkHelper.isNetworkAvailable(this)) {
-            getFragmentManager().beginTransaction()
-                    .show(mControlsFragment)
-                    .commit();
+        if (networkConf.isNetworkAvailable(this)) {
+            try {
+                getFragmentManager().beginTransaction()
+                        .show(mControlsFragment)
+//                        .commitAllowingStateLoss();
+                        .commit();
+            } catch (IllegalStateException ise) {
+                // [According to](https://stackoverflow.com/questions/7575921)
+//                ise.printStackTrace();
+                lastTransaction = getFragmentManager().beginTransaction()
+                        .show(mControlsFragment);
+            }
         }
     }
 
     protected void hidePlaybackControls()
     {
         LogHelper.e(TAG, "hidePlaybackControls");
-        getFragmentManager().beginTransaction()
-                .hide(mControlsFragment)
-                .commit();
+        try {
+            getFragmentManager().beginTransaction()
+                    .hide(mControlsFragment)
+                    .commit();
+        } catch (IllegalStateException ise) {
+            // [According to](https://stackoverflow.com/questions/7575921)
+//            ise.printStackTrace();
+            lastTransaction = getFragmentManager().beginTransaction()
+                    .hide(mControlsFragment);
+        }
     }
 
     /**

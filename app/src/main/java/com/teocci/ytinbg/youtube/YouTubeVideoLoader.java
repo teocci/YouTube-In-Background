@@ -20,13 +20,18 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_LANGUAGE_KEY;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_SEARCH_LIST_FIELDS;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_SEARCH_LIST_PART;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_SEARCH_LIST_TYPE;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_VIDEO_FIELDS;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_VIDEO_LIST_FIELDS;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_VIDEO_LIST_PART;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_VIDEO_PART;
+import static com.teocci.ytinbg.utils.Config.YT_REGEX;
 import static com.teocci.ytinbg.youtube.YouTubeSingleton.getInstance;
 import static com.teocci.ytinbg.youtube.YouTubeSingleton.getYouTube;
 
@@ -87,7 +92,7 @@ public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVide
     /**
      * Start the search.
      *
-     * @param keywords         - query
+     * @param keywords - query
      */
     public void search(String keywords)
     {
@@ -136,58 +141,102 @@ public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVide
                 searchList.setPageToken(currentPageToken);
             }
 
-            YouTube.Videos.List videosList = youtube.videos().list(YOUTUBE_VIDEO_LIST_PART);
-            videosList.setKey(Config.YOUTUBE_API_KEY);
-            videosList.setFields(YOUTUBE_VIDEO_LIST_FIELDS);
-            videosList.set(YOUTUBE_LANGUAGE_KEY, language);
 
-            // Search Response
-            final SearchListResponse searchListResponse = searchList.execute();
-            Log.e(TAG, "Printed " + searchListResponse.getPageInfo().getResultsPerPage() +
-                    " out of " + searchListResponse.getPageInfo().getTotalResults() +
-                    ".\nCurrent page token: " + searchList.getPageToken() + "\n" +
-                    "Next page token: " + searchListResponse.getNextPageToken() +
-                    ".\nPrev page token: " + searchListResponse.getPrevPageToken());
-            final List<SearchResult> searchResults = searchListResponse.getItems();
+            final Pattern pattern = Pattern.compile(YT_REGEX);
+            final Matcher matcher = pattern.matcher(keywords);
 
-            // Stores the nextPageToken
-            nextPageToken = searchListResponse.getNextPageToken();
+            if (matcher.find()) {
+                Log.e(TAG, "YouTube ID: " + matcher.group(1));
 
-            // Finds video list
-            videosList.setId(Utils.concatenateIDs(searchResults));
-            VideoListResponse resp = videosList.execute();
-            List<Video> videoResults = resp.getItems();
+                YouTube.Videos.List singleVideo = youtube.videos().list(YOUTUBE_VIDEO_PART);
+                singleVideo.setKey(Config.YOUTUBE_API_KEY);
+                singleVideo.setFields(YOUTUBE_VIDEO_FIELDS);
+                singleVideo.set(YOUTUBE_LANGUAGE_KEY, language);
+                singleVideo.setId(matcher.group(1));
+                VideoListResponse resp = singleVideo.execute();
+                List<Video> videoResults = resp.getItems();
 
-            // Create the ytVideos list to be displayed in the UI
-            int index = 0;
-            for (SearchResult result : searchResults) {
-                YouTubeVideo item = new YouTubeVideo();
+                for (Video videoResult : videoResults) {
+                    YouTubeVideo item = new YouTubeVideo();
 
-                // SearchList list info
-                item.setTitle(result.getSnippet().getTitle());
-                item.setThumbnailURL(result.getSnippet().getThumbnails().getDefault().getUrl());
-                item.setId(result.getId().getVideoId());
+                    if (videoResult != null) {
+                    // SearchList list info
+                    item.setTitle(videoResult.getSnippet().getTitle());
+                    item.setThumbnailURL(videoResult.getSnippet().getThumbnails().getDefault().getUrl());
+                    item.setId(videoResult.getId());
 
-                // Video info
-                Video videoResult = videoResults.get(index);
-                if (videoResult != null) {
-                    if (videoResult.getStatistics() != null) {
-                        BigInteger viewsNumber = videoResult.getStatistics().getViewCount();
-                        String viewsFormatted = NumberFormat.getIntegerInstance().format(viewsNumber) + " views";
-                        item.setViewCount(viewsFormatted);
+                    // Video info
+                        if (videoResult.getStatistics() != null) {
+                            BigInteger viewsNumber = videoResult.getStatistics().getViewCount();
+                            String viewsFormatted = NumberFormat.getIntegerInstance().format(viewsNumber) + " views";
+                            item.setViewCount(viewsFormatted);
+                        }
+                        if (videoResult.getContentDetails() != null) {
+                            String isoTime = videoResult.getContentDetails().getDuration();
+                            String time = Utils.convertISO8601DurationToNormalTime(isoTime);
+                            item.setDuration(time);
+                        }
+                    } else {
+                        item.setDuration("NA");
                     }
-                    if (videoResult.getContentDetails() != null) {
-                        String isoTime = videoResult.getContentDetails().getDuration();
-                        String time = Utils.convertISO8601DurationToNormalTime(isoTime);
-                        item.setDuration(time);
-                    }
-                } else {
-                    item.setDuration("NA");
+
+                    // Add to the list
+                    ytVideos.add(item);
                 }
+            } else {
+                YouTube.Videos.List videosList = youtube.videos().list(YOUTUBE_VIDEO_LIST_PART);
+                videosList.setKey(Config.YOUTUBE_API_KEY);
+                videosList.setFields(YOUTUBE_VIDEO_LIST_FIELDS);
+                videosList.set(YOUTUBE_LANGUAGE_KEY, language);
 
-                // Add to the list
-                ytVideos.add(item);
-                index++;
+                // Search Response
+                final SearchListResponse searchListResponse = searchList.execute();
+                Log.e(TAG, "Printed " + searchListResponse.getPageInfo().getResultsPerPage() +
+                        " out of " + searchListResponse.getPageInfo().getTotalResults() +
+                        ".\nCurrent page token: " + searchList.getPageToken() + "\n" +
+                        "Next page token: " + searchListResponse.getNextPageToken() +
+                        ".\nPrev page token: " + searchListResponse.getPrevPageToken());
+                final List<SearchResult> searchResults = searchListResponse.getItems();
+
+                // Stores the nextPageToken
+                nextPageToken = searchListResponse.getNextPageToken();
+
+                // Finds video list
+                videosList.setId(Utils.concatenateIDs(searchResults));
+                VideoListResponse resp = videosList.execute();
+                List<Video> videoResults = resp.getItems();
+
+                // Create the ytVideos list to be displayed in the UI
+                int index = 0;
+                for (SearchResult result : searchResults) {
+                    YouTubeVideo item = new YouTubeVideo();
+
+                    // SearchList list info
+                    item.setTitle(result.getSnippet().getTitle());
+                    item.setThumbnailURL(result.getSnippet().getThumbnails().getDefault().getUrl());
+                    item.setId(result.getId().getVideoId());
+
+                    // Video info
+                    Video videoResult = videoResults.get(index);
+                    if (videoResult != null) {
+                        if (videoResult.getStatistics() != null) {
+                            BigInteger viewsNumber = videoResult.getStatistics().getViewCount();
+                            String viewsFormatted = NumberFormat.getIntegerInstance().format(viewsNumber) + " views";
+                            item.setViewCount(viewsFormatted);
+                        }
+                        if (videoResult.getContentDetails() != null) {
+                            String isoTime = videoResult.getContentDetails().getDuration();
+                            String time = Utils.convertISO8601DurationToNormalTime(isoTime);
+                            item.setDuration(time);
+                        }
+                    } else {
+                        item.setDuration("NA");
+                    }
+
+                    // Add to the list
+                    ytVideos.add(item);
+                    index++;
+                }
             }
         } catch (IOException e) {
             Log.e(TAG, "Could not initialize: " + e);

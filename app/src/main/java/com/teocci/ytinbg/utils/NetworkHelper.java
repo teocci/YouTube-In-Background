@@ -15,7 +15,7 @@ import android.support.v7.app.AlertDialog;
  */
 public class NetworkHelper
 {
-    private Activity activity;
+    private Context activity;
 
     public NetworkHelper(Activity activity)
     {
@@ -35,8 +35,9 @@ public class NetworkHelper
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public static boolean isNetworkAvailable(Context context)
+    public boolean isNetworkAvailable(Context context)
     {
+        this.activity = context;
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();

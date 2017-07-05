@@ -29,7 +29,6 @@ public abstract class RecyclerFragment extends Fragment implements AdapterView.O
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        networkConf = new NetworkHelper(getActivity());
 //        setHasOptionsMenu(true);
     }
 
@@ -39,7 +38,7 @@ public abstract class RecyclerFragment extends Fragment implements AdapterView.O
     {
         View rootView = inflater.inflate(R.layout.fragment_search, container, false);
 
-        recyclerView = (RecyclerView) rootView.findViewById(R.id.recently_played);
+        recyclerView = rootView.findViewById(R.id.recently_played);
         recyclerView.setLayoutManager(getLayoutManager());
         recyclerView.addItemDecoration(getItemDecoration());
 
@@ -53,6 +52,14 @@ public abstract class RecyclerFragment extends Fragment implements AdapterView.O
         recyclerView.setAdapter(videoListAdapter);
 
         return rootView;
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        networkConf = new NetworkHelper(getActivity());
     }
 
     /**

@@ -22,6 +22,7 @@ import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.decoration.DividerDecoration;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.NetworkHelper;
 import com.teocci.ytinbg.youtube.YouTubeVideoLoader;
 
 import java.util.List;
@@ -70,7 +71,7 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
     {
         // Inflate the layout for this fragment
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
-        loadingProgressBar = (ProgressBar) rootView.findViewById(R.id.progressBar);
+        loadingProgressBar = rootView.findViewById(R.id.progressBar);
 
         final LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
@@ -117,7 +118,7 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
         // Check network connectivity
-        if (!networkConf.isNetworkAvailable()) {
+        if (!networkConf.isNetworkAvailable(getActivity())) {
             networkConf.createNetErrorDialog();
             return;
         }
@@ -176,7 +177,7 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
     {
         currentQuery = query;
         // Check network connectivity
-        if (!networkConf.isNetworkAvailable()) {
+        if (!networkConf.isNetworkAvailable(getActivity())) {
             networkConf.createNetErrorDialog();
             return;
         }
@@ -191,9 +192,9 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
     /**
      * Called when video items are received
      *
-     * @param ytVideos - videos to be shown in list view
+     * @param ytVideos         - videos to be shown in list view
      * @param currentPageToken - videos to be shown in list view
-     * @param nextPageToken - videos to be shown in list view
+     * @param nextPageToken    - videos to be shown in list view
      */
     @Override
     public void onVideosReceived(final List<YouTubeVideo> ytVideos,

@@ -35,6 +35,9 @@ public final class Config
     public static final String YT_WATCH_LINK = "youtube.com/watch?v=";
     public static final String YT_PREFIX_LINK = "https://youtu.be/";
 
+    public static final String YT_REGEX = "(?:[?&]vi?=|\\/embed\\/|\\/\\d\\d?\\/|\\/vi?\\/|https?:\\/\\/(?:www\\" +
+            ".)?youtu\\.be\\/)([A-Za-z0-9_\\-]{11})";
+
 
     public static final String ACCOUNT_NAME = "GOOGLE_ACCOUNT_NAME";
 
@@ -99,6 +102,11 @@ public final class Config
             "snippet/thumbnails/default/url)";
     public static final String YOUTUBE_VIDEO_LIST_PART = "id,contentDetails,statistics";
     public static final String YOUTUBE_VIDEO_LIST_FIELDS = "items(contentDetails/duration,statistics/viewCount)";
+
+
+    public static final String YOUTUBE_VIDEO_PART = "id,snippet,contentDetails,statistics";
+    public static final String YOUTUBE_VIDEO_FIELDS = "items(id,snippet/title," +
+            "snippet/thumbnails/default/url,contentDetails/duration,statistics/viewCount)";
 
     public static final String YOUTUBE_PLAYLIST_VIDEO_PART = "id,contentDetails";
     public static final String YOUTUBE_PLAYLIST_VIDEO_FIELDS = "items(contentDetails/duration)" +

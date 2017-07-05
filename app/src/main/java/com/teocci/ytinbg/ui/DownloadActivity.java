@@ -55,8 +55,8 @@ public class DownloadActivity extends Activity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_download);
-        mainLayout = (LinearLayout) findViewById(R.id.main_layout);
-        mainProgressBar = (ProgressBar) findViewById(R.id.progress_bar);
+        mainLayout = findViewById(R.id.main_layout);
+        mainProgressBar = findViewById(R.id.progress_bar);
         Intent intent = getIntent();
         String ytLink = intent.getStringExtra(Config.YOUTUBE_LINK); //if it's a string you stored.
 

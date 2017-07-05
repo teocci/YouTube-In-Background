@@ -75,7 +75,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
         View rootView = inflater.inflate(R.layout.fragment_playlists, container, false);
 
         /* Setup the ListView */
-        playlistListView = (RecyclerView) rootView.findViewById(R.id.playlists);
+        playlistListView = rootView.findViewById(R.id.playlists);
         playlistListView.setLayoutManager(getLayoutManager());
         playlistListView.addItemDecoration(getItemDecoration());
 
@@ -88,8 +88,8 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
         playlistAdapter.setOnItemClickListener(this);
         playlistListView.setAdapter(playlistAdapter);
 
-        userNameTextView = (TextView) rootView.findViewById(R.id.user_name);
-        swipeToRefresh = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeToRefresh);
+        userNameTextView = rootView.findViewById(R.id.user_name);
+        swipeToRefresh = rootView.findViewById(R.id.swipeToRefresh);
 
         swipeToRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener()
         {
@@ -129,9 +129,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
     {
         super.onResume();
 
-        if (!getUserVisibleHint()) {
-            // Do nothing for now
-        }
+        networkConf = new NetworkHelper(getActivity());
 
 //        playlistList.clear();
 //        playlistList.addAll(YouTubeSqlDb.getInstance().playlistModel().readAll());
@@ -156,7 +154,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
         // Check network connectivity
-        if (!networkConf.isNetworkAvailable()) {
+        if (!networkConf.isNetworkAvailable(getActivity())) {
             networkConf.createNetErrorDialog();
             return;
         }

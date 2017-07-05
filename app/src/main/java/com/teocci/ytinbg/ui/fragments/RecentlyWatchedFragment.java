@@ -64,7 +64,7 @@ public class RecentlyWatchedFragment extends RecyclerFragment implements
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_recently_watched, container, false);
 
-        recyclerView = (RecyclerView) rootView.findViewById(R.id.recently_played);
+        recyclerView = rootView.findViewById(R.id.recently_played);
         recyclerView.setLayoutManager(getLayoutManager());
         recyclerView.addItemDecoration(getItemDecoration());
 
@@ -153,7 +153,7 @@ public class RecentlyWatchedFragment extends RecyclerFragment implements
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id)
     {
-        if (!networkConf.isNetworkAvailable()) {
+        if (!networkConf.isNetworkAvailable(getActivity())) {
             networkConf.createNetErrorDialog();
             return;
         }
