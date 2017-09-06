@@ -237,7 +237,10 @@ public class MainActivity extends AppCompatActivity
             LogHelper.e(TAG, "on sessionToken receive");
             try {
                 connectToSession(sessionToken);
-                if (lastTransaction != null) lastTransaction.commit();
+                if (lastTransaction != null) {
+                    lastTransaction.commit();
+                    lastTransaction = null;
+                }
             } catch (RemoteException re) {
                 LogHelper.e(TAG, re, "could not connect media controller");
                 hidePlaybackControls();
@@ -438,8 +441,8 @@ public class MainActivity extends AppCompatActivity
                 AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
                 alertDialog.setTitle("Teocci");
                 alertDialog.setIcon(R.mipmap.ic_launcher);
-                alertDialog.setMessage("YTinBG v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex" +
-                        ".com\n\n" +
+                alertDialog.setMessage("YiB v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex" +
+                        ".com\n\n\n\nWith all my \uD83D\uDC96 to Mokhira.\n\n" +
                         monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
                 alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
                         new DialogInterface.OnClickListener()

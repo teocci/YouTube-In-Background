@@ -160,12 +160,12 @@ public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVide
                     YouTubeVideo item = new YouTubeVideo();
 
                     if (videoResult != null) {
-                    // SearchList list info
-                    item.setTitle(videoResult.getSnippet().getTitle());
-                    item.setThumbnailURL(videoResult.getSnippet().getThumbnails().getDefault().getUrl());
-                    item.setId(videoResult.getId());
+                        // SearchList list info
+                        item.setTitle(videoResult.getSnippet().getTitle());
+                        item.setThumbnailURL(videoResult.getSnippet().getThumbnails().getDefault().getUrl());
+                        item.setId(videoResult.getId());
 
-                    // Video info
+                        // Video info
                         if (videoResult.getStatistics() != null) {
                             BigInteger viewsNumber = videoResult.getStatistics().getViewCount();
                             String viewsFormatted = NumberFormat.getIntegerInstance().format(viewsNumber) + " views";
@@ -209,6 +209,10 @@ public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVide
                 // Create the ytVideos list to be displayed in the UI
                 int index = 0;
                 for (SearchResult result : searchResults) {
+                    if (result.getId() == null) {
+                        continue;
+                    }
+
                     YouTubeVideo item = new YouTubeVideo();
 
                     // SearchList list info
@@ -236,6 +240,7 @@ public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVide
                     // Add to the list
                     ytVideos.add(item);
                     index++;
+
                 }
             }
         } catch (IOException e) {

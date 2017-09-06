@@ -195,6 +195,10 @@ public class Utils
     {
         StringBuilder contentDetails = new StringBuilder();
         for (SearchResult result : searchResults) {
+            if (result.getId() == null) {
+                continue;
+            }
+
             String id = result.getId().getVideoId();
             if (id != null) {
                 contentDetails.append(id);
