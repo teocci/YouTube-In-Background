@@ -61,4 +61,6 @@
     <string name="play_pause">玩或暂停</string>
     <string name="skip_next">跳到下一个</string>
     <string name="skip_prev">跳到上一个</string>
+    <string name="notification_channel">YIB_Channel_ID</string>
+    <string name="notification_channel_description">Channel ID for YIB</string>
 </resources>

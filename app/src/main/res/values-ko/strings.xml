@@ -64,4 +64,6 @@
     <string name="play_pause">재생 또는 일시 중지</string>
     <string name="skip_prev">이전으로 건너 뛰기</string>
     <string name="skip_next">다음으로 건너 뛰기</string>
+    <string name="notification_channel">YIB_Channel_ID</string>
+    <string name="notification_channel_description">Channel ID for YIB</string>
 </resources>

@@ -491,7 +491,7 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
                 Log.d(LOG_TAG, "Decipher FunctURL: " + decipherFunctUrl);
             Matcher mat = patSignatureDecFunction.matcher(javascriptFile);
             if (mat.find()) {
-                decipherFunctionName = mat.group(1);
+                decipherFunctionName = mat.group(2);
                 if (LOGGING)
                     Log.d(LOG_TAG, "Decipher Functname: " + decipherFunctionName);
 

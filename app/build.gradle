@@ -2,13 +2,13 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 27
-    buildToolsVersion "27.0.2"
+    buildToolsVersion "27.0.3"
     defaultConfig {
         applicationId "com.teocci.ytinbg"
         minSdkVersion 17
         targetSdkVersion 27
         versionCode 1
-        versionName "3.0.2"
+        versionName "3.0.6"
         multiDexEnabled true
     }
 
@@ -23,12 +23,9 @@ android {
 
     buildTypes {
         debug {
-            applicationVariants.all { variant ->
-                variant.outputs.all { output ->
-                    def file = output.outputFile
-                    def appId = android.defaultConfig.applicationId
-                    def fileName = appId + "-" + variant.buildType.name + ".apk"
-                    outputFileName = new File(file.parent, fileName)
+            android.applicationVariants.all { variant ->
+                variant.outputs.all {
+                    outputFileName = "com.teocci.ytinbg-${variant.name}-${variant.versionName}.apk"
                 }
             }
             signingConfig signingConfigs.config
@@ -36,16 +33,19 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            debug {
-                applicationVariants.all { variant ->
-                    variant.outputs.all { output ->
-                        def file = output.outputFile
-                        def appId = android.defaultConfig.applicationId
-                        def fileName = appId + "-" + variant.buildType.name + ".apk"
-                        outputFileName = new File(file.parent, fileName)
-                    }
+
+            android.applicationVariants.all { variant ->
+                variant.outputs.all {
+                    outputFileName = "com.teocci.ytinbg-${variant.name}-${variant.versionName}.apk"
                 }
             }
+//            debug {
+//                android.applicationVariants.all { variant ->
+//                    variant.outputs.all {
+//                        outputFileName = "com.teocci.ytinbg-${variant.name}-${variant.versionName}.apk"
+//                    }
+//                }
+//            }
             signingConfig signingConfigs.config
         }
     }

@@ -64,4 +64,6 @@
     <string name="play_pause">reproducir o pausar</string>
     <string name="skip_next">siguiente</string>
     <string name="skip_prev">anterior</string>
+    <string name="notification_channel">YIB_Channel_ID</string>
+    <string name="notification_channel_description">Channel ID for YIB</string>
 </resources>
