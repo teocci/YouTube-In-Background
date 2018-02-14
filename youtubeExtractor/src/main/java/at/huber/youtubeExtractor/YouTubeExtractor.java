@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -40,7 +41,8 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
     private final static String CACHE_FILE_NAME = "decipher_js_funct";
     private final static int DASH_PARSE_RETRIES = 5;
 
-    private Context context;
+    protected WeakReference<Context> weakContext;
+//    private Context context;
     private String videoID;
     private VideoMeta videoMeta;
     private boolean includeWebM = true;
@@ -81,7 +83,9 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
     private static final Pattern patVariableFunction = Pattern.compile("(\\{|;| |=)([a-zA-Z$][a-zA-Z0-9$]{0,2})\\.([a-zA-Z$][a-zA-Z0-9$]{0,2})\\(");
     private static final Pattern patFunction = Pattern.compile("(\\{|;| |=)([a-zA-Z$_][a-zA-Z0-9$]{0,2})\\(");
     private static final Pattern patDecryptionJsFile = Pattern.compile("jsbin\\\\/(player-(.+?).js)");
-    private static final Pattern patSignatureDecFunction = Pattern.compile("\\(\"signature\",(.{1,3}?)\\(.{1,10}?\\)");
+//    private static final Pattern patSignatureDecFunction = Pattern.compile("\\(\"signature\",(.{1,3}?)\\(.{1,10}?\\)");
+
+    private static final Pattern patSignatureDecFunction = Pattern.compile("([\"\\'])signature\\1\\s*,\\s*(?<sig>[a-zA-Z0-9$]+)\\(");
 
     private static final SparseArray<Format> FORMAT_MAP = new SparseArray<>();
 
@@ -112,6 +116,7 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
         FORMAT_MAP.put(134, new Format(134, "mp4", 360, Format.VCodec.H264, Format.ACodec.NONE, true));
         FORMAT_MAP.put(135, new Format(135, "mp4", 480, Format.VCodec.H264, Format.ACodec.NONE, true));
         FORMAT_MAP.put(136, new Format(136, "mp4", 720, Format.VCodec.H264, Format.ACodec.NONE, true));
+		FORMAT_MAP.put(137, new Format(137, "mp4", 1080, Format.VCodec.H264, Format.ACodec.NONE, true));
         //itag 138 videos are either 3840x2160 or 7680x4320 (sLprVF6d7Ug)
         FORMAT_MAP.put(138, new Format(138, "mp4", 4320, Format.VCodec.H264, Format.ACodec.NONE, true));
         FORMAT_MAP.put(160, new Format(160, "mp4", 144, Format.VCodec.H264, Format.ACodec.NONE, true));
@@ -173,7 +178,8 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
     }
 
     public YouTubeExtractor(Context con) {
-        context = con;
+//        context = con;
+        weakContext = new WeakReference<>(con);
     }
 
     @Override
@@ -651,6 +657,7 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
     }
 
     private void readDecipherFunctFromCache() {
+        Context context = weakContext.get();
         if (context != null) {
             File cacheFile = new File(context.getCacheDir().getAbsolutePath() + "/" + CACHE_FILE_NAME);
             // The cached functions are valid for 2 weeks
@@ -704,6 +711,7 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
     }
 
     private void writeDeciperFunctToChache() {
+        Context context = weakContext.get();
         if (context != null) {
             File cacheFile = new File(context.getCacheDir().getAbsolutePath() + "/" + CACHE_FILE_NAME);
             BufferedWriter writer = null;
@@ -727,6 +735,7 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
     }
 
     private void decipherViaWebView(final SparseArray<String> encSignatures) {
+        final Context context = weakContext.get();
         if (context == null) {
             return;
         }

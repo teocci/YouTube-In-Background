@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "25.0.3"
+    compileSdkVersion 27
+    buildToolsVersion "27.0.2"
     defaultConfig {
         applicationId "com.teocci.ytinbg"
         minSdkVersion 17
-        targetSdkVersion 26
+        targetSdkVersion 27
         versionCode 1
         versionName "3.0.2"
         multiDexEnabled true
@@ -24,11 +24,11 @@ android {
     buildTypes {
         debug {
             applicationVariants.all { variant ->
-                variant.outputs.each { output ->
+                variant.outputs.all { output ->
                     def file = output.outputFile
                     def appId = android.defaultConfig.applicationId
                     def fileName = appId + "-" + variant.buildType.name + ".apk"
-                    output.outputFile = new File(file.parent, fileName)
+                    outputFileName = new File(file.parent, fileName)
                 }
             }
             signingConfig signingConfigs.config
@@ -38,11 +38,11 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             debug {
                 applicationVariants.all { variant ->
-                    variant.outputs.each { output ->
+                    variant.outputs.all { output ->
                         def file = output.outputFile
                         def appId = android.defaultConfig.applicationId
                         def fileName = appId + "-" + variant.buildType.name + ".apk"
-                        output.outputFile = new File(file.parent, fileName)
+                        outputFileName = new File(file.parent, fileName)
                     }
                 }
             }
@@ -71,47 +71,31 @@ android {
         exclude 'META-INF/dependencies.txt'
         exclude 'META-INF/LGPL2.1'
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
     provided fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:26.+'
-    compile 'com.android.support:cardview-v7:26.+'
-    compile 'com.android.support:recyclerview-v7:26.+'
-    compile 'com.android.support:design:26.+'
-    compile 'com.android.support:multidex:1.0.1'
-
-    compile 'com.google.android.gms:play-services-auth:11.0.1'
+    compile 'com.android.support:appcompat-v7:27.0.2'
+    compile 'com.android.support:cardview-v7:27.0.2'
+    compile 'com.android.support:recyclerview-v7:27.0.2'
+    compile 'com.android.support:design:27.0.2'
+    compile 'com.android.support:multidex:1.0.2'
+    compile 'com.google.android.gms:play-services-auth:11.8.0'
     compile 'com.google.android.exoplayer:exoplayer:r2.4.1'
-
-    compile 'com.google.code.gson:gson:2.7'
+    compile 'com.google.code.gson:gson:2.8.0'
     compile 'com.googlecode.mp4parser:isoparser:1.1.17'
-
     compile 'com.google.api-client:google-api-client:1.22.0'
     compile 'com.google.api-client:google-api-client-android:1.22.0'
     compile 'com.google.http-client:google-http-client:1.22.0'
     compile 'com.google.http-client:google-http-client-android:1.22.0'
     compile 'com.google.http-client:google-http-client-jackson2:1.22.0'
     compile 'com.google.apis:google-api-services-youtube:v3-rev182-1.22.0'
-
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.fasterxml.jackson.core:jackson-core:2.8.7'
     compile 'org.aspectj:aspectjrt:1.8.8'
-
     compile project(':youtubeExtractor')
-    //    compile files('libs/listviewanimations_lib-core-slh_3.1.0.jar')
-    //    compile files('libs/listviewanimations_lib-manipulation_3.1.0.jar')
-    //    compile files('libs/listviewanimations_lib-core_3.1.0.jar')
-    //    compile files('libs/google-api-client-1.21.0.jar')
-    //    compile files('libs/google-api-client-android-1.21.0.jar')
-    //    compile files('libs/google-http-client-1.21.0.jar')
-    //    compile files('libs/google-http-client-android-1.21.0.jar')
-    //    compile files('libs/google-http-client-jackson2-1.21.0.jar')
-    //    compile files('libs/google-api-services-youtube-v3-rev160-1.21.0.jar')
-    //    compile files('libs/google-oauth-client-1.21.0.jar')
-    //    compile files('libs/jackson-core-2.1.3.jar')
-    //    compile files('libs/jsr305-1.3.9.jar')
-    //    compile files('libs/picasso-2.5.2.jar')
-    //    compile files('libs/okhttp-3.2.0.jar') //used for picasso caching
-    //    compile files('libs/youtubeExtractor.jar')
 }

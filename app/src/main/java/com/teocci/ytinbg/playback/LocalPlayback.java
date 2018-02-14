@@ -1,5 +1,6 @@
 package com.teocci.ytinbg.playback;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +13,6 @@ import android.text.TextUtils;
 import android.util.SparseArray;
 import android.widget.Toast;
 
-import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -40,17 +40,8 @@ import at.huber.youtubeExtractor.VideoMeta;
 import at.huber.youtubeExtractor.YouTubeExtractor;
 import at.huber.youtubeExtractor.YtFile;
 
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_140;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_141;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_17;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_171;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_18;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_22;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_249;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_250;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_251;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_36;
-import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_43;
+import static com.teocci.ytinbg.utils.Utils.getBestStream;
+import static com.teocci.ytinbg.utils.Utils.validateUrl;
 
 /**
  * Created by teocci.
@@ -304,6 +295,7 @@ public class LocalPlayback implements Playback
     /**
      * Extracts link from youtube video ID, so mediaPlayer can play it
      */
+    @SuppressLint("StaticFieldLeak")
     private void extractUrlAndPlay()
     {
         final String youtubeLink = "https://youtube.com/watch?v=" + currentYouTubeVideoId;
@@ -315,6 +307,10 @@ public class LocalPlayback implements Playback
             @Override
             public void onExtractionComplete(SparseArray<YtFile> ytFiles, VideoMeta videoMeta)
             {
+                final Context context = weakContext.get();
+                if (context == null) {
+                    return;
+                }
 //                LogHelper.e(TAG, "extractUrlAndPlay | started");
                 if (ytFiles == null) {
                     Toast.makeText(
@@ -327,6 +323,7 @@ public class LocalPlayback implements Playback
                     ).show();
 //                    LogHelper.e(TAG, "extractUrlAndPlay | ended-error");
                     isExtractingYTURL = false;
+                    hasBeenExtracted = false;
                     return;
                 }
                 YtFile ytFile = getBestStream(ytFiles);
@@ -336,8 +333,7 @@ public class LocalPlayback implements Playback
 
                     releaseResources(false); // Release everything except the player
                     if (exoPlayer == null) {
-                        exoPlayer = ExoPlayerFactory
-                                .newSimpleInstance(context, new DefaultTrackSelector(), new DefaultLoadControl());
+                        exoPlayer = ExoPlayerFactory.newSimpleInstance(context, new DefaultTrackSelector());
                         exoPlayer.addListener(eventListener);
                     }
 
@@ -388,58 +384,6 @@ public class LocalPlayback implements Playback
                 isExtractingYTURL = false;
             }
         }.extract(youtubeLink, true, true);
-    }
-
-
-    private boolean validateUrl(String url)
-    {
-        // https://r8---sn-3u-bh2ee.googlevideo.com/videoplayback
-        return url.contains(".googlevideo.com/videoplayback");
-    }
-
-    /**
-     * Get the best available audio stream
-     *
-     * @param ytFiles Array of available streams
-     * @return Audio stream with highest bitrate
-     */
-    private YtFile getBestStream(SparseArray<YtFile> ytFiles)
-    {
-//        Log.e(TAG, "ytFiles: " + ytFiles);
-        if (ytFiles.get(YOUTUBE_ITAG_141) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_141");
-            return ytFiles.get(YOUTUBE_ITAG_141);
-        } else if (ytFiles.get(YOUTUBE_ITAG_140) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_140");
-            return ytFiles.get(YOUTUBE_ITAG_140);
-        } else if (ytFiles.get(YOUTUBE_ITAG_251) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_251");
-            return ytFiles.get(YOUTUBE_ITAG_251);
-        } else if (ytFiles.get(YOUTUBE_ITAG_250) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_250");
-            return ytFiles.get(YOUTUBE_ITAG_250);
-        } else if (ytFiles.get(YOUTUBE_ITAG_249) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_249");
-            return ytFiles.get(YOUTUBE_ITAG_249);
-        } else if (ytFiles.get(YOUTUBE_ITAG_171) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_171");
-            return ytFiles.get(YOUTUBE_ITAG_171);
-        } else if (ytFiles.get(YOUTUBE_ITAG_18) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_18");
-            return ytFiles.get(YOUTUBE_ITAG_18);
-        } else if (ytFiles.get(YOUTUBE_ITAG_22) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_22");
-            return ytFiles.get(YOUTUBE_ITAG_22);
-        } else if (ytFiles.get(YOUTUBE_ITAG_43) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_43");
-            return ytFiles.get(YOUTUBE_ITAG_43);
-        } else if (ytFiles.get(YOUTUBE_ITAG_36) != null) {
-            LogHelper.e(TAG, " gets YOUTUBE_ITAG_36");
-            return ytFiles.get(YOUTUBE_ITAG_36);
-        }
-
-        LogHelper.e(TAG, " gets YOUTUBE_ITAG_17");
-        return ytFiles.get(YOUTUBE_ITAG_17);
     }
 
     private void giveUpAudioFocus()

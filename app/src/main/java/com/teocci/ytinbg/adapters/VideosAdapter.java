@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -28,7 +26,6 @@ import com.teocci.ytinbg.interfaces.OnStartDragListener;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.DownloadActivity;
 import com.teocci.ytinbg.utils.Config;
-import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.Utils;
 
 import java.util.ArrayList;
@@ -121,55 +118,32 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
             videoViewHolder.checkBoxFavorite.setChecked(isFavorite);
 
-            videoViewHolder.checkBoxFavorite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
-            {
-                public void onCheckedChanged(CompoundButton btn, boolean isChecked)
-                {
+            videoViewHolder.checkBoxFavorite.setOnCheckedChangeListener((btn, isChecked) -> {
 //                    if (!isChecked) favorites.remove(youTubeVideo.getId());
-                }
             });
 
-            videoViewHolder.checkBoxFavorite.setOnClickListener(new View.OnClickListener()
-            {
-                @Override
-                public void onClick(View v)
-                {
-                    final boolean isChecked = ((CheckBox) v).isChecked();
-                    if (isChecked) {
-                        YouTubeSqlDb
-                                .getInstance()
-                                .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
-                                .create(youTubeVideo);
-                    } else {
-                        YouTubeSqlDb
-                                .getInstance()
-                                .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
-                                .delete(youTubeVideo.getId());
-                        if (isFavoriteList) {
-                            removeVideo(videoViewHolder.getAdapterPosition());
-                        }
+            videoViewHolder.checkBoxFavorite.setOnClickListener(v -> {
+                final boolean isChecked = ((CheckBox) v).isChecked();
+                if (isChecked) {
+                    YouTubeSqlDb
+                            .getInstance()
+                            .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
+                            .create(youTubeVideo);
+                } else {
+                    YouTubeSqlDb
+                            .getInstance()
+                            .videos(YouTubeSqlDb.VIDEOS_TYPE.FAVORITE)
+                            .delete(youTubeVideo.getId());
+                    if (isFavoriteList) {
+                        removeVideo(videoViewHolder.getAdapterPosition());
                     }
-
                 }
+
             });
 
-            videoViewHolder.imageButtonShare.setOnClickListener(new View.OnClickListener()
-            {
-                @Override
-                public void onClick(View v)
-                {
-                    doShareLink(youTubeVideo.getTitle(), youTubeVideo.getId());
-                }
-            });
+            videoViewHolder.imageButtonShare.setOnClickListener(v -> doShareLink(youTubeVideo.getTitle(), youTubeVideo.getId()));
 
-            videoViewHolder.imageButtonDownload.setOnClickListener(new View.OnClickListener()
-            {
-                @Override
-                public void onClick(View v)
-                {
-                    doDownloadVideo(youTubeVideo.getId());
-                }
-            });
+            videoViewHolder.imageButtonDownload.setOnClickListener(v -> doDownloadVideo(youTubeVideo.getId()));
         } else if (itemHolder instanceof LoaderViewHolder) {
             LoaderViewHolder loadingViewHolder = (LoaderViewHolder) itemHolder;
             loadingViewHolder.progressBar.setIndeterminate(true);
@@ -233,9 +207,8 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
      */
     public void setYouTubeVideos(List<YouTubeVideo> youTubeVideos)
     {
-        videoList.clear();
-        videoList.addAll(youTubeVideos);
-        notifyDataSetChanged();
+        clearYouTubeVideos();
+        addYouTubeVideos(youTubeVideos);
     }
 
     public void addYouTubeVideo(YouTubeVideo youTubeVideo, int position)
@@ -253,8 +226,21 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
      */
     public void addMoreYouTubeVideos(List<YouTubeVideo> youTubeVideos)
     {
+        int position = videoList.size() + 1;
         videoList.addAll(youTubeVideos);
+        notifyItemChanged(position, videoList);
 //        Log.e(TAG, "Adding " + youTubeVideos.size() + " more elements. Total: " + videoList.size());
+    }
+
+    /**
+     * A common adapter ADD mechanism. As with VideosAdapter,
+     * calling notifyDataSetChanged() will trigger the RecyclerView to update
+     * the view. However, this method will not trigger any of the RecyclerView
+     * animation features.
+     */
+    public void addYouTubeVideos(List<YouTubeVideo> youTubeVideos)
+    {
+        videoList.addAll(youTubeVideos);
         notifyDataSetChanged();
     }
 
@@ -302,14 +288,6 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         videoList.remove(position);
         notifyItemRemoved(position);
         notifyItemRangeChanged(position, videoList.size());
-    }
-
-    private void printVideoList()
-    {
-        Log.e(TAG, "videoList: ");
-        for (YouTubeVideo video : videoList) {
-            Log.e(TAG, video.getId());
-        }
     }
 
     public void swapItems(int positionA, int positionB)
@@ -412,6 +390,14 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
     }
 
+    private void printVideoList()
+    {
+        Log.e(TAG, "videoList: ");
+        for (YouTubeVideo video : videoList) {
+            Log.e(TAG, video.getId());
+        }
+    }
+
     protected static class LoaderViewHolder extends RecyclerView.ViewHolder
     {
         private ProgressBar progressBar;
@@ -465,7 +451,7 @@ public class VideosAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         public boolean onTouch(View v, MotionEvent event)
         {
             // Start a drag whenever the handle view it touched
-            if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 videosAdapter.onItemHolderStartDrag(this);
             }
             return false;

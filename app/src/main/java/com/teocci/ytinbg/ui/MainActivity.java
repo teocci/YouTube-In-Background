@@ -442,7 +442,7 @@ public class MainActivity extends AppCompatActivity
                 alertDialog.setTitle("Teocci");
                 alertDialog.setIcon(R.mipmap.ic_launcher);
                 alertDialog.setMessage("YiB v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex" +
-                        ".com\n\n\n\nWith all my \uD83D\uDC96 to Mokhira.\n\n" +
+                        ".com\n\n" +
                         monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
                 alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
                         new DialogInterface.OnClickListener()

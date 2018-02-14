@@ -42,7 +42,7 @@ public class AudioPlayer implements Runnable
         this.events = events;
     }
 
-    public AudioPlayer() { }
+    public AudioPlayer() {}
 
     public AudioPlayer(PlayerEvents events)
     {
@@ -52,7 +52,7 @@ public class AudioPlayer implements Runnable
     /**
      * For live streams, duration is 0
      *
-     * @return
+     * @return true if is a live stream
      */
     public boolean isLive()
     {
@@ -62,7 +62,7 @@ public class AudioPlayer implements Runnable
     /**
      * set the data source, a file path or an url, or a file descriptor, to play encoded audio from
      *
-     * @param src
+     * @param src the data source
      */
     public void setDataSource(String src)
     {
@@ -94,7 +94,7 @@ public class AudioPlayer implements Runnable
 
     public synchronized int getCurrentPosition()
     {
-        return Math.round(presentationTimeUs / duration  * 100);
+        return Math.round(presentationTimeUs / duration * 100);
     }
 
     /**
@@ -131,7 +131,7 @@ public class AudioPlayer implements Runnable
      */
     public synchronized void waitPlay()
     {
-        // if (duration == 0) return;
+//        if (duration == 0) return;
         while (state.get() == PlayerStates.READY_TO_PLAY) {
             try {
                 wait();
@@ -146,9 +146,9 @@ public class AudioPlayer implements Runnable
     {
         android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
 
-        // extractor gets information about the stream
+        // Extractor gets information about the stream
         extractor = new MediaExtractor();
-        // try to set the source, this might fail
+        // Try to set the source, this might fail
         try {
             if (sourcePath != null) extractor.setDataSource(this.sourcePath);
             if (sourceRawResId != -1) {
@@ -174,16 +174,21 @@ public class AudioPlayer implements Runnable
             mime = format.getString(MediaFormat.KEY_MIME);
             sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE);
             channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
-            // if duration is 0, we are probably playing a live stream
+            // If duration is 0, we are probably playing a live stream
             duration = format.getLong(MediaFormat.KEY_DURATION);
             bitrate = format.getInteger(MediaFormat.KEY_BIT_RATE);
         } catch (Exception e) {
             Log.e(TAG, "Reading format parameters exception:" + e.getMessage());
             e.printStackTrace();
-            // don't exit, tolerate this error, we'll fail later if this is critical
+            // Don't exit, tolerate this error, we'll fail later if this is critical
         }
 
-        Log.d(TAG, "Track info: mime:" + mime + " sampleRate:" + sampleRate + " channels:" + channels + " bitrate:" + bitrate + " duration:" + duration);
+        Log.d(TAG, "Track info: mime:" + mime +
+                " sampleRate:" + sampleRate +
+                " channels:" + channels +
+                " bitrate:" + bitrate +
+                " duration:" + duration
+        );
 
         // check we have audio content we know
         if (format == null || !mime.startsWith("audio/")) {
@@ -194,13 +199,13 @@ public class AudioPlayer implements Runnable
             });
             return;
         }
-        // create the actual decoder, using the mime to select
+        // Create the actual decoder, using the mime to select
         try {
             codec = MediaCodec.createDecoderByType(mime);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // check we have a valid codec instance
+        // Check we have a valid codec instance
         if (codec == null) {
             if (events != null) handler.post(new Runnable()
             {
@@ -210,7 +215,7 @@ public class AudioPlayer implements Runnable
             return;
         }
 
-        //state.set(PlayerStates.READY_TO_PLAY);
+//        state.set(PlayerStates.READY_TO_PLAY);
         if (events != null) handler.post(new Runnable()
         {
             @Override
@@ -222,17 +227,17 @@ public class AudioPlayer implements Runnable
         ByteBuffer[] codecInputBuffers = codec.getInputBuffers();
         ByteBuffer[] codecOutputBuffers = codec.getOutputBuffers();
 
-        // configure AudioTrack
+        // Configure AudioTrack
         int channelConfiguration = channels == 1 ? AudioFormat.CHANNEL_OUT_MONO : AudioFormat.CHANNEL_OUT_STEREO;
         int minSize = AudioTrack.getMinBufferSize(sampleRate, channelConfiguration, AudioFormat.ENCODING_PCM_16BIT);
         audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConfiguration,
                 AudioFormat.ENCODING_PCM_16BIT, minSize, AudioTrack.MODE_STREAM);
 
-        // start playing, we will feed the AudioTrack later
+        // Start playing, we will feed the AudioTrack later
         audioTrack.play();
         extractor.selectTrack(0);
 
-        // start decoding
+        // Start decoding
         final long kTimeOutUs = 1000;
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
         boolean sawInputEOS = false;
@@ -243,11 +248,11 @@ public class AudioPlayer implements Runnable
         state.set(PlayerStates.PLAYING);
         while (!sawOutputEOS && noOutputCounter < noOutputCounterLimit && !stop) {
 
-            // pause implementation
+            // Pause implementation
             waitPlay();
 
             noOutputCounter++;
-            // read a buffer before feeding it to the decoder
+            // Read a buffer before feeding it to the decoder
             if (!sawInputEOS) {
                 int inputBufIndex = codec.dequeueInputBuffer(kTimeOutUs);
                 if (inputBufIndex >= 0) {
@@ -260,23 +265,39 @@ public class AudioPlayer implements Runnable
                     } else {
                         presentationTimeUs = extractor.getSampleTime();
                         final int percent = (duration == 0) ? 0 : (int) (100 * presentationTimeUs / duration);
-                        if (events != null) handler.post(new Runnable()
-                        {
-                            @Override
-                            public void run() { events.onPlayUpdate(percent, presentationTimeUs / 1000, duration / 1000); }
-                        });
+                        if (events != null) {
+                            handler.post(new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    events.onPlayUpdate(
+                                            percent,
+                                            presentationTimeUs / 1000,
+                                            duration / 1000
+                                    );
+                                }
+                            });
+                        }
                     }
 
-                    codec.queueInputBuffer(inputBufIndex, 0, sampleSize, presentationTimeUs, sawInputEOS ? MediaCodec.BUFFER_FLAG_END_OF_STREAM : 0);
+                    codec.queueInputBuffer(
+                            inputBufIndex,
+                            0,
+                            sampleSize,
+                            presentationTimeUs,
+                            sawInputEOS ? MediaCodec.BUFFER_FLAG_END_OF_STREAM : 0
+                    );
 
-                    if (!sawInputEOS) extractor.advance();
-
+                    if (!sawInputEOS) {
+                        extractor.advance();
+                    }
                 } else {
                     Log.e(TAG, "inputBufIndex " + inputBufIndex);
                 }
             } // !sawInputEOS
 
-            // decode to PCM and push it to the AudioTrack player
+            // Decode to PCM and push it to the AudioTrack player
             int res = codec.dequeueOutputBuffer(info, kTimeOutUs);
 
             if (res >= 0) {
@@ -290,11 +311,10 @@ public class AudioPlayer implements Runnable
                 buf.clear();
                 if (chunk.length > 0) {
                     audioTrack.write(chunk, 0, chunk.length);
-                    /*if(this.state.get() != PlayerStates.PLAYING) {
-                        if (events != null) handler.post(new Runnable() { @Override public void run() { events.onPlay();  } });
-            			state.set(PlayerStates.PLAYING);
-                	}*/
-
+//                    if(this.state.get() != PlayerStates.PLAYING) {
+//                        if (events != null) handler.post(new Runnable() { @Override public void run() { events.onPlay();  } });
+//            			state.set(PlayerStates.PLAYING);
+//                	}
                 }
                 codec.releaseOutputBuffer(outputBufIndex, false);
                 if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
@@ -319,13 +339,14 @@ public class AudioPlayer implements Runnable
             codec.release();
             codec = null;
         }
+
         if (audioTrack != null) {
             audioTrack.flush();
             audioTrack.release();
             audioTrack = null;
         }
 
-        // clear source and the other globals
+        // Clear source and the other globals
         sourcePath = null;
         sourceRawResId = -1;
         duration = 0;
@@ -335,7 +356,6 @@ public class AudioPlayer implements Runnable
         bitrate = 0;
         presentationTimeUs = 0;
         duration = 0;
-
 
         state.set(PlayerStates.STOPPED);
         stop = true;
@@ -362,7 +382,7 @@ public class AudioPlayer implements Runnable
         for (int i = 0; i < numCodecs; i++) {
             MediaCodecInfo codecInfo = MediaCodecList.getCodecInfoAt(i);
 
-            // grab results and put them in a list
+            // Grab results and put them in a list
             String name = codecInfo.getName();
             boolean isEncoder = codecInfo.isEncoder();
             String[] types = codecInfo.getSupportedTypes();
@@ -393,7 +413,7 @@ public class AudioPlayer implements Runnable
             audioTrack = null;
         }
 
-        // clear source and the other globals
+        // Clear source and the other globals
         sourcePath = null;
         sourceRawResId = -1;
         duration = 0;

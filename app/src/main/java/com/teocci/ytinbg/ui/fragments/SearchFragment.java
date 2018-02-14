@@ -22,10 +22,11 @@ import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.decoration.DividerDecoration;
 import com.teocci.ytinbg.utils.Config;
-import com.teocci.ytinbg.utils.NetworkHelper;
 import com.teocci.ytinbg.youtube.YouTubeVideoLoader;
 
 import java.util.List;
+
+import static com.teocci.ytinbg.utils.Config.NUMBER_OF_VIDEOS_RETURNED;
 
 /**
  * Created by teocci.
@@ -81,7 +82,7 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
             {
                 super.onScrolled(recyclerView, dx, dy);
                 totalItemCount = linearLayoutManager.getItemCount();
-                if (totalItemCount > Config.NUMBER_OF_VIDEOS_RETURNED - visibleThreshold) {
+                if (totalItemCount > NUMBER_OF_VIDEOS_RETURNED - visibleThreshold) {
                     lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
 //                Log.e(TAG, "totalItemCount: " + totalItemCount + " lastVisibleItem: " + lastVisibleItem);
                     if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
@@ -176,10 +177,14 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
     public void searchQuery(String query)
     {
         currentQuery = query;
-        // Check network connectivity
-        if (!networkConf.isNetworkAvailable(getActivity())) {
-            networkConf.createNetErrorDialog();
-            return;
+        try {
+            // Check network connectivity
+            if (!networkConf.isNetworkAvailable(getActivity())) {
+                networkConf.createNetErrorDialog();
+                return;
+            }
+        } catch (NullPointerException e) {
+
         }
         videoListAdapter.clearYouTubeVideos();
         loadingProgressBar.setVisibility(View.VISIBLE);
@@ -201,25 +206,20 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
                                  final String currentPageToken,
                                  final String nextPageToken)
     {
-        if (videoListAdapter != null) {
-            getActivity().runOnUiThread(new Runnable()
-            {
-                public void run()
-                {
-                    if (currentPageToken == null || currentPageToken.equals("")) {
-                        Log.e(TAG, "Adding First Page Videos");
-                        videoListAdapter.setYouTubeVideos(ytVideos);
-                        recyclerView.smoothScrollToPosition(0);
-                    } else {
-                        Log.e(TAG, "Adding Next Page Videos");
+        if (videoListAdapter != null && getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                if (currentPageToken == null || currentPageToken.equals("")) {
+                    Log.e(TAG, "Adding First Page Videos");
+                    videoListAdapter.setYouTubeVideos(ytVideos);
+                    recyclerView.smoothScrollToPosition(0);
+                } else {
+                    Log.e(TAG, "Adding Next Page Videos");
 //                        int prevLastPosition = videoListAdapter.getItemCount();
-                        videoListAdapter.removeLoader();
-                        videoListAdapter.addMoreYouTubeVideos(ytVideos);
-                        isLoading = false;
+                    videoListAdapter.removeLoader();
+                    videoListAdapter.addMoreYouTubeVideos(ytVideos);
+                    isLoading = false;
 //                        recyclerView.smoothScrollToPosition(prevLastPosition + 1);
-                    }
                 }
-
             });
 
             this.nextPageToken = nextPageToken;
@@ -230,13 +230,7 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
             }
         }
 
-        handler.post(new Runnable()
-        {
-            public void run()
-            {
-                loadingProgressBar.setVisibility(View.INVISIBLE);
-            }
-        });
+        handler.post(() -> loadingProgressBar.setVisibility(View.INVISIBLE));
     }
 //
 //    /**
@@ -254,15 +248,13 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
     {
         Log.e(TAG, "onLoadMore called");
         videoListAdapter.addLoader();
-        new Handler().postDelayed(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                YouTubeVideoLoader youTubeVideoLoader = new YouTubeVideoLoader(getActivity());
-                youTubeVideoLoader.setYouTubeVideoReceiver(SearchFragment.this);
-                youTubeVideoLoader.search(currentQuery, nextPageToken);
-            }
-        }, 200);
+        new Handler().postDelayed(
+                () -> {
+                    YouTubeVideoLoader youTubeVideoLoader = new YouTubeVideoLoader(getActivity());
+                    youTubeVideoLoader.setYouTubeVideoReceiver(SearchFragment.this);
+                    youTubeVideoLoader.search(currentQuery, nextPageToken);
+                },
+                200
+        );
     }
 }

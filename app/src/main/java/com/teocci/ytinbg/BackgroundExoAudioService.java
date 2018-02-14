@@ -7,30 +7,29 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.RemoteException;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 
+import com.teocci.ytinbg.handlers.DelayedStopHandler;
+import com.teocci.ytinbg.handlers.ServiceHandler;
+import com.teocci.ytinbg.interfaces.Playback;
 import com.teocci.ytinbg.interfaces.YouTubeVideoUpdateListener;
 import com.teocci.ytinbg.model.YouTubeVideo;
+import com.teocci.ytinbg.notification.MediaNotificationManager;
 import com.teocci.ytinbg.playback.LocalPlayback;
 import com.teocci.ytinbg.playback.PlaybackManager;
 import com.teocci.ytinbg.playback.QueueManager;
 import com.teocci.ytinbg.receivers.MediaButtonIntentReceiver;
-import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
-import com.teocci.ytinbg.notification.MediaNotificationManager;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +40,13 @@ import static com.teocci.ytinbg.utils.Config.ACTION_PLAY;
 import static com.teocci.ytinbg.utils.Config.ACTION_STOP;
 import static com.teocci.ytinbg.utils.Config.INTENT_SESSION_TOKEN;
 import static com.teocci.ytinbg.utils.Config.KEY_SESSION_TOKEN;
+import static com.teocci.ytinbg.utils.Config.KEY_YOUTUBE_TYPE;
+import static com.teocci.ytinbg.utils.Config.KEY_YOUTUBE_TYPE_PLAYLIST;
+import static com.teocci.ytinbg.utils.Config.KEY_YOUTUBE_TYPE_PLAYLIST_VIDEO_POS;
+import static com.teocci.ytinbg.utils.Config.KEY_YOUTUBE_TYPE_VIDEO;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_MEDIA_NO_NEW_REQUEST;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_MEDIA_TYPE_PLAYLIST;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_MEDIA_TYPE_VIDEO;
 
 /**
  * Service class for background youtube playback
@@ -55,7 +61,7 @@ public class BackgroundExoAudioService extends Service implements
     private static final int STOP_DELAY = 30000;
 
 
-    private PlaybackManager mPlaybackManager;
+    private PlaybackManager playbackManager;
 
     private MediaSessionCompat mediaSession;
     private MediaControllerCompat mediaController;
@@ -64,10 +70,10 @@ public class BackgroundExoAudioService extends Service implements
 
     private LocalBroadcastManager mLocalBroadcastManager;
 
-    private final DelayedStopHandler mDelayedStopHandler = new DelayedStopHandler(this);
-    private ServiceHandler mServiceHandler = new ServiceHandler(this);
+    private final DelayedStopHandler delayedStopHandler = new DelayedStopHandler(this);
+    private ServiceHandler serviceHandler = new ServiceHandler(this);
 
-    private int mediaType = Config.YOUTUBE_MEDIA_NO_NEW_REQUEST;
+    private int mediaType = YOUTUBE_MEDIA_NO_NEW_REQUEST;
 
     private Context context;
 
@@ -118,11 +124,11 @@ public class BackgroundExoAudioService extends Service implements
         }
         // Reset the delay handler to enqueue a message to stop the service if
         // nothing is playing.
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
-        mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
+        delayedStopHandler.removeCallbacksAndMessages(null);
+        delayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
 
-        mServiceHandler.removeCallbacksAndMessages(null);
-        mServiceHandler.sendEmptyMessage(0);
+        serviceHandler.removeCallbacksAndMessages(null);
+        serviceHandler.sendEmptyMessage(0);
         return START_STICKY;
     }
 
@@ -133,7 +139,7 @@ public class BackgroundExoAudioService extends Service implements
     public void onPlaybackStart()
     {
         mediaSession.setActive(true);
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
+        delayedStopHandler.removeCallbacksAndMessages(null);
 
         // The service needs to continue running even after the bound client (usually a
         // MediaController) disconnects, otherwise the playback will stop.
@@ -162,7 +168,7 @@ public class BackgroundExoAudioService extends Service implements
             );
             ytVideo.putLong(
                     MediaMetadataCompat.METADATA_KEY_DURATION,
-                    mPlaybackManager.getDuration()
+                    playbackManager.getDuration()
             );
 
 
@@ -176,8 +182,8 @@ public class BackgroundExoAudioService extends Service implements
         mediaSession.setActive(false);
         // Reset the delayed stop handler, so after STOP_DELAY it will be executed again,
         // potentially stopping the service.
-        mDelayedStopHandler.removeCallbacksAndMessages(null);
-        mDelayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
+        delayedStopHandler.removeCallbacksAndMessages(null);
+        delayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
         stopForeground(true);
 
     }
@@ -247,9 +253,8 @@ public class BackgroundExoAudioService extends Service implements
                             );
                             ytVideo.putLong(
                                     MediaMetadataCompat.METADATA_KEY_DURATION,
-                                    mPlaybackManager.getDuration()
+                                    playbackManager.getDuration()
                             );
-
 
                             mediaSession.setMetadata(ytVideo.build());
                         }
@@ -258,13 +263,13 @@ public class BackgroundExoAudioService extends Service implements
                     @Override
                     public void onYouTubeVideoRetrieveError()
                     {
-                        mPlaybackManager.updatePlaybackState(getString(R.string.error_no_yt_video_retrieve));
+                        playbackManager.updatePlaybackState(getString(R.string.error_no_yt_video_retrieve));
                     }
 
                     @Override
                     public void onCurrentQueueIndexUpdated(int queueIndex)
                     {
-                        mPlaybackManager.handlePlayRequest();
+                        playbackManager.handlePlayRequest();
                     }
 
                     @Override
@@ -277,7 +282,7 @@ public class BackgroundExoAudioService extends Service implements
         );
 
         LocalPlayback playback = new LocalPlayback(this);
-        mPlaybackManager = new PlaybackManager(this, getResources(), queueManager, playback);
+        playbackManager = new PlaybackManager(this, getResources(), queueManager, playback);
 
         mediaSession = new MediaSessionCompat(
                 context,
@@ -287,14 +292,14 @@ public class BackgroundExoAudioService extends Service implements
         );
 
 
-        mPlaybackManager.updatePlaybackState(null);
+        playbackManager.updatePlaybackState(null);
         try {
             mediaController = new MediaControllerCompat(
                     context,
                     mediaSession.getSessionToken()
             );
 
-            mediaSession.setCallback(mPlaybackManager.getMediaSessionCallback());
+            mediaSession.setCallback(playbackManager.getMediaSessionCallback());
             mediaNotificationManager = new MediaNotificationManager(this);
 //            sendSessionTokenToActivity();
 //            mediaSession.setSessionActivity(pi);
@@ -312,13 +317,13 @@ public class BackgroundExoAudioService extends Service implements
             public void onCallStateChanged(int state, String incomingNumber)
             {
                 if (state == TelephonyManager.CALL_STATE_RINGING) {
-                    //Incoming call: Pause music
-                    mPlaybackManager.handlePauseRequest();
+                    // Incoming call: Pause music
+                    playbackManager.handlePauseRequest();
                 } else if (state == TelephonyManager.CALL_STATE_IDLE) {
-                    //Not in call: Play music
-                    mPlaybackManager.handlePlayRequest();
+                    // Not in call: Play music
+                    playbackManager.handlePlayRequest();
                 } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
-                    //A call is dialing, active or on hold
+                    // A call is dialing, active or on hold
                 }
                 super.onCallStateChanged(state, incomingNumber);
             }
@@ -335,7 +340,7 @@ public class BackgroundExoAudioService extends Service implements
         return mediaController.getSessionToken();
     }
 
-    private void sendSessionTokenToActivity()
+    public void sendSessionTokenToActivity()
     {
 //        LogHelper.e(TAG, "ServiceHandler | handleMessage sending: INTENT_SESSION_TOKEN");
         Intent intent = new Intent(INTENT_SESSION_TOKEN);
@@ -376,36 +381,36 @@ public class BackgroundExoAudioService extends Service implements
      */
     private void handleMedia(Intent intent)
     {
-        int intentMediaType = intent.getIntExtra(Config.KEY_YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_NO_NEW_REQUEST);
+        int intentMediaType = intent.getIntExtra(KEY_YOUTUBE_TYPE, YOUTUBE_MEDIA_NO_NEW_REQUEST);
 
         switch (intentMediaType) {
             // Video has been paused. It is not necessary a new playback requests
-            case Config.YOUTUBE_MEDIA_NO_NEW_REQUEST:
+            case YOUTUBE_MEDIA_NO_NEW_REQUEST:
                 LogHelper.e(TAG, "handleMedia: YOUTUBE_MEDIA_NO_NEW_REQUEST");
-                mPlaybackManager.handlePlayRequest();
+                playbackManager.handlePlayRequest();
                 break;
-            case Config.YOUTUBE_MEDIA_TYPE_VIDEO:
-                mediaType = Config.YOUTUBE_MEDIA_TYPE_VIDEO;
-                currentYouTubeVideo = (YouTubeVideo) intent.getSerializableExtra(Config.KEY_YOUTUBE_TYPE_VIDEO);
+            case YOUTUBE_MEDIA_TYPE_VIDEO:
+                mediaType = YOUTUBE_MEDIA_TYPE_VIDEO;
+                currentYouTubeVideo = (YouTubeVideo) intent.getSerializableExtra(KEY_YOUTUBE_TYPE_VIDEO);
                 if (currentYouTubeVideo.getId() != null) {
-                    mPlaybackManager.initPlaylist(currentYouTubeVideo, null);
+                    playbackManager.initPlaylist(currentYouTubeVideo, null);
                     LogHelper.e(TAG, "handleMedia: YOUTUBE_MEDIA_TYPE_VIDEO");
-                    mPlaybackManager.handlePlayRequest();
-                    mPlaybackManager.updateYouTubeVideo();
+                    playbackManager.handlePlayRequest();
+                    playbackManager.updateYouTubeVideo();
                 }
                 break;
             // New playlist playback request
-            case Config.YOUTUBE_MEDIA_TYPE_PLAYLIST:
-                mediaType = Config.YOUTUBE_MEDIA_TYPE_PLAYLIST;
-                youTubeVideos = (ArrayList<YouTubeVideo>) intent.getSerializableExtra(Config.KEY_YOUTUBE_TYPE_PLAYLIST);
-                currentVideoPosition = intent.getIntExtra(Config.KEY_YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, 0);
+            case YOUTUBE_MEDIA_TYPE_PLAYLIST:
+                mediaType = YOUTUBE_MEDIA_TYPE_PLAYLIST;
+                youTubeVideos = (ArrayList<YouTubeVideo>) intent.getSerializableExtra(KEY_YOUTUBE_TYPE_PLAYLIST);
+                currentVideoPosition = intent.getIntExtra(KEY_YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, 0);
                 LogHelper.e(TAG, "currentVideoPosition: " + currentVideoPosition);
                 if (youTubeVideos != null && currentVideoPosition != -1) {
                     currentYouTubeVideo = youTubeVideos.get(currentVideoPosition);
-                    mPlaybackManager.initPlaylist(currentYouTubeVideo, youTubeVideos);
+                    playbackManager.initPlaylist(currentYouTubeVideo, youTubeVideos);
                     LogHelper.e(TAG, "handleMedia: YOUTUBE_MEDIA_TYPE_PLAYLIST");
-                    mPlaybackManager.handlePlayRequest();
-                    mPlaybackManager.updateYouTubeVideo();
+                    playbackManager.handlePlayRequest();
+                    playbackManager.updateYouTubeVideo();
                 }
                 break;
             default:
@@ -480,54 +485,9 @@ public class BackgroundExoAudioService extends Service implements
         return currentYouTubeVideo;
     }
 
-    /**
-     * A simple handler that stops the service if playback is not active (playing)
-     */
-    private static class DelayedStopHandler extends Handler
+    public Playback getPlayback()
     {
-        private final WeakReference<BackgroundExoAudioService> mWeakReference;
-
-        private DelayedStopHandler(BackgroundExoAudioService service)
-        {
-            mWeakReference = new WeakReference<>(service);
-        }
-
-        @Override
-        public void handleMessage(Message msg)
-        {
-            BackgroundExoAudioService service = mWeakReference.get();
-            if (service != null && service.mPlaybackManager.getPlayback() != null) {
-                if (service.mPlaybackManager.getPlayback().isPlaying()) {
-                    LogHelper.d(TAG, "Ignoring delayed stop since the media player is in use.");
-                    return;
-                }
-                LogHelper.d(TAG, "Stopping service with delay handler.");
-                service.stopSelf();
-            }
-        }
-    }
-
-    // Define how the handler will process messages
-    private final class ServiceHandler extends Handler
-    {
-        private final WeakReference<BackgroundExoAudioService> weakReference;
-
-        public ServiceHandler(BackgroundExoAudioService service)
-        {
-            weakReference = new WeakReference<>(service);
-        }
-
-        // Define how to handle any incoming messages here
-        @Override
-        public void handleMessage(Message message)
-        {
-//            LogHelper.e(TAG, "ServiceHandler | handleMessage");
-            BackgroundExoAudioService service = weakReference.get();
-            if (service != null && service.mPlaybackManager.getPlayback() != null) {
-                if (service.mPlaybackManager.getPlayback().isPlaying()) {
-                    sendSessionTokenToActivity();
-                }
-            }
-        }
+        if (playbackManager == null) return null;
+        else return playbackManager.getPlayback();
     }
 }

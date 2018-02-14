@@ -2,7 +2,6 @@ package com.teocci.ytinbg.utils;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -27,17 +26,22 @@ public class NetworkHelper
      *
      * @return boolean
      */
-    public boolean isNetworkAvailable()
+    public boolean isNetworkAvailable() throws NullPointerException
     {
+        if (activity == null) throw new NullPointerException("Activity is null.");
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public boolean isNetworkAvailable(Context context)
+    public boolean isNetworkAvailable(Context context) throws NullPointerException
     {
-        this.activity = context;
+        if (context != null) {
+            this.activity = context;
+        } else {
+            return isNetworkAvailable();
+        }
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
@@ -46,29 +50,20 @@ public class NetworkHelper
 
     public void createNetErrorDialog()
     {
-
         AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setMessage("You need a network connection to use this application. Please turn on" +
                 " mobile network or Wi-Fi in Settings.")
                 .setTitle("Unable to connect")
                 .setCancelable(false)
                 .setPositiveButton("Settings",
-                        new DialogInterface.OnClickListener()
-                        {
-                            public void onClick(DialogInterface dialog, int id)
-                            {
-                                Intent i = new Intent(Settings.ACTION_SETTINGS);
-                                activity.startActivity(i);
-                            }
+                        (dialog, id) -> {
+                            Intent i = new Intent(Settings.ACTION_SETTINGS);
+                            activity.startActivity(i);
                         }
                 )
                 .setNegativeButton("Cancel",
-                        new DialogInterface.OnClickListener()
-                        {
-                            public void onClick(DialogInterface dialog, int id)
-                            {
-                                //activity.finish();
-                            }
+                        (dialog, id) -> {
+                            //activity.finish();
                         }
                 );
         AlertDialog alert = builder.create();

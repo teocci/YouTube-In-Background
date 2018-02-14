@@ -78,4 +78,8 @@
     <!-- Playback Controls Description -->
     <string name="play_pause">play or pause</string>
 
+    <!-- Notification Channel -->
+    <string name="notification_channel">YIB_Channel_ID</string>
+    <string name="notification_channel_description">Channel ID for YIB</string>
+
 </resources>

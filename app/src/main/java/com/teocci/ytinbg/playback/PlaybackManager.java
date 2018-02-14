@@ -207,7 +207,6 @@ public class PlaybackManager implements Playback.Callback
 //        queueManager.setQueueFromMusic(mediaId);
     }
 
-
     /**
      * Switch to a different Playback instance, maintaining all playback state, if possible.
      *

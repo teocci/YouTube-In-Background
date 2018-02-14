@@ -17,11 +17,12 @@ import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.RemoteException;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.media.app.NotificationCompat.MediaStyle;
 import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.app.NotificationCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -495,7 +496,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 
     private void buildNotification(NotificationCompat.Action action)
     {
-        final NotificationCompat.MediaStyle style = new NotificationCompat.MediaStyle();
+        final MediaStyle style = new MediaStyle();
 
         Intent intent = new Intent(getApplicationContext(), BackgroundAudioService.class);
         intent.setAction(ACTION_STOP);

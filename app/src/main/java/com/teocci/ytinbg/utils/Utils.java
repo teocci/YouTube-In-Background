@@ -1,16 +1,30 @@
 package com.teocci.ytinbg.utils;
 
 import android.util.Log;
+import android.util.SparseArray;
 
 import com.google.api.services.youtube.model.SearchResult;
 import com.teocci.ytinbg.model.YouTubeVideo;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+
+import at.huber.youtubeExtractor.YtFile;
+
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_140;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_141;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_17;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_171;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_18;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_22;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_249;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_250;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_251;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_36;
+import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_43;
 
 /**
  * Helper methods
@@ -179,10 +193,56 @@ public class Utils
         Log.d(TAG, "\n*************************************************************\n");
     }
 
-    public static boolean empty(final String s)
+
+    public static boolean validateUrl(String url)
     {
-        // Null-safe, short-circuit evaluation.
-        return s == null || s.trim().isEmpty();
+        // https://r8---sn-3u-bh2ee.googlevideo.com/videoplayback
+        return url.contains(".googlevideo.com/videoplayback");
+    }
+
+    /**
+     * Get the best available audio stream
+     *
+     * @param ytFiles Array of available streams
+     * @return Audio stream with highest bitrate
+     */
+    public static YtFile getBestStream(SparseArray<YtFile> ytFiles)
+    {
+//        Log.e(TAG, "ytFiles: " + ytFiles);
+        if (ytFiles.get(YOUTUBE_ITAG_141) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_141");
+            return ytFiles.get(YOUTUBE_ITAG_141);
+        } else if (ytFiles.get(YOUTUBE_ITAG_140) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_140");
+            return ytFiles.get(YOUTUBE_ITAG_140);
+        } else if (ytFiles.get(YOUTUBE_ITAG_251) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_251");
+            return ytFiles.get(YOUTUBE_ITAG_251);
+        } else if (ytFiles.get(YOUTUBE_ITAG_250) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_250");
+            return ytFiles.get(YOUTUBE_ITAG_250);
+        } else if (ytFiles.get(YOUTUBE_ITAG_249) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_249");
+            return ytFiles.get(YOUTUBE_ITAG_249);
+        } else if (ytFiles.get(YOUTUBE_ITAG_171) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_171");
+            return ytFiles.get(YOUTUBE_ITAG_171);
+        } else if (ytFiles.get(YOUTUBE_ITAG_18) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_18");
+            return ytFiles.get(YOUTUBE_ITAG_18);
+        } else if (ytFiles.get(YOUTUBE_ITAG_22) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_22");
+            return ytFiles.get(YOUTUBE_ITAG_22);
+        } else if (ytFiles.get(YOUTUBE_ITAG_43) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_43");
+            return ytFiles.get(YOUTUBE_ITAG_43);
+        } else if (ytFiles.get(YOUTUBE_ITAG_36) != null) {
+            LogHelper.e(TAG, " gets YOUTUBE_ITAG_36");
+            return ytFiles.get(YOUTUBE_ITAG_36);
+        }
+
+        LogHelper.e(TAG, " gets YOUTUBE_ITAG_17");
+        return ytFiles.get(YOUTUBE_ITAG_17);
     }
 
     /**
@@ -215,5 +275,11 @@ public class Utils
         }
 
         return contentDetails.toString();
+    }
+
+    public static boolean isEmpty(final String s)
+    {
+        // Null-safe, short-circuit evaluation.
+        return s == null || s.trim().isEmpty();
     }
 }

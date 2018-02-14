@@ -2,7 +2,7 @@ package com.teocci.ytinbg.notification;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -23,20 +23,11 @@ public class NotificationTarget implements Target
     }
 
     @Override
-    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from)
-    {
-
-    }
+    public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {}
 
     @Override
-    public void onBitmapFailed(Drawable errorDrawable)
-    {
-
-    }
+    public void onBitmapFailed(Drawable errorDrawable) {}
 
     @Override
-    public void onPrepareLoad(Drawable placeHolderDrawable)
-    {
-
-    }
+    public void onPrepareLoad(Drawable placeHolderDrawable) {}
 }
