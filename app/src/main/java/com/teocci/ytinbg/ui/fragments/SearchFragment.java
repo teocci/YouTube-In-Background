@@ -22,11 +22,12 @@ import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.ui.decoration.DividerDecoration;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.youtube.YouTubeVideoLoader;
 
 import java.util.List;
 
-import static com.teocci.ytinbg.utils.Config.NUMBER_OF_VIDEOS_RETURNED;
+import static com.teocci.ytinbg.utils.Config.MAX_VIDEOS_RETURNED;
 
 /**
  * Created by teocci.
@@ -36,7 +37,7 @@ import static com.teocci.ytinbg.utils.Config.NUMBER_OF_VIDEOS_RETURNED;
 
 public class SearchFragment extends RecyclerFragment implements YouTubeVideoReceiver, OnLoadMoreListener
 {
-    private static final String TAG = SearchFragment.class.getSimpleName();
+    private static final String TAG = LogHelper.makeLogTag(SearchFragment.class);
 
     private Handler handler;
     private ProgressBar loadingProgressBar;
@@ -82,7 +83,7 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
             {
                 super.onScrolled(recyclerView, dx, dy);
                 totalItemCount = linearLayoutManager.getItemCount();
-                if (totalItemCount > NUMBER_OF_VIDEOS_RETURNED - visibleThreshold) {
+                if (totalItemCount > MAX_VIDEOS_RETURNED - visibleThreshold) {
                     lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
 //                Log.e(TAG, "totalItemCount: " + totalItemCount + " lastVisibleItem: " + lastVisibleItem);
                     if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
@@ -184,7 +185,7 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
                 return;
             }
         } catch (NullPointerException e) {
-
+            e.printStackTrace();
         }
         videoListAdapter.clearYouTubeVideos();
         loadingProgressBar.setVisibility(View.VISIBLE);

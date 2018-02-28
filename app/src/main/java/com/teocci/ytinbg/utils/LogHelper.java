@@ -7,20 +7,22 @@ import com.teocci.ytinbg.BuildConfig;
 import static com.teocci.ytinbg.utils.Config.LOG_PREFIX;
 
 /**
- * Created by teocci on 12/23/16.
+ * Created by teocci.
+ *
+ * @author teocci@yandex.com on 2016-Dec-23
  */
 public class LogHelper
 {
     private static final int LOG_PREFIX_LENGTH = LOG_PREFIX.length();
     private static final int MAX_LOG_TAG_LENGTH = 23;
+    private static final int RESERVED_LENGTH = MAX_LOG_TAG_LENGTH - LOG_PREFIX_LENGTH - 2;
 
     public static String makeLogTag(String str)
     {
-        if (str.length() > MAX_LOG_TAG_LENGTH - LOG_PREFIX_LENGTH) {
-            return LOG_PREFIX + str.substring(0, MAX_LOG_TAG_LENGTH - LOG_PREFIX_LENGTH - 1);
-        }
-
-        return LOG_PREFIX + str;
+        return LOG_PREFIX
+                + '['
+                + (str.length() > RESERVED_LENGTH ? str.substring(0, RESERVED_LENGTH - 1) : str)
+                + ']';
     }
 
     /**

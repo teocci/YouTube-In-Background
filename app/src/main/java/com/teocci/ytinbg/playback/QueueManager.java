@@ -21,7 +21,7 @@ import java.util.List;
 
 public class QueueManager
 {
-    private static final String TAG = QueueManager.class.getSimpleName();
+    private static final String TAG = LogHelper.makeLogTag(QueueManager.class);
 
     private YouTubeVideoUpdateListener youTubeVideoUpdateListener;
     private Resources resources;
@@ -105,7 +105,7 @@ public class QueueManager
     public void setCurrentQueue(YouTubeVideo initialVideo, List<YouTubeVideo> newQueue)
     {
         playingQueue = newQueue;
-        if (newQueue == null){
+        if (newQueue == null) {
             playingQueue = Collections.synchronizedList(new ArrayList<YouTubeVideo>());
             playingQueue.add(initialVideo);
         }

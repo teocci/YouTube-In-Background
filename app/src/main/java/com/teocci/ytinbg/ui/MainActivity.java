@@ -2,11 +2,9 @@ package com.teocci.ytinbg.ui;
 
 import android.Manifest;
 import android.accounts.AccountManager;
-import android.app.FragmentTransaction;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -22,12 +20,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
@@ -42,13 +40,11 @@ import com.teocci.ytinbg.BuildConfig;
 import com.teocci.ytinbg.JsonAsyncTask;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.database.YouTubeSqlDb;
-import com.teocci.ytinbg.interfaces.JsonAsyncResponse;
 import com.teocci.ytinbg.ui.fragments.FavoritesFragment;
 import com.teocci.ytinbg.ui.fragments.PlaybackControlsFragment;
 import com.teocci.ytinbg.ui.fragments.PlaylistFragment;
 import com.teocci.ytinbg.ui.fragments.RecentlyWatchedFragment;
 import com.teocci.ytinbg.ui.fragments.SearchFragment;
-import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.NetworkHelper;
 
@@ -57,7 +53,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_ERROR;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_NONE;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_STOPPED;
+import static com.teocci.ytinbg.utils.Config.ACCOUNT_NAME;
 import static com.teocci.ytinbg.utils.Config.INTENT_SESSION_TOKEN;
 import static com.teocci.ytinbg.utils.Config.KEY_SESSION_TOKEN;
 import static com.teocci.ytinbg.youtube.YouTubeSingleton.getCredential;
@@ -78,13 +79,14 @@ public class MainActivity extends AppCompatActivity
     private TabLayout tabLayout;
     private ViewPager viewPager;
 
-    private static Context context;
+    private Context context;
+    private FragmentManager fragmentManager;
 
     private int initialColors[] = new int[2];
 
     private SearchFragment searchFragment;
     private RecentlyWatchedFragment recentlyPlayedFragment;
-    private PlaybackControlsFragment mControlsFragment;
+    private PlaybackControlsFragment playbackControlsFragment;
 
     private FragmentTransaction lastTransaction;
 
@@ -102,37 +104,34 @@ public class MainActivity extends AppCompatActivity
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
 
     // Callback that ensures that we are showing the controls
-    private final MediaControllerCompat.Callback mMediaControllerCallback =
-            new MediaControllerCompat.Callback()
-            {
-                @Override
-                public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state)
-                {
-                    LogHelper.e(TAG, "onPlaybackStateChanged");
-                    if (shouldShowControls()) {
-                        showPlaybackControls();
-                    } else {
-                        LogHelper.e(TAG, "mediaControllerCallback.onPlaybackStateChanged: hiding controls because " +
-                                "state is ", state.getState());
-                        hidePlaybackControls();
-                    }
-                }
+    private final MediaControllerCompat.Callback mediaControllerCallback = new MediaControllerCompat.Callback()
+    {
+        @Override
+        public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state)
+        {
+            LogHelper.e(TAG, "onPlaybackStateChanged");
+            if (shouldShowControls()) {
+                showPlaybackControls();
+            } else {
+                LogHelper.e(TAG, "onPlaybackStateChanged: hiding controls cuz state = ", state.getState());
+                hidePlaybackControls();
+            }
+        }
 
-                @Override
-                public void onMetadataChanged(MediaMetadataCompat metadata)
-                {
-                    LogHelper.e(TAG, "onMetadataChanged");
-                    if (shouldShowControls()) {
-                        showPlaybackControls();
-                    } else {
-                        LogHelper.e(TAG, "mediaControllerCallback.onMetadataChanged: hiding controls because " +
-                                "metadata is null");
-                        hidePlaybackControls();
-                    }
-                }
-            };
+        @Override
+        public void onMetadataChanged(MediaMetadataCompat metadata)
+        {
+            LogHelper.e(TAG, "onMetadataChanged");
+            if (shouldShowControls()) {
+                showPlaybackControls();
+            } else {
+                LogHelper.e(TAG, "onMetadataChanged: hiding controls because metadata is null");
+                hidePlaybackControls();
+            }
+        }
+    };
 
-    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver()
+    private BroadcastReceiver messageReceiver = new BroadcastReceiver()
     {
         @Override
         public void onReceive(Context context, Intent intent)
@@ -176,6 +175,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         context = getApplicationContext();
+        fragmentManager = getSupportFragmentManager();
 
         YouTubeSqlDb.getInstance().init(this);
 
@@ -186,6 +186,9 @@ public class MainActivity extends AppCompatActivity
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
+        playbackControlsFragment = (PlaybackControlsFragment) fragmentManager
+                .findFragmentById(R.id.fragment_playback_controls);
+
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setOffscreenPageLimit(3);
         setupViewPager(viewPager);
@@ -193,11 +196,11 @@ public class MainActivity extends AppCompatActivity
         tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
 
-        checkAndRequestPermissions();
-        networkConf = new NetworkHelper(this);
-
         setupTabIcons();
         loadColor();
+
+        checkAndRequestPermissions();
+        networkConf = new NetworkHelper(this);
 
 
         // Connect a media browser just to get the media session token. There are other ways
@@ -214,10 +217,7 @@ public class MainActivity extends AppCompatActivity
     {
         super.onStart();
         LogHelper.e(TAG, "Main Activity onStart");
-
-        mControlsFragment = (PlaybackControlsFragment) getFragmentManager()
-                .findFragmentById(R.id.fragment_playback_controls);
-        if (mControlsFragment == null) {
+        if (playbackControlsFragment == null) {
             throw new IllegalStateException("Missing fragment with id 'controls'. Cannot continue.");
         }
 
@@ -231,7 +231,7 @@ public class MainActivity extends AppCompatActivity
     {
         super.onResume();
         IntentFilter filter = new IntentFilter(INTENT_SESSION_TOKEN);
-        registerReceiver(mMessageReceiver, filter);
+        registerReceiver(messageReceiver, filter);
 
         if (sessionToken != null) {
             LogHelper.e(TAG, "on sessionToken receive");
@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity
         LogHelper.d(TAG, "Main Activity onStop");
         MediaControllerCompat controller = MediaControllerCompat.getMediaController(this);
         if (controller != null) {
-            controller.unregisterCallback(mMediaControllerCallback);
+            controller.unregisterCallback(mediaControllerCallback);
         }
 
 //        mMediaBrowser.disconnect();
@@ -265,7 +265,7 @@ public class MainActivity extends AppCompatActivity
     protected void onPause()
     {
         super.onPause();
-        unregisterReceiver(mMessageReceiver);
+        unregisterReceiver(messageReceiver);
     }
 
     /**
@@ -325,8 +325,8 @@ public class MainActivity extends AppCompatActivity
         MenuItem searchItem = menu.findItem(R.id.action_search);
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
 
-        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
-        if (searchView != null) {
+        final SearchView searchView = (SearchView) searchItem.getActionView();
+        if (searchView != null && searchManager != null) {
             searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         }
 
@@ -362,28 +362,23 @@ public class MainActivity extends AppCompatActivity
                     return true;
                 }
             });
-        }
 
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
-        {
-            @Override
-            public boolean onQueryTextSubmit(String s)
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener()
             {
-                return false; // Whenever is true, no new intent will be started
-            }
+                @Override
+                public boolean onQueryTextSubmit(String s)
+                {
+                    return false; // Whenever is true, no new intent will be started
+                }
 
-            @Override
-            public boolean onQueryTextChange(String suggestion)
-            {
-                // Check network connection. If not available, do not query.
-                // This also disables onSuggestionClick triggering
-                if (suggestion.length() > 2) { //make suggestions after 3rd letter
-                    if (networkConf.isNetworkAvailable(getApplicationContext())) {
-                        new JsonAsyncTask(new JsonAsyncResponse()
-                        {
-                            @Override
-                            public void processFinish(ArrayList<String> result)
-                            {
+                @Override
+                public boolean onQueryTextChange(String suggestion)
+                {
+                    // Check network connection. If not available, do not query.
+                    // This also disables onSuggestionClick triggering
+                    if (suggestion.length() > 2) { //make suggestions after 3rd letter
+                        if (networkConf.isNetworkAvailable(getApplicationContext())) {
+                            new JsonAsyncTask(result -> {
                                 suggestions.clear();
                                 suggestions.addAll(result);
                                 String[] columns = {
@@ -398,18 +393,18 @@ public class MainActivity extends AppCompatActivity
                                 }
                                 suggestionAdapter.swapCursor(cursor);
 
-                            }
-                        }).execute(suggestion);
-                        return true;
+                            }).execute(suggestion);
+                            return true;
+                        }
                     }
+                    return false;
                 }
-                return false;
-            }
-        });
+            });
+        }
 
         MenuItem removeAccountItem = menu.findItem(R.id.action_remove_account);
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
+        String chosenAccountName = sp.getString(ACCOUNT_NAME, null);
 
         if (chosenAccountName != null) {
             removeAccountItem.setVisible(true);
@@ -430,47 +425,46 @@ public class MainActivity extends AppCompatActivity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        Locale locale = getResources().getConfiguration().locale;
 
         //noinspection SimplifiableIfStatement
         switch (id) {
             case R.id.action_about:
-                DateFormat monthFormat = new SimpleDateFormat("MMMM");
-                DateFormat yearFormat = new SimpleDateFormat("yyyy");
+                DateFormat monthFormat = new SimpleDateFormat("MMMM", locale);
+                DateFormat yearFormat = new SimpleDateFormat("yyyy", locale);
                 Date date = new Date();
 
                 AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
                 alertDialog.setTitle("Teocci");
                 alertDialog.setIcon(R.mipmap.ic_launcher);
-                alertDialog.setMessage("YiB v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex" +
-                        ".com\n\n" +
-                        monthFormat.format(date) + " " + yearFormat.format(date) + ".\n");
-                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                        new DialogInterface.OnClickListener()
-                        {
-                            public void onClick(DialogInterface dialog, int which)
-                            {
-                                dialog.dismiss();
-                            }
-                        });
+                alertDialog.setMessage(
+                        "YiB v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex.com\n\n" +
+                                monthFormat.format(date) + " " + yearFormat.format(date) + ".\n"
+                );
+                alertDialog.setButton(
+                        AlertDialog.BUTTON_NEUTRAL,
+                        "OK",
+                        (dialog, which) -> dialog.dismiss()
+                );
                 alertDialog.show();
 
                 return true;
             case R.id.action_clear_list:
-                YouTubeSqlDb.getInstance().videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
+                YouTubeSqlDb.getInstance()
+                        .videos(YouTubeSqlDb.VIDEOS_TYPE.RECENTLY_WATCHED)
                         .deleteAll();
                 recentlyPlayedFragment.clearRecentlyPlayedList();
                 return true;
             case R.id.action_remove_account:
-                SharedPreferences sp = PreferenceManager
-                        .getDefaultSharedPreferences(getApplicationContext());
-                String chosenAccountName = sp.getString(Config.ACCOUNT_NAME, null);
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+                String chosenAccountName = sp.getString(ACCOUNT_NAME, null);
 
                 if (chosenAccountName != null) {
-                    sp.edit().remove(Config.ACCOUNT_NAME).apply();
+                    sp.edit().remove(ACCOUNT_NAME).apply();
                 }
                 return true;
             case R.id.action_search:
-                MenuItemCompat.expandActionView(item);
+                item.expandActionView();
                 return true;
         }
 
@@ -502,10 +496,9 @@ public class MainActivity extends AppCompatActivity
     private void setupTabIcons()
     {
         try {
-            tabLayout.getTabAt(0).setIcon(tabIcons[0]);
-            tabLayout.getTabAt(1).setIcon(tabIcons[1]);
-            tabLayout.getTabAt(2).setIcon(tabIcons[2]);
-            tabLayout.getTabAt(3).setIcon(tabIcons[3]);
+            for (int i = 0, count = tabLayout.getTabCount(); i < count; i++) {
+                tabLayout.getTabAt(i).setIcon(tabIcons[i]);
+            }
         } catch (NullPointerException e) {
             LogHelper.e(TAG, "setupTabIcons are not found - Null");
         }
@@ -518,7 +511,7 @@ public class MainActivity extends AppCompatActivity
      */
     private void setupViewPager(ViewPager viewPager)
     {
-        PagerAdapter pagerAdapter = new PagerAdapter(getSupportFragmentManager());
+        PagerAdapter pagerAdapter = new PagerAdapter(fragmentManager);
 
         searchFragment = SearchFragment.newInstance();
         recentlyPlayedFragment = RecentlyWatchedFragment.newInstance();
@@ -577,15 +570,15 @@ public class MainActivity extends AppCompatActivity
         LogHelper.e(TAG, "showPlaybackControls");
         if (networkConf.isNetworkAvailable(this)) {
             try {
-                getFragmentManager().beginTransaction()
-                        .show(mControlsFragment)
+                fragmentManager.beginTransaction()
+                        .show(playbackControlsFragment)
 //                        .commitAllowingStateLoss();
                         .commit();
             } catch (IllegalStateException ise) {
                 // [According to](https://stackoverflow.com/questions/7575921)
 //                ise.printStackTrace();
-                lastTransaction = getFragmentManager().beginTransaction()
-                        .show(mControlsFragment);
+                lastTransaction = fragmentManager.beginTransaction()
+                        .show(playbackControlsFragment);
             }
         }
     }
@@ -594,14 +587,14 @@ public class MainActivity extends AppCompatActivity
     {
         LogHelper.e(TAG, "hidePlaybackControls");
         try {
-            getFragmentManager().beginTransaction()
-                    .hide(mControlsFragment)
+            fragmentManager.beginTransaction()
+                    .hide(playbackControlsFragment)
                     .commit();
         } catch (IllegalStateException ise) {
             // [According to](https://stackoverflow.com/questions/7575921)
 //            ise.printStackTrace();
-            lastTransaction = getFragmentManager().beginTransaction()
-                    .hide(mControlsFragment);
+            lastTransaction = fragmentManager.beginTransaction()
+                    .hide(playbackControlsFragment);
         }
     }
 
@@ -621,9 +614,9 @@ public class MainActivity extends AppCompatActivity
             return false;
         }
         switch (mediaController.getPlaybackState().getState()) {
-            case PlaybackStateCompat.STATE_ERROR:
-            case PlaybackStateCompat.STATE_NONE:
-            case PlaybackStateCompat.STATE_STOPPED:
+            case STATE_ERROR:
+            case STATE_NONE:
+            case STATE_STOPPED:
                 return false;
             default:
                 return true;
@@ -636,7 +629,7 @@ public class MainActivity extends AppCompatActivity
         MediaControllerCompat mediaController = new MediaControllerCompat(this, token);
         MediaControllerCompat.setMediaController(this, mediaController);
 
-        mediaController.registerCallback(mMediaControllerCallback);
+        mediaController.registerCallback(mediaControllerCallback);
 
         if (shouldShowControls()) {
             showPlaybackControls();
@@ -645,8 +638,8 @@ public class MainActivity extends AppCompatActivity
             hidePlaybackControls();
         }
 
-        if (mControlsFragment != null) {
-            mControlsFragment.onConnected();
+        if (playbackControlsFragment != null) {
+            playbackControlsFragment.onConnected();
         }
 
         onMediaControllerConnected();
@@ -657,8 +650,7 @@ public class MainActivity extends AppCompatActivity
      */
     private void loadColor()
     {
-        SharedPreferences sp = PreferenceManager
-                .getDefaultSharedPreferences(this);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         int backgroundColor = sp.getInt("BACKGROUND_COLOR", -1);
         int textColor = sp.getInt("TEXT_COLOR", -1);
 
@@ -667,7 +659,8 @@ public class MainActivity extends AppCompatActivity
         } else {
             initialColors = new int[]{
                     ContextCompat.getColor(this, R.color.color_primary),
-                    ContextCompat.getColor(this, R.color.text_color_primary)};
+                    ContextCompat.getColor(this, R.color.text_color_primary)
+            };
         }
     }
 

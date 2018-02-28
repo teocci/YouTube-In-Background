@@ -3,8 +3,6 @@ package com.teocci.ytinbg.youtube;
 import android.content.Context;
 
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
-import com.google.api.client.http.HttpRequest;
-import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
@@ -12,7 +10,6 @@ import com.google.api.services.youtube.YouTube;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.utils.LogHelper;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import static com.teocci.ytinbg.utils.Auth.SCOPES;
@@ -58,11 +55,7 @@ public class YouTubeSingleton
         youTube = new YouTube.Builder(
                 new NetHttpTransport(),
                 new JacksonFactory(),
-                new HttpRequestInitializer()
-                {
-                    @Override
-                    public void initialize(HttpRequest httpRequest) throws IOException {}
-                }
+                httpRequest -> {}
         ).setApplicationName(appName).build();
 
         youTubeWithCredentials = new YouTube.Builder(

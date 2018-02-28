@@ -12,9 +12,9 @@ import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
-import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.Utils;
 
 import java.io.IOException;
@@ -41,7 +41,7 @@ import static com.teocci.ytinbg.youtube.YouTubeSingleton.getYouTube;
 public class YouTubePlaylistVideoLoader extends AsyncTask<String, Void, List<YouTubeVideo>>
 {
 
-    private final static String TAG = YouTubePlaylistVideoLoader.class.getSimpleName();
+    private final static String TAG = LogHelper.makeLogTag(YouTubePlaylistVideoLoader.class);
 
     private YouTube youtube;
 
@@ -118,7 +118,7 @@ public class YouTubePlaylistVideoLoader extends AsyncTask<String, Void, List<You
             playlistItemRequest = youtube.playlistItems().list(YOUTUBE_ACQUIRE_PLAYLIST_PART);
             playlistItemRequest.setPlaylistId(playlistId);
             playlistItemRequest.setKey(YOUTUBE_API_KEY);
-            playlistItemRequest.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
+            playlistItemRequest.setMaxResults(Config.MAX_VIDEOS_RETURNED);
             playlistItemRequest.setFields(YOUTUBE_ACQUIRE_PLAYLIST_FIELDS);
             // Call API one or more times to retrieve all items in the list. As long as API
             // response returns a nextPageToken, there are still more items to retrieve.

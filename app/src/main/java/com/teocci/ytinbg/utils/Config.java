@@ -9,11 +9,13 @@ import com.teocci.ytinbg.ui.MainActivity;
 
 public final class Config
 {
+    public static final String APP_NAME =  "yib";
+    public static final String LOG_PREFIX = "[" + APP_NAME + "]";
+
     // YouTube Media Type
     public static final int YOUTUBE_MEDIA_NO_NEW_REQUEST = -1;
     public static final int YOUTUBE_MEDIA_TYPE_VIDEO = 0;
     public static final int YOUTUBE_MEDIA_TYPE_PLAYLIST = 1;
-
 
     public static final String KEY_YOUTUBE_TYPE = "YT_MEDIA_TYPE";
     public static final String KEY_YOUTUBE_TYPE_VIDEO = "YT_VIDEO";
@@ -21,7 +23,6 @@ public final class Config
     public static final String KEY_YOUTUBE_TYPE_PLAYLIST_VIDEO_POS = "YT_PLAYLIST_VIDEO_POS";
 
     public static final String YOUTUBE_LINK = "YT_DOWNLOAD_LINK";
-
     public static final String YOUTUBE_API_KEY = "AIzaSyAN074XUjainWwyXkhv2hergNIlh2uTWUc";
 
     // Media Session Token"
@@ -41,7 +42,7 @@ public final class Config
 
     public static final String ACCOUNT_NAME = "GOOGLE_ACCOUNT_NAME";
 
-    public static final long NUMBER_OF_VIDEOS_RETURNED = 50; //due to YouTube API rules - MAX 50
+    public static final long MAX_VIDEOS_RETURNED = 50; //due to YouTube API rules - MAX 50
 
     // Resolution reasonable for carrying around as an icon (generally in
     // MediaDescription.getIconBitmap). This should not be bigger than necessary, because
@@ -127,6 +128,4 @@ public final class Config
     public static final int YOUTUBE_ITAG_18 = 18;      // mp4 - stereo, 44.1 KHz 96 Kbps (aac)
     public static final int YOUTUBE_ITAG_36 = 36;      // mp4 - stereo, 44.1 KHz 32 Kbps (aac)
     public static final int YOUTUBE_ITAG_17 = 17;      // mp4 - stereo, 44.1 KHz 24 Kbps (aac)
-
-    public static final String LOG_PREFIX = "yib_";
 }

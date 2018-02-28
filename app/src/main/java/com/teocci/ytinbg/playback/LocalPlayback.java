@@ -13,14 +13,14 @@ import android.text.TextUtils;
 import android.util.SparseArray;
 import android.widget.Toast;
 
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.extractor.ExtractorsFactory;
+import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
@@ -33,13 +33,30 @@ import com.teocci.ytinbg.BackgroundExoAudioService;
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.interfaces.Playback;
 import com.teocci.ytinbg.model.YouTubeVideo;
-import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
 
 import at.huber.youtubeExtractor.VideoMeta;
 import at.huber.youtubeExtractor.YouTubeExtractor;
 import at.huber.youtubeExtractor.YtFile;
 
+import static android.content.Context.AUDIO_SERVICE;
+import static android.content.Context.WIFI_SERVICE;
+import static android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY;
+import static android.media.AudioManager.AUDIOFOCUS_GAIN;
+import static android.media.AudioManager.AUDIOFOCUS_LOSS;
+import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT;
+import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
+import static android.media.AudioManager.STREAM_MUSIC;
+import static android.net.wifi.WifiManager.WIFI_MODE_FULL;
+import static com.google.android.exoplayer2.Player.STATE_BUFFERING;
+import static com.google.android.exoplayer2.Player.STATE_ENDED;
+import static com.google.android.exoplayer2.Player.STATE_IDLE;
+import static com.google.android.exoplayer2.Player.STATE_READY;
+import static com.teocci.ytinbg.utils.Config.ACTION_CMD;
+import static com.teocci.ytinbg.utils.Config.APP_NAME;
+import static com.teocci.ytinbg.utils.Config.CMD_NAME;
+import static com.teocci.ytinbg.utils.Config.CMD_PAUSE;
+import static com.teocci.ytinbg.utils.Config.KEY_LOCK;
 import static com.teocci.ytinbg.utils.Utils.getBestStream;
 import static com.teocci.ytinbg.utils.Utils.validateUrl;
 
@@ -68,39 +85,42 @@ public class LocalPlayback implements Playback
 
     private final Context context;
     private final WifiManager.WifiLock wifiLock;
-    private boolean playOnFocusGain;
+
     private Callback callback;
-    private boolean audioNoisyReceiverRegistered;
+
     private String currentYouTubeVideoId;
 
     private int currentAudioFocusState = AUDIO_NO_FOCUS_NO_DUCK;
+
     private final AudioManager audioManager;
-    private SimpleExoPlayer exoPlayer;
     private final ExoPlayerEventListener eventListener = new ExoPlayerEventListener();
+
+    private SimpleExoPlayer exoPlayer;
 
     // Whether to return STATE_NONE or STATE_STOPPED when exoPlayer is null;
     private boolean exoPlayerNullIsStopped = false;
 
-    private boolean isExtractingYTURL = false;
-    private boolean hasBeenExtracted = false;
+    private boolean playOnFocusGain;
+    private boolean audioNoisyReceiverRegistered;
 
-    private final IntentFilter audioNoisyIntentFilter = new IntentFilter(
-            AudioManager.ACTION_AUDIO_BECOMING_NOISY
-    );
+    private boolean extractingYTURL = false;
+    private boolean extracted = false;
+
+    private final IntentFilter audioNoisyIntentFilter = new IntentFilter(ACTION_AUDIO_BECOMING_NOISY);
 
     private final BroadcastReceiver audioNoisyReceiver = new BroadcastReceiver()
     {
         @Override
         public void onReceive(Context context, Intent intent)
         {
-            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+            if (ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
                 LogHelper.e(TAG, "audioNoisyReceiver: Headphones disconnected.");
                 if (isPlaying()) {
 //                    pauseVideo();
                     LogHelper.e(TAG, "audioNoisyReceiver: Video Pause");
                     Intent i = new Intent(context, BackgroundExoAudioService.class);
-                    i.setAction(Config.ACTION_CMD);
-                    i.putExtra(Config.CMD_NAME, Config.CMD_PAUSE);
+                    i.setAction(ACTION_CMD);
+                    i.putExtra(CMD_NAME, CMD_PAUSE);
                     LocalPlayback.this.context.startService(i);
                 }
             }
@@ -129,12 +149,11 @@ public class LocalPlayback implements Playback
         Context applicationContext = context.getApplicationContext();
         this.context = applicationContext;
 
-        this.audioManager = (AudioManager) applicationContext
-                .getSystemService(Context.AUDIO_SERVICE);
+        this.audioManager = (AudioManager) applicationContext.getSystemService(AUDIO_SERVICE);
         // Create the Wifi lock (this does not acquire the lock, this just creates it)
         this.wifiLock = ((WifiManager) applicationContext
-                .getSystemService(Context.WIFI_SERVICE))
-                .createWifiLock(WifiManager.WIFI_MODE_FULL, Config.KEY_LOCK);
+                .getSystemService(WIFI_SERVICE))
+                .createWifiLock(WIFI_MODE_FULL, KEY_LOCK);
     }
 
     @Override
@@ -166,15 +185,15 @@ public class LocalPlayback implements Playback
                     : PlaybackStateCompat.STATE_NONE;
         }
         switch (exoPlayer.getPlaybackState()) {
-            case ExoPlayer.STATE_IDLE:
+            case STATE_IDLE:
                 return PlaybackStateCompat.STATE_PAUSED;
-            case ExoPlayer.STATE_BUFFERING:
+            case STATE_BUFFERING:
                 return PlaybackStateCompat.STATE_BUFFERING;
-            case ExoPlayer.STATE_READY:
+            case STATE_READY:
                 return exoPlayer.getPlayWhenReady()
                         ? PlaybackStateCompat.STATE_PLAYING
                         : PlaybackStateCompat.STATE_PAUSED;
-            case ExoPlayer.STATE_ENDED:
+            case STATE_ENDED:
                 return PlaybackStateCompat.STATE_PAUSED;
             default:
                 return PlaybackStateCompat.STATE_NONE;
@@ -226,13 +245,13 @@ public class LocalPlayback implements Playback
         boolean videoHasChanged = !TextUtils.equals(youTubeVideoId, currentYouTubeVideoId);
         if (videoHasChanged) {
 //            LogHelper.e(TAG, "play | videoHasChanged");
-            hasBeenExtracted = false;
+            extracted = false;
             currentYouTubeVideoId = youTubeVideoId;
         }
-        if (videoHasChanged || exoPlayer == null || !hasBeenExtracted) {
-//            LogHelper.e(TAG, "play | calling: extractUrlAndPlay " + (!isExtractingYTURL ? "true" : "false"));
-            if (!isExtractingYTURL) extractUrlAndPlay();
-        } else if (!isExtractingYTURL) {
+        if (videoHasChanged || exoPlayer == null || !extracted) {
+//            LogHelper.e(TAG, "play | calling: extractUrlAndPlay " + (!extractingYTURL ? "true" : "false"));
+            if (!extractingYTURL) extractUrlAndPlay();
+        } else if (!extractingYTURL) {
 //            LogHelper.e(TAG, "play | calling: seekTo and configurePlayerState");
             seekTo(0);
             configurePlayerState();
@@ -280,11 +299,11 @@ public class LocalPlayback implements Playback
     private void tryToGetAudioFocus()
     {
         LogHelper.d(TAG, "tryToGetAudioFocus");
-        int result =
-                audioManager.requestAudioFocus(
-                        mOnAudioFocusChangeListener,
-                        AudioManager.STREAM_MUSIC,
-                        AudioManager.AUDIOFOCUS_GAIN);
+        int result = audioManager.requestAudioFocus(
+                audioFocusChangeListener,
+                STREAM_MUSIC,
+                AUDIOFOCUS_GAIN
+        );
         if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             currentAudioFocusState = AUDIO_FOCUSED;
         } else {
@@ -299,7 +318,7 @@ public class LocalPlayback implements Playback
     private void extractUrlAndPlay()
     {
         final String youtubeLink = "https://youtube.com/watch?v=" + currentYouTubeVideoId;
-        isExtractingYTURL = true;
+        extractingYTURL = true;
 
         LogHelper.e(TAG, "extractUrlAndPlay | called");
         new YouTubeExtractor(context)
@@ -322,8 +341,8 @@ public class LocalPlayback implements Playback
                             Toast.LENGTH_SHORT
                     ).show();
 //                    LogHelper.e(TAG, "extractUrlAndPlay | ended-error");
-                    isExtractingYTURL = false;
-                    hasBeenExtracted = false;
+                    extractingYTURL = false;
+                    extracted = false;
                     return;
                 }
                 YtFile ytFile = getBestStream(ytFiles);
@@ -337,24 +356,35 @@ public class LocalPlayback implements Playback
                         exoPlayer.addListener(eventListener);
                     }
 
-                    exoPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                    @C.AudioUsage int usage = Util.getAudioUsageForStreamType(STREAM_MUSIC);
+                    @C.AudioContentType int contentType = Util.getAudioContentTypeForStreamType(STREAM_MUSIC);
+                    AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                            .setUsage(usage)
+                            .setContentType(contentType)
+                            .build();
+
+                    exoPlayer.setAudioAttributes(audioAttributes);
 
                     // Produces DataSource instances through which media data is loaded.
                     DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(
                             context,
-                            Util.getUserAgent(context, "yib"),
+                            Util.getUserAgent(context, APP_NAME),
                             null
                     );
                     // Produces Extractor instances for parsing the media data.
-                    ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
+//                    ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
                     // The MediaSource represents the media to be played.
-                    MediaSource mediaSource = new ExtractorMediaSource(
-                            Uri.parse(ytFile.getUrl()),
-                            dataSourceFactory,
-                            extractorsFactory,
-                            null,
-                            null
-                    );
+//                    MediaSource mediaSource = new ExtractorMediaSource(
+//                            Uri.parse(ytFile.getUrl()),
+//                            dataSourceFactory,
+//                            extractorsFactory,
+//                            null,
+//                            null
+//                    );
+
+                    MediaSource mediaSource = new ExtractorMediaSource
+                            .Factory(dataSourceFactory)
+                            .createMediaSource(Uri.parse(ytFile.getUrl()));
 
                     // Prepares media to play (happens on background thread) and triggers
                     // {@code onPlayerStateChanged} callback when the stream is ready to play.
@@ -364,7 +394,7 @@ public class LocalPlayback implements Playback
                     // Wifi lock, which prevents the Wifi radio from going to
                     // sleep while the song is playing.
                     wifiLock.acquire();
-                    hasBeenExtracted = true;
+                    extracted = true;
 
 //                    LogHelper.e(TAG, "extractUrlAndPlay calls: configurePlayerState");
                     configurePlayerState();
@@ -381,7 +411,7 @@ public class LocalPlayback implements Playback
 //                    LogHelper.e(TAG, "extractUrlAndPlay | ended-error: No Link found");
                 }
 
-                isExtractingYTURL = false;
+                extractingYTURL = false;
             }
         }.extract(youtubeLink, true, true);
     }
@@ -389,8 +419,7 @@ public class LocalPlayback implements Playback
     private void giveUpAudioFocus()
     {
         LogHelper.d(TAG, "giveUpAudioFocus");
-        if (audioManager.abandonAudioFocus(mOnAudioFocusChangeListener)
-                == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+        if (audioManager.abandonAudioFocus(audioFocusChangeListener) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
             currentAudioFocusState = AUDIO_NO_FOCUS_NO_DUCK;
         }
     }
@@ -426,7 +455,7 @@ public class LocalPlayback implements Playback
         }
     }
 
-    private final AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener =
+    private final AudioManager.OnAudioFocusChangeListener audioFocusChangeListener =
             new AudioManager.OnAudioFocusChangeListener()
             {
                 @Override
@@ -434,20 +463,20 @@ public class LocalPlayback implements Playback
                 {
                     LogHelper.d(TAG, "onAudioFocusChange. focusChange=", focusChange);
                     switch (focusChange) {
-                        case AudioManager.AUDIOFOCUS_GAIN:
+                        case AUDIOFOCUS_GAIN:
                             currentAudioFocusState = AUDIO_FOCUSED;
                             break;
-                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                        case AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                             // Audio focus was lost, but it's possible to duck (i.e.: play quietly)
                             currentAudioFocusState = AUDIO_NO_FOCUS_CAN_DUCK;
                             break;
-                        case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                        case AUDIOFOCUS_LOSS_TRANSIENT:
                             // Lost audio focus, but will gain it back (shortly), so note whether
                             // playback should resume
                             currentAudioFocusState = AUDIO_NO_FOCUS_NO_DUCK;
                             playOnFocusGain = exoPlayer != null && exoPlayer.getPlayWhenReady();
                             break;
-                        case AudioManager.AUDIOFOCUS_LOSS:
+                        case AUDIOFOCUS_LOSS:
                             // Lost audio focus, probably "permanently"
                             currentAudioFocusState = AUDIO_NO_FOCUS_NO_DUCK;
                             break;
@@ -503,7 +532,7 @@ public class LocalPlayback implements Playback
     private final class ExoPlayerEventListener implements ExoPlayer.EventListener
     {
         @Override
-        public void onTimelineChanged(Timeline timeline, Object manifest)
+        public void onTimelineChanged(Timeline timeline, Object manifest, int reason)
         {
             // Nothing to do.
         }
@@ -524,20 +553,32 @@ public class LocalPlayback implements Playback
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState)
         {
             switch (playbackState) {
-                case ExoPlayer.STATE_IDLE:
-                case ExoPlayer.STATE_BUFFERING:
-                case ExoPlayer.STATE_READY:
+                case STATE_IDLE:
+                case STATE_BUFFERING:
+                case STATE_READY:
                     if (callback != null) {
                         callback.onPlaybackStatusChanged(getState());
                     }
                     break;
-                case ExoPlayer.STATE_ENDED:
+                case STATE_ENDED:
                     // The media player finished playing the current song.
                     if (callback != null) {
                         callback.onCompletion();
                     }
                     break;
             }
+        }
+
+        @Override
+        public void onRepeatModeChanged(int repeatMode)
+        {
+
+        }
+
+        @Override
+        public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled)
+        {
+
         }
 
         @Override
@@ -565,7 +606,7 @@ public class LocalPlayback implements Playback
         }
 
         @Override
-        public void onPositionDiscontinuity()
+        public void onPositionDiscontinuity(int reason)
         {
             // Nothing to do.
         }
@@ -574,6 +615,12 @@ public class LocalPlayback implements Playback
         public void onPlaybackParametersChanged(PlaybackParameters playbackParameters)
         {
             // Nothing to do.
+        }
+
+        @Override
+        public void onSeekProcessed()
+        {
+
         }
     }
 }

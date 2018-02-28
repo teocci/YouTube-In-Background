@@ -30,9 +30,16 @@ import com.teocci.ytinbg.playback.QueueManager;
 import com.teocci.ytinbg.receivers.MediaButtonIntentReceiver;
 import com.teocci.ytinbg.utils.LogHelper;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI;
+import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE;
+import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE;
+import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DURATION;
+import static android.telephony.PhoneStateListener.LISTEN_CALL_STATE;
+import static android.telephony.TelephonyManager.CALL_STATE_IDLE;
+import static android.telephony.TelephonyManager.CALL_STATE_OFFHOOK;
+import static android.telephony.TelephonyManager.CALL_STATE_RINGING;
 import static com.teocci.ytinbg.BackgroundAudioService.ACTION_PREVIOUS;
 import static com.teocci.ytinbg.utils.Config.ACTION_NEXT;
 import static com.teocci.ytinbg.utils.Config.ACTION_PAUSE;
@@ -52,21 +59,18 @@ import static com.teocci.ytinbg.utils.Config.YOUTUBE_MEDIA_TYPE_VIDEO;
  * Service class for background youtube playback
  * Created by Teocci on 9.3.16..
  */
-public class BackgroundExoAudioService extends Service implements
-        PlaybackManager.PlaybackServiceCallback
+public class BackgroundExoAudioService extends Service implements PlaybackManager.PlaybackServiceCallback
 {
     private static final String TAG = LogHelper.makeLogTag(BackgroundExoAudioService.class);
 
     // Delay stopSelf by using a handler.
     private static final int STOP_DELAY = 30000;
 
-
     private PlaybackManager playbackManager;
 
     private MediaSessionCompat mediaSession;
     private MediaControllerCompat mediaController;
     private MediaNotificationManager mediaNotificationManager;
-
 
     private LocalBroadcastManager mLocalBroadcastManager;
 
@@ -80,8 +84,6 @@ public class BackgroundExoAudioService extends Service implements
     private YouTubeVideo currentYouTubeVideo;
     private String currentVideoTitle;
     private int currentVideoPosition;
-
-    private ArrayList<YouTubeVideo> youTubeVideos;
 
     @Override
     public IBinder onBind(Intent intent)
@@ -109,6 +111,8 @@ public class BackgroundExoAudioService extends Service implements
     {
 //        if (mediaButtonIntentReceiver != null)
 //            unregisterReceiver(mediaButtonIntentReceiver);
+
+        mediaNotificationManager.stopNotification();
         super.onDestroy();
     }
 
@@ -151,28 +155,10 @@ public class BackgroundExoAudioService extends Service implements
     public void onNotificationRequired()
     {
         mediaNotificationManager.startNotification();
-        YouTubeVideo youTubeVideo = getCurrentYouTubeVideo();
-        if (youTubeVideo != null) {
-            MediaMetadataCompat.Builder ytVideo = new MediaMetadataCompat.Builder();
-            ytVideo.putString(
-                    MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
-                    youTubeVideo.getTitle()
-            );
-            ytVideo.putString(
-                    MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
-                    youTubeVideo.getViewCount()
-            );
-            ytVideo.putString(
-                    MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI,
-                    youTubeVideo.getThumbnailURL()
-            );
-            ytVideo.putLong(
-                    MediaMetadataCompat.METADATA_KEY_DURATION,
-                    playbackManager.getDuration()
-            );
 
-
-            mediaSession.setMetadata(ytVideo.build());
+        MediaMetadataCompat videoMetadata = getVideoMetadata();
+        if (videoMetadata != null) {
+            mediaSession.setMetadata(videoMetadata);
         }
     }
 
@@ -185,7 +171,6 @@ public class BackgroundExoAudioService extends Service implements
         delayedStopHandler.removeCallbacksAndMessages(null);
         delayedStopHandler.sendEmptyMessageDelayed(0, STOP_DELAY);
         stopForeground(true);
-
     }
 
     @Override
@@ -234,29 +219,14 @@ public class BackgroundExoAudioService extends Service implements
                     @Override
                     public void onYouTubeVideoChanged(YouTubeVideo youTubeVideo)
                     {
-//                        mediaSession.setMetadata(youTubeVideo);
+                        if (youTubeVideo == null) return;
                         LogHelper.e(TAG, "onYouTubeVideoChanged: " + youTubeVideo);
-                        if (youTubeVideo != null) {
-                            currentYouTubeVideo = youTubeVideo;
-                            MediaMetadataCompat.Builder ytVideo = new MediaMetadataCompat.Builder();
-                            ytVideo.putString(
-                                    MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE,
-                                    youTubeVideo.getTitle()
-                            );
-                            ytVideo.putString(
-                                    MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
-                                    youTubeVideo.getViewCount()
-                            );
-                            ytVideo.putString(
-                                    MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI,
-                                    youTubeVideo.getThumbnailURL()
-                            );
-                            ytVideo.putLong(
-                                    MediaMetadataCompat.METADATA_KEY_DURATION,
-                                    playbackManager.getDuration()
-                            );
 
-                            mediaSession.setMetadata(ytVideo.build());
+                        currentYouTubeVideo = youTubeVideo;
+
+                        MediaMetadataCompat videoMetadata = getVideoMetadata();
+                        if (videoMetadata != null) {
+                            mediaSession.setMetadata(videoMetadata);
                         }
                     }
 
@@ -316,13 +286,13 @@ public class BackgroundExoAudioService extends Service implements
             @Override
             public void onCallStateChanged(int state, String incomingNumber)
             {
-                if (state == TelephonyManager.CALL_STATE_RINGING) {
+                if (state == CALL_STATE_RINGING) {
                     // Incoming call: Pause music
                     playbackManager.handlePauseRequest();
-                } else if (state == TelephonyManager.CALL_STATE_IDLE) {
+                } else if (state == CALL_STATE_IDLE) {
                     // Not in call: Play music
                     playbackManager.handlePlayRequest();
-                } else if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
+                } else if (state == CALL_STATE_OFFHOOK) {
                     // A call is dialing, active or on hold
                 }
                 super.onCallStateChanged(state, incomingNumber);
@@ -330,9 +300,9 @@ public class BackgroundExoAudioService extends Service implements
         };
 
         TelephonyManager mgr = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
-        if (mgr != null) {
-            mgr.listen(phoneStateListener, PhoneStateListener.LISTEN_CALL_STATE);
-        }
+        if (mgr == null) return;
+        mgr.listen(phoneStateListener, LISTEN_CALL_STATE);
+
     }
 
     public MediaSessionCompat.Token getSessionToken()
@@ -402,7 +372,8 @@ public class BackgroundExoAudioService extends Service implements
             // New playlist playback request
             case YOUTUBE_MEDIA_TYPE_PLAYLIST:
                 mediaType = YOUTUBE_MEDIA_TYPE_PLAYLIST;
-                youTubeVideos = (ArrayList<YouTubeVideo>) intent.getSerializableExtra(KEY_YOUTUBE_TYPE_PLAYLIST);
+
+                List<YouTubeVideo> youTubeVideos = (List<YouTubeVideo>) intent.getSerializableExtra(KEY_YOUTUBE_TYPE_PLAYLIST);
                 currentVideoPosition = intent.getIntExtra(KEY_YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, 0);
                 LogHelper.e(TAG, "currentVideoPosition: " + currentVideoPosition);
                 if (youTubeVideos != null && currentVideoPosition != -1) {
@@ -453,20 +424,25 @@ public class BackgroundExoAudioService extends Service implements
 
         String label;
         int icon;
-        if (intentAction.equals(ACTION_PAUSE)) {
-            label = getString(R.string.action_pause);
-            icon = R.drawable.ic_pause_white_24dp;
-        } else if (intentAction.equals(ACTION_PLAY)) {
-            label = getString(R.string.action_play);
-            icon = R.drawable.ic_play_arrow_white_24dp;
-        } else if (intentAction.equals(ACTION_NEXT)) {
-            label = getString(R.string.action_next);
-            icon = R.drawable.ic_skip_next_white_24dp;
-        } else if (intentAction.equals(ACTION_PREVIOUS)) {
-            label = getString(R.string.action_previous);
-            icon = R.drawable.ic_skip_previous_white_24dp;
-        } else {
-            return null;
+        switch (intentAction) {
+            case ACTION_PAUSE:
+                label = getString(R.string.action_pause);
+                icon = R.drawable.ic_pause_white_24dp;
+                break;
+            case ACTION_PLAY:
+                label = getString(R.string.action_play);
+                icon = R.drawable.ic_play_arrow_white_24dp;
+                break;
+            case ACTION_NEXT:
+                label = getString(R.string.action_next);
+                icon = R.drawable.ic_skip_next_white_24dp;
+                break;
+            case ACTION_PREVIOUS:
+                label = getString(R.string.action_previous);
+                icon = R.drawable.ic_skip_previous_white_24dp;
+                break;
+            default:
+                return null;
         }
 
         return new NotificationCompat.Action.Builder(icon, label, pendingIntent).build();
@@ -479,6 +455,19 @@ public class BackgroundExoAudioService extends Service implements
 //                .NOTIFICATION_SERVICE);
 //        notificationManager.cancel(NOTIFICATION_ID);
 //    }
+
+    private MediaMetadataCompat getVideoMetadata()
+    {
+        if (currentYouTubeVideo == null) return null;
+
+        MediaMetadataCompat.Builder ytVideo = new MediaMetadataCompat.Builder();
+        ytVideo.putString(METADATA_KEY_DISPLAY_TITLE, currentYouTubeVideo.getTitle());
+        ytVideo.putString(METADATA_KEY_DISPLAY_SUBTITLE, currentYouTubeVideo.getViewCount());
+        ytVideo.putString(METADATA_KEY_DISPLAY_ICON_URI, currentYouTubeVideo.getThumbnailURL());
+        ytVideo.putLong(METADATA_KEY_DURATION, playbackManager.getDuration());
+
+        return ytVideo.build();
+    }
 
     public YouTubeVideo getCurrentYouTubeVideo()
     {

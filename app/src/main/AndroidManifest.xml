@@ -63,7 +63,8 @@
         </service>
 
         <service
-            android:name="com.teocci.ytinbg.BackgroundExoAudioService">
+            android:name="com.teocci.ytinbg.BackgroundExoAudioService"
+            android:process=":youtube">
         </service>
 
         <receiver

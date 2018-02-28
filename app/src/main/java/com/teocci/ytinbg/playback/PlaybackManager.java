@@ -15,6 +15,19 @@ import com.teocci.ytinbg.utils.LogHelper;
 
 import java.util.List;
 
+import static android.support.v4.media.session.PlaybackStateCompat.ACTION_PAUSE;
+import static android.support.v4.media.session.PlaybackStateCompat.ACTION_PLAY;
+import static android.support.v4.media.session.PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID;
+import static android.support.v4.media.session.PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH;
+import static android.support.v4.media.session.PlaybackStateCompat.ACTION_PLAY_PAUSE;
+import static android.support.v4.media.session.PlaybackStateCompat.ACTION_SKIP_TO_NEXT;
+import static android.support.v4.media.session.PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS;
+import static android.support.v4.media.session.PlaybackStateCompat.ERROR_CODE_SKIP_LIMIT_REACHED;
+import static android.support.v4.media.session.PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_ERROR;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_PAUSED;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_PLAYING;
+
 
 /**
  * Created by teocci.
@@ -25,8 +38,7 @@ import java.util.List;
 
 public class PlaybackManager implements Playback.Callback
 {
-
-    private static final String TAG = PlaybackManager.class.getSimpleName();
+    private static final String TAG = LogHelper.makeLogTag(PlaybackManager.class);
 
     private QueueManager queueManager;
     private Resources resources;
@@ -119,7 +131,8 @@ public class PlaybackManager implements Playback.Callback
     public void updatePlaybackState(String error)
     {
         LogHelper.d(TAG, "updatePlaybackState, playback state=" + playback.getState());
-        long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
+        long position = PLAYBACK_POSITION_UNKNOWN;
+
         if (playback != null && playback.isConnected()) {
             position = playback.getCurrentStreamPosition();
         }
@@ -135,8 +148,8 @@ public class PlaybackManager implements Playback.Callback
         if (error != null) {
             // Error states are really only supposed to be used for errors that cause playback to
             // stop unexpectedly and persist until the user takes action to fix it.
-            stateBuilder.setErrorMessage(error);
-            state = PlaybackStateCompat.STATE_ERROR;
+            stateBuilder.setErrorMessage(ERROR_CODE_SKIP_LIMIT_REACHED, error);
+            state = STATE_ERROR;
         }
         // Noinspection ResourceType
         stateBuilder.setState(state, position, 1.0f, SystemClock.elapsedRealtime());
@@ -149,24 +162,23 @@ public class PlaybackManager implements Playback.Callback
 
         serviceCallback.onPlaybackStateUpdated(stateBuilder.build());
 
-        if (state == PlaybackStateCompat.STATE_PLAYING ||
-                state == PlaybackStateCompat.STATE_PAUSED) {
+        if (state == STATE_PLAYING || state == STATE_PAUSED) {
             serviceCallback.onNotificationRequired();
         }
     }
 
     private long getAvailableActions()
     {
-        long actions =
-                PlaybackStateCompat.ACTION_PLAY_PAUSE |
-                        PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
-                        PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH |
-                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
-                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT;
+        long actions = ACTION_PLAY_PAUSE |
+                       ACTION_PLAY_FROM_MEDIA_ID |
+                        ACTION_PLAY_FROM_SEARCH |
+                        ACTION_SKIP_TO_PREVIOUS |
+                        ACTION_SKIP_TO_NEXT;
+
         if (playback.isPlaying()) {
-            actions |= PlaybackStateCompat.ACTION_PAUSE;
+            actions |= ACTION_PAUSE;
         } else {
-            actions |= PlaybackStateCompat.ACTION_PLAY;
+            actions |= ACTION_PLAY;
         }
         return actions;
     }
@@ -231,10 +243,10 @@ public class PlaybackManager implements Playback.Callback
         switch (oldState) {
             case PlaybackStateCompat.STATE_BUFFERING:
             case PlaybackStateCompat.STATE_CONNECTING:
-            case PlaybackStateCompat.STATE_PAUSED:
+            case STATE_PAUSED:
                 this.playback.pause();
                 break;
-            case PlaybackStateCompat.STATE_PLAYING:
+            case STATE_PLAYING:
                 YouTubeVideo currentYouTubeVideo = queueManager.getCurrentVideo();
                 if (resumePlaying && currentYouTubeVideo != null) {
                     LogHelper.e(TAG, "switchToPlayback: call | playback.play");
@@ -330,9 +342,7 @@ public class PlaybackManager implements Playback.Callback
         @Override
         public void onCustomAction(@NonNull String action, Bundle extras)
         {
-
             LogHelper.e(TAG, "Unsupported action: ", action);
-
         }
 
         /**

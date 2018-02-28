@@ -12,6 +12,7 @@ import com.google.api.services.youtube.model.VideoListResponse;
 import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.utils.Utils;
 
 import java.io.IOException;
@@ -43,7 +44,7 @@ import static com.teocci.ytinbg.youtube.YouTubeSingleton.getYouTube;
 
 public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVideo>>
 {
-    private static final String TAG = YouTubeVideoLoader.class.getSimpleName();
+    private static final String TAG = LogHelper.makeLogTag(YouTubeVideoLoader.class);
 
     private Context context;
     private YouTube youtube;
@@ -134,7 +135,7 @@ public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVide
             searchList.setQ(keywords);
             searchList.setKey(Config.YOUTUBE_API_KEY);
             searchList.setType(YOUTUBE_SEARCH_LIST_TYPE); //TODO ADD PLAYLISTS SEARCH
-            searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
+            searchList.setMaxResults(Config.MAX_VIDEOS_RETURNED);
             searchList.setFields(YOUTUBE_SEARCH_LIST_FIELDS);
             searchList.set(YOUTUBE_LANGUAGE_KEY, language);
             if (currentPageToken != null) {

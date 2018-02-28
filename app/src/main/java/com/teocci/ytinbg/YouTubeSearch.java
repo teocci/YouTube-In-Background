@@ -187,7 +187,7 @@ public class YouTubeSearch
                     // Restrict the search results to only include videos. See:
                     // https://developers.google.com/youtube/v3/docs/search/list#type
                     searchList.setType("video");
-                    searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
+                    searchList.setMaxResults(Config.MAX_VIDEOS_RETURNED);
                     // As a best practice, only retrieve the fields that the
                     // application uses.
                     searchList.setFields(YOUTUBE_SEARCH_VIDEOS_FIELDS);
@@ -309,7 +309,7 @@ public class YouTubeSearch
                     // Restrict the search results to only include videos. See:
                     // https://developers.google.com/youtube/v3/docs/search/list#type
                     searchList.setType("video");
-                    searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
+                    searchList.setMaxResults(Config.MAX_VIDEOS_RETURNED);
                     // As a best practice, only retrieve the fields that the
                     // application uses.
                     searchList.setFields(YOUTUBE_SEARCH_VIDEOS_FIELDS);
@@ -420,7 +420,7 @@ public class YouTubeSearch
 
                     searchList.setChannelId(channel.getId());
                     searchList.setFields(YOUTUBE_PLAYLIST_FIELDS);
-                    searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
+                    searchList.setMaxResults(Config.MAX_VIDEOS_RETURNED);
                     searchList.set("hl", language);
 
                     PlaylistListResponse playListResponse = searchList.execute();
@@ -503,7 +503,7 @@ public class YouTubeSearch
                 try {
                     playlistItemRequest = youtube.playlistItems().list(YOUTUBE_ACQUIRE_PLAYLIST_PART);
                     playlistItemRequest.setPlaylistId(playlistId);
-                    playlistItemRequest.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
+                    playlistItemRequest.setMaxResults(Config.MAX_VIDEOS_RETURNED);
                     playlistItemRequest.setFields(YOUTUBE_ACQUIRE_PLAYLIST_FIELDS);
                     playlistItemRequest.set("hl", language);
                     // Call API one or more times to retrieve all items in the list. As long as API

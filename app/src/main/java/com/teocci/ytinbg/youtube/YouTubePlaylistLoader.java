@@ -14,6 +14,7 @@ import com.google.api.services.youtube.model.PlaylistListResponse;
 import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
 import com.teocci.ytinbg.model.YouTubePlaylist;
 import com.teocci.ytinbg.utils.Config;
+import com.teocci.ytinbg.utils.LogHelper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ import static com.teocci.ytinbg.youtube.YouTubeSingleton.getYouTubeWithCredentia
 
 public class YouTubePlaylistLoader extends AsyncTask<String, Void, List<YouTubePlaylist>>
 {
-    private static final String TAG = YouTubePlaylistLoader.class.getSimpleName();
+    private static final String TAG = LogHelper.makeLogTag(YouTubePlaylistLoader.class);
 
     private Context context;
     private YouTube youtube;
@@ -98,7 +99,9 @@ public class YouTubePlaylistLoader extends AsyncTask<String, Void, List<YouTubeP
         }
 
         try {
-            ChannelListResponse channelListResponse = youtube.channels().list(YOUTUBE_CHANNEL_LIST)
+            ChannelListResponse channelListResponse = youtube
+                    .channels()
+                    .list(YOUTUBE_CHANNEL_LIST)
                     .setMine(true)
                     .execute();
 
@@ -108,13 +111,14 @@ public class YouTubePlaylistLoader extends AsyncTask<String, Void, List<YouTubeP
             }
             Channel channel = channelList.get(0);
 
-            YouTube.Playlists.List searchList = youtube.playlists()
+            YouTube.Playlists.List searchList = youtube
+                    .playlists()
                     .list(YOUTUBE_PLAYLIST_PART)
                     .setKey(Config.YOUTUBE_API_KEY);
 
             searchList.setChannelId(channel.getId());
             searchList.setFields(YOUTUBE_PLAYLIST_FIELDS);
-            searchList.setMaxResults(Config.NUMBER_OF_VIDEOS_RETURNED);
+            searchList.setMaxResults(Config.MAX_VIDEOS_RETURNED);
 
             PlaylistListResponse playListResponse = searchList.execute();
             List<Playlist> playlists = playListResponse.getItems();
