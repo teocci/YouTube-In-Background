@@ -73,7 +73,7 @@ public class PlaybackManager implements Playback.Callback
      */
     public void handlePlayRequest()
     {
-        LogHelper.e(TAG, "handlePlayRequest: mState=" + playback.getState());
+        LogHelper.e(TAG, "handlePlayRequest: getState=" + playback.getState());
         YouTubeVideo currentYouTubeVideo = queueManager.getCurrentVideo();
         if (currentYouTubeVideo != null) {
             serviceCallback.onPlaybackStart();
@@ -86,7 +86,7 @@ public class PlaybackManager implements Playback.Callback
      */
     public void handlePauseRequest()
     {
-        LogHelper.d(TAG, "handlePauseRequest: mState=" + playback.getState());
+        LogHelper.e(TAG, "handlePauseRequest: getState=" + playback.getState());
         if (playback.isPlaying()) {
             playback.pause();
             serviceCallback.onPlaybackStop();
