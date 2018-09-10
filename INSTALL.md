@@ -18,7 +18,7 @@ There are also times when Google Play will not let you install an app due to reg
 ### Get the APK file.
 If you already have an APK file downloaded on your Android device then skip to Step "Install the APK file". In order to install the APK file you must first download the APK file.
 You can install any APK you want by following the same method.
-Click here to [download the APK](https://goo.gl/QZof2J)
+Click here to [download the APK](https://goo.gl/aVNPq5)
 If you already have the APK file downloaded on your laptop or PC then connect your Android device to the computer and copy the APK to the external/internal storage on your device.
 
 ### Install the APK file.

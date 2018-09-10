@@ -592,7 +592,7 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
                     Log.d(LOG_TAG, "Decipher Function: " + decipherFunctions);
                 decipherViaWebView(encSignatures);
                 if (CACHING) {
-                    writeDeciperFunctToChache();
+                    writeDecipherFunctionToCache();
                 }
             } else {
                 return false;
@@ -738,7 +738,7 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
         this.useHttp = useHttp;
     }
 
-    private void writeDeciperFunctToChache()
+    private void writeDecipherFunctionToCache()
     {
         File cacheFile = new File(cacheDirPath + "/" + CACHE_FILE_NAME);
         BufferedWriter writer = null;
