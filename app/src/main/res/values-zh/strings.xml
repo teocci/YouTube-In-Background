@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">YiB</string>
-    <string name="action_about">关于我们</string>
+    <string name="menu_action_about">关于我们</string>
     <string name="recently_watched_tab">最近观看</string>
     <string name="search_tab">搜索 YouTube</string>
     <string name="playlist_tab">搜索 播放列表</string>
@@ -48,8 +48,8 @@
     <string name="app_update">无法提取网址，您可能需要更新！</string>
     <string name="error_no_yt_link">不是有效的YouTube连结！</string>
     <string name="share_image_button">分享：</string>
-    <string name="action_clear_list">清除最近播放列表</string>
-    <string name="action_remove_account">删除注册账号</string>
+    <string name="menu_action_clear_list">清除最近播放列表</string>
+    <string name="menu_action_remove_account">删除注册账号</string>
     <string name="toast_message_error_playing_url">错误URL受保护: %1$s</string>
     <string name="error_loading_media">加载介质时出错</string>
     <string name="error_no_connection">无法连接到服务器。 请检查您的互联网连接。</string>

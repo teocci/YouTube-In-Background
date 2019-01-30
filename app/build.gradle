@@ -6,17 +6,21 @@ android {
         applicationId "com.teocci.ytinbg"
         minSdkVersion 16
         targetSdkVersion 27
-        versionCode 308
+        versionCode 160030008
         versionName "3.0.8"
         multiDexEnabled true
     }
 
+    def keystorePropertiesFile = rootProject.file("keystore.properties")
+    def keystoreProperties = new Properties()
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
     signingConfigs {
         config {
-            keyAlias 'YTinBG'
-            keyPassword 'ytinbg'
-            storeFile file('/home/teocci/Dropbox/YouTubeInBG/release-ytinbg.keystore')
-            storePassword 'ytinbg'
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
         }
     }
 
@@ -38,13 +42,6 @@ android {
                     outputFileName = "com.teocci.ytinbg-${variant.name}-${variant.versionName}.apk"
                 }
             }
-//            debug {
-//                android.applicationVariants.all { variant ->
-//                    variant.outputs.all {
-//                        outputFileName = "com.teocci.ytinbg-${variant.name}-${variant.versionName}.apk"
-//                    }
-//                }
-//            }
             signingConfig signingConfigs.config
         }
     }
@@ -83,7 +80,6 @@ dependencies {
     implementation 'com.android.support:recyclerview-v7:27.1.1'
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.android.support:multidex:1.0.3'
-
     implementation 'com.google.android.gms:play-services-auth:16.0.0'
     implementation 'com.google.android.exoplayer:exoplayer:2.8.4'
     implementation 'com.google.code.gson:gson:2.8.5'
@@ -93,12 +89,9 @@ dependencies {
     implementation 'com.google.http-client:google-http-client-android:1.22.0'
     implementation 'com.google.http-client:google-http-client-jackson2:1.22.0'
     implementation 'com.google.apis:google-api-services-youtube:v3-rev182-1.22.0'
-
     implementation 'com.googlecode.mp4parser:isoparser:1.1.17'
-
     implementation 'com.fasterxml.jackson.core:jackson-core:2.8.7'
     implementation 'org.aspectj:aspectjrt:1.8.8'
     implementation project(':youtubeExtractor')
-
     implementation 'com.squareup.picasso:picasso:2.5.2'
 }

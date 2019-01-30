@@ -49,9 +49,9 @@
     <string name="video_thumbnail">Video Thumbnail</string>
 
     <!-- Menu -->
-    <string name="action_clear_list">Clear recently played list</string>
-    <string name="action_remove_account">Remove registered account</string>
-    <string name="action_about">About me</string>
+    <string name="menu_action_clear_list">Clear recently played list</string>
+    <string name="menu_action_remove_account">Remove registered account</string>
+    <string name="menu_action_about">About me</string>
 
     <!-- Image Buttons -->
     <string name="share_image_button">Share:</string>

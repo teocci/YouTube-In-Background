@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">YiB</string>
-    <string name="action_about">버전 정보</string>
+    <string name="menu_action_about">버전 정보</string>
     <string name="recently_watched_tab">최근 본 영상</string>
 
     <string name="search_tab">유튜브 검색</string>
@@ -50,8 +50,8 @@
     <string name="app_update">업데이트에 필요한 URL을 추출할 수 없습니다.</string>
     <string name="error_no_yt_link">유효한 YouTube 링크가 아닙니다.</string>
     <string name="share_image_button">공유:</string>
-    <string name="action_clear_list">최근 본 영상 비우기</string>
-    <string name="action_remove_account">등록된 계정을 제거하다</string>
+    <string name="menu_action_clear_list">최근 본 영상 비우기</string>
+    <string name="menu_action_remove_account">등록된 계정을 제거하다</string>
     <string name="toast_message_error_playing_url">오류 URL 보호됨: %1$s</string>
     <string name="toast_message_loading">오디오로드 중</string>
     <string name="error_loading_media">미디어 로딩 에러</string>

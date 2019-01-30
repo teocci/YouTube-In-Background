@@ -14,20 +14,20 @@
     <item
         android:id="@+id/action_clear_list"
         android:orderInCategory="100"
-        android:title="@string/action_clear_list"
+        android:title="@string/menu_action_clear_list"
         app:showAsAction="never"/>
 
     <item
         android:id="@+id/action_remove_account"
         android:orderInCategory="100"
-        android:title="@string/action_remove_account"
+        android:title="@string/menu_action_remove_account"
         android:visible="false"
         app:showAsAction="never"/>
 
     <item
         android:id="@+id/action_about"
         android:orderInCategory="100"
-        android:title="@string/action_about"
+        android:title="@string/menu_action_about"
         app:showAsAction="never"/>
 
 </menu>

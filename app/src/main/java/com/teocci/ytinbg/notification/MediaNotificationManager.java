@@ -15,9 +15,9 @@ import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.media.app.NotificationCompat.MediaStyle;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.app.NotificationCompat.MediaStyle;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -413,9 +413,11 @@ public class MediaNotificationManager extends BroadcastReceiver
     private void createNotificationChannel() {
         if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
             NotificationChannel notificationChannel =
-                    new NotificationChannel(CHANNEL_ID,
+                    new NotificationChannel(
+                            CHANNEL_ID,
                             exoAudioService.getString(R.string.notification_channel),
-                            NotificationManager.IMPORTANCE_LOW);
+                            NotificationManager.IMPORTANCE_LOW
+                    );
 
             notificationChannel.setDescription(
                     exoAudioService.getString(R.string.notification_channel_description));

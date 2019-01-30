@@ -6,6 +6,12 @@ This feature is against YouTube terms of service and could not be present on Goo
 
 YTinBG provides mechanisms for searching videos and playlists on YT, as well as logging into a Google account in order to acquire private playlists, which normally cannot be accessed.
 
+## Sponsors
+<a href="https://www.patreon.com/teocci">
+  <img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" width="160">
+</a>
+
+
 ### Disclaimer
 
 This repository contains a simple sample code intended to demonstrate the capabilities of the YouTube API V3. It is not intended to be used as-is in applications as a library dependency, and will not be maintained as such. Bug fix contributions are welcome, but issues and feature requests will not be addressed.

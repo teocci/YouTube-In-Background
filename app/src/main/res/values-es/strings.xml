@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">YiB</string>
-    <string name="action_about">Acerca de mi</string>
+    <string name="menu_action_about">Acerca de mi</string>
     <string name="recently_watched_tab">Recien vistos</string>
     <string name="search_tab">Buscar en YouTube</string>
     <string name="playlist_tab">Buscar Playlist</string>
@@ -51,8 +51,8 @@
     <string name="app_update">No se pudo extraer el video, tal vez necesites una update!</string>
     <string name="error_no_yt_link">No es un enlacce valido de YouTube!</string>
     <string name="share_image_button">Compartir:</string>
-    <string name="action_clear_list">Vaciar lista de reproducción</string>
-    <string name="action_remove_account">Remover cuenta registrada</string>
+    <string name="menu_action_clear_list">Vaciar lista de reproducción</string>
+    <string name="menu_action_remove_account">Remover cuenta registrada</string>
     <string name="toast_message_error_playing_url">Error URL Protegida: %1$s</string>
     <string name="error_loading_media">Error cargando Me</string>
     <string name="error_no_yt_video_retrieve">Error cargando el enlace de YouTube</string>
