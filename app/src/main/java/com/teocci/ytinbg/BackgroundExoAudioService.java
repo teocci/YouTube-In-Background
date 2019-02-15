@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -36,6 +37,7 @@ import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_
 import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE;
 import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE;
 import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DURATION;
+import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID;
 import static android.telephony.PhoneStateListener.LISTEN_CALL_STATE;
 import static android.telephony.TelephonyManager.CALL_STATE_IDLE;
 import static android.telephony.TelephonyManager.CALL_STATE_OFFHOOK;
@@ -144,11 +146,16 @@ public class BackgroundExoAudioService extends Service implements PlaybackManage
     {
         mediaSession.setActive(true);
         delayedStopHandler.removeCallbacksAndMessages(null);
+        Context context = getApplicationContext();
 
         // The service needs to continue running even after the bound client (usually a
         // MediaController) disconnects, otherwise the playback will stop.
         // Calling startService(Intent) will keep the service running until it is explicitly killed.
-        startService(new Intent(getApplicationContext(), BackgroundExoAudioService.class));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(context, BackgroundExoAudioService.class));
+        } else {
+            startService(new Intent(context, BackgroundExoAudioService.class));
+        }
     }
 
     @Override
@@ -464,6 +471,7 @@ public class BackgroundExoAudioService extends Service implements PlaybackManage
         ytVideo.putString(METADATA_KEY_DISPLAY_TITLE, currentYouTubeVideo.getTitle());
         ytVideo.putString(METADATA_KEY_DISPLAY_SUBTITLE, currentYouTubeVideo.getViewCount());
         ytVideo.putString(METADATA_KEY_DISPLAY_ICON_URI, currentYouTubeVideo.getThumbnailURL());
+        ytVideo.putString(METADATA_KEY_MEDIA_ID, currentYouTubeVideo.getId());
         ytVideo.putLong(METADATA_KEY_DURATION, playbackManager.getDuration());
 
         return ytVideo.build();

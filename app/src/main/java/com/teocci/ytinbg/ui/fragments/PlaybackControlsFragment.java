@@ -33,6 +33,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DURATION;
+import static android.support.v4.media.session.PlaybackStateCompat.ACTION_SKIP_TO_NEXT;
+import static android.support.v4.media.session.PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_BUFFERING;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_NONE;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_PAUSED;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_PLAYING;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_STOPPED;
 import static android.view.View.INVISIBLE;
 import static android.view.View.VISIBLE;
 
@@ -77,7 +85,7 @@ public class PlaybackControlsFragment extends Fragment
     private final Handler handler = new Handler();
     private MediaBrowserCompat mediaBrowser;
 
-    private final Runnable updateProgressTask = () -> updateProgress();
+    private final Runnable updateProgressTask = this::updateProgress;
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
@@ -103,16 +111,15 @@ public class PlaybackControlsFragment extends Fragment
             if (metadata == null) {
                 return;
             }
-            LogHelper.d(TAG, "Received metadata state change to mediaId=",
-                    metadata.getDescription().getMediaId(),
-                    " song=", metadata.getDescription().getTitle());
+            LogHelper.d(TAG, "Received metadata state change to mediaId=", metadata.getDescription().getMediaId(),
+                    " song=", metadata.getDescription().getTitle()
+            );
             PlaybackControlsFragment.this.onMetadataChanged(metadata);
         }
     };
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState)
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
         View rootView = inflater.inflate(R.layout.fragment_playback_controls, container, false);
         activity = getActivity();
@@ -153,19 +160,19 @@ public class PlaybackControlsFragment extends Fragment
         playPause.setOnClickListener(v -> {
             MediaControllerCompat controller = MediaControllerCompat.getMediaController(activity);
             PlaybackStateCompat stateObj = controller.getPlaybackState();
-            final int state = stateObj == null ? PlaybackStateCompat.STATE_NONE : stateObj.getState();
+            final int state = stateObj == null ? STATE_NONE : stateObj.getState();
 
 
             switch (state) {
-                case PlaybackStateCompat.STATE_PLAYING: // fall through
-                case PlaybackStateCompat.STATE_BUFFERING:
+                case STATE_PLAYING: // fall through
+                case STATE_BUFFERING:
                 case PlaybackStateCompat.STATE_CONNECTING:
                     pauseMedia();
                     stopSeekbarUpdate();
                     break;
-                case PlaybackStateCompat.STATE_PAUSED:
-                case PlaybackStateCompat.STATE_STOPPED:
-                case PlaybackStateCompat.STATE_NONE:
+                case STATE_PAUSED:
+                case STATE_STOPPED:
+                case STATE_NONE:
                     playMedia();
                     scheduleSeekbarUpdate();
                     break;
@@ -175,7 +182,6 @@ public class PlaybackControlsFragment extends Fragment
         });
 
         seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener()
-
         {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser)
@@ -269,8 +275,7 @@ public class PlaybackControlsFragment extends Fragment
                 updateDuration(metadata);
             }
             updateProgress();
-            if (state != null && (state.getState() == PlaybackStateCompat.STATE_PLAYING ||
-                    state.getState() == PlaybackStateCompat.STATE_BUFFERING)) {
+            if (state != null && (state.getState() == STATE_PLAYING || state.getState() == STATE_BUFFERING)) {
                 scheduleSeekbarUpdate();
             }
         }
@@ -350,18 +355,19 @@ public class PlaybackControlsFragment extends Fragment
 
     private void onMetadataChanged(MediaMetadataCompat metadata)
     {
-        LogHelper.e(TAG, "onMetadataChanged ", metadata);
+//        LogHelper.e(TAG, "onMetadataChanged ", metadata);
+//        LogHelper.e(TAG, "METADATA_KEY_MEDIA_ID ", metadata.getString(METADATA_KEY_MEDIA_ID));
         if (activity == null) {
             LogHelper.w(TAG, "onMetadataChanged called when getActivity null," +
                     "this should not happen if the callback was properly unregistered. Ignoring.");
             return;
         }
-        if (metadata == null) {
-            return;
-        }
+        if (metadata == null) return;
 
-        updateMediaDescription(metadata.getDescription());
-        updateDuration(metadata);
+        if (!activity.isFinishing()) {
+            updateMediaDescription(metadata.getDescription());
+            updateDuration(metadata);
+        }
     }
 
     private void playMedia()
@@ -410,7 +416,7 @@ public class PlaybackControlsFragment extends Fragment
         if (description == null) {
             return;
         }
-        LogHelper.e(TAG, "updateMediaDescription called ");
+//        LogHelper.e(TAG, "updateMediaDescription called ");
         videoTitle.setText(description.getTitle());
         videoViewsNumber.setText(description.getSubtitle());
         fetchImage(description);
@@ -418,43 +424,42 @@ public class PlaybackControlsFragment extends Fragment
 
     private void updateDuration(MediaMetadataCompat metadata)
     {
-        if (metadata == null) {
-            return;
+        if (metadata == null) return;
+        if (lastPlaybackState.getState() != STATE_PAUSED) {
+//            LogHelper.e(TAG, "updateDuration called ");
+            int duration = (int) metadata.getLong(METADATA_KEY_DURATION);
+            seekbar.setMax(duration);
+            tvEnd.setText(DateUtils.formatElapsedTime(duration / 1000));
         }
-        LogHelper.e(TAG, "updateDuration called ");
-        int duration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
-        seekbar.setMax(duration);
-        tvEnd.setText(DateUtils.formatElapsedTime(duration / 1000));
     }
 
     private void updatePlaybackState(PlaybackStateCompat state)
     {
-        if (state == null) {
-            return;
-        }
-        LogHelper.e(TAG, "updatePlaybackState called ");
+        if (state == null) return;
+
+//        LogHelper.e(TAG, "updatePlaybackState called ");
         lastPlaybackState = state;
 
         switch (state.getState()) {
-            case PlaybackStateCompat.STATE_PLAYING:
+            case STATE_PLAYING:
                 playPause.setVisibility(VISIBLE);
                 playPause.setImageDrawable(pauseDrawable);
                 controls.setVisibility(VISIBLE);
                 scheduleSeekbarUpdate();
                 break;
-            case PlaybackStateCompat.STATE_PAUSED:
+            case STATE_PAUSED:
                 controls.setVisibility(VISIBLE);
                 playPause.setVisibility(VISIBLE);
                 playPause.setImageDrawable(playDrawable);
-                stopSeekbarUpdate();
+//                stopSeekbarUpdate();
                 break;
-            case PlaybackStateCompat.STATE_NONE:
-            case PlaybackStateCompat.STATE_STOPPED:
+            case STATE_NONE:
+            case STATE_STOPPED:
                 playPause.setVisibility(VISIBLE);
                 playPause.setImageDrawable(playDrawable);
                 stopSeekbarUpdate();
                 break;
-            case PlaybackStateCompat.STATE_BUFFERING:
+            case STATE_BUFFERING:
                 playPause.setVisibility(INVISIBLE);
                 stopSeekbarUpdate();
                 break;
@@ -462,25 +467,22 @@ public class PlaybackControlsFragment extends Fragment
                 LogHelper.d(TAG, "Unhandled state ", state.getState());
         }
 
-        skipNext.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_NEXT) == 0
-                ? INVISIBLE : VISIBLE);
-        skipPrev.setVisibility((state.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS) == 0
-                ? INVISIBLE : VISIBLE);
+        skipNext.setVisibility((state.getActions() & ACTION_SKIP_TO_NEXT) == 0 ? INVISIBLE : VISIBLE);
+        skipPrev.setVisibility((state.getActions() & ACTION_SKIP_TO_PREVIOUS) == 0 ? INVISIBLE : VISIBLE);
     }
 
     private void updateProgress()
     {
-        if (lastPlaybackState == null) {
-            return;
-        }
+        if (lastPlaybackState == null) return;
+
         long currentPosition = lastPlaybackState.getPosition();
-        if (lastPlaybackState.getState() != PlaybackStateCompat.STATE_PAUSED) {
+//        LogHelper.e(TAG, "currentPosition: " + currentPosition);
+        if (lastPlaybackState.getState() != STATE_PAUSED) {
             // Calculate the elapsed time between the last position update and now and unless
             // paused, we can assume (delta * speed) + current position is approximately the
             // latest position. This ensure that we do not repeatedly call the getPlaybackState()
             // on MediaControllerCompat.
-            long timeDelta = SystemClock.elapsedRealtime() -
-                    lastPlaybackState.getLastPositionUpdateTime();
+            long timeDelta = SystemClock.elapsedRealtime() - lastPlaybackState.getLastPositionUpdateTime();
             currentPosition += (int) timeDelta * lastPlaybackState.getPlaybackSpeed();
         }
         seekbar.setProgress((int) currentPosition);

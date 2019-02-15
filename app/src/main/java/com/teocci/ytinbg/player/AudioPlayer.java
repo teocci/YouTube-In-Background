@@ -192,11 +192,7 @@ public class AudioPlayer implements Runnable
 
         // check we have audio content we know
         if (format == null || !mime.startsWith("audio/")) {
-            if (events != null) handler.post(new Runnable()
-            {
-                @Override
-                public void run() { events.onError(); }
-            });
+            if (events != null) handler.post(() -> events.onError());
             return;
         }
         // Create the actual decoder, using the mime to select
@@ -207,20 +203,12 @@ public class AudioPlayer implements Runnable
         }
         // Check we have a valid codec instance
         if (codec == null) {
-            if (events != null) handler.post(new Runnable()
-            {
-                @Override
-                public void run() { events.onError(); }
-            });
+            if (events != null) handler.post(() -> events.onError());
             return;
         }
 
 //        state.set(PlayerStates.READY_TO_PLAY);
-        if (events != null) handler.post(new Runnable()
-        {
-            @Override
-            public void run() { events.onStart(mime, sampleRate, channels, duration); }
-        });
+        if (events != null) handler.post(() -> events.onStart(mime, sampleRate, channels, duration));
 
         codec.configure(format, null, null, 0);
         codec.start();
@@ -266,18 +254,11 @@ public class AudioPlayer implements Runnable
                         presentationTimeUs = extractor.getSampleTime();
                         final int percent = (duration == 0) ? 0 : (int) (100 * presentationTimeUs / duration);
                         if (events != null) {
-                            handler.post(new Runnable()
-                            {
-                                @Override
-                                public void run()
-                                {
-                                    events.onPlayUpdate(
-                                            percent,
-                                            presentationTimeUs / 1000,
-                                            duration / 1000
-                                    );
-                                }
-                            });
+                            handler.post(() -> events.onPlayUpdate(
+                                    percent,
+                                    presentationTimeUs / 1000,
+                                    duration / 1000
+                            ));
                         }
                     }
 

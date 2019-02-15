@@ -48,6 +48,7 @@ import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT;
 import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
 import static android.media.AudioManager.STREAM_MUSIC;
 import static android.net.wifi.WifiManager.WIFI_MODE_FULL;
+import static com.google.android.exoplayer2.C.STREAM_TYPE_MUSIC;
 import static com.google.android.exoplayer2.Player.STATE_BUFFERING;
 import static com.google.android.exoplayer2.Player.STATE_ENDED;
 import static com.google.android.exoplayer2.Player.STATE_IDLE;
@@ -104,6 +105,7 @@ public class LocalPlayback implements Playback
     private boolean audioNoisyReceiverRegistered;
 
     private boolean extractingYTURL = false;
+    private boolean errorFound = false;
     private boolean extracted = false;
 
     private final IntentFilter audioNoisyIntentFilter = new IntentFilter(ACTION_AUDIO_BECOMING_NOISY);
@@ -180,19 +182,16 @@ public class LocalPlayback implements Playback
     public int getState()
     {
         if (exoPlayer == null) {
-            return exoPlayerNullIsStopped
-                    ? PlaybackStateCompat.STATE_STOPPED
-                    : PlaybackStateCompat.STATE_NONE;
+            return exoPlayerNullIsStopped ? PlaybackStateCompat.STATE_STOPPED : PlaybackStateCompat.STATE_NONE;
         }
+
         switch (exoPlayer.getPlaybackState()) {
             case STATE_IDLE:
                 return PlaybackStateCompat.STATE_PAUSED;
             case STATE_BUFFERING:
                 return PlaybackStateCompat.STATE_BUFFERING;
             case STATE_READY:
-                return exoPlayer.getPlayWhenReady()
-                        ? PlaybackStateCompat.STATE_PLAYING
-                        : PlaybackStateCompat.STATE_PAUSED;
+                return exoPlayer.getPlayWhenReady() ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED;
             case STATE_ENDED:
                 return PlaybackStateCompat.STATE_PAUSED;
             default:
@@ -244,16 +243,16 @@ public class LocalPlayback implements Playback
         String youTubeVideoId = youTubeVideo.getId();
         boolean videoHasChanged = !TextUtils.equals(youTubeVideoId, currentYouTubeVideoId);
         if (videoHasChanged) {
-//            LogHelper.e(TAG, "play | videoHasChanged");
+            LogHelper.e(TAG, "play | videoHasChanged");
             extracted = false;
             currentYouTubeVideoId = youTubeVideoId;
         }
         if (videoHasChanged || exoPlayer == null || !extracted) {
-//            LogHelper.e(TAG, "play | calling: extractUrlAndPlay " + (!extractingYTURL ? "true" : "false"));
+            LogHelper.e(TAG, "play | calling: extractUrlAndPlay " + (!extractingYTURL ? "true" : "false"));
             if (!extractingYTURL) extractUrlAndPlay();
-        } else if (!extractingYTURL) {
-//            LogHelper.e(TAG, "play | calling: seekTo and configurePlayerState");
-            seekTo(0);
+        } else if (!extractingYTURL && extracted) {
+            LogHelper.e(TAG, "play | calling: seekTo and configurePlayerState");
+//            seekTo(0);
             configurePlayerState();
         }
     }
@@ -343,6 +342,7 @@ public class LocalPlayback implements Playback
 //                    LogHelper.e(TAG, "extractUrlAndPlay | ended-error");
                     extractingYTURL = false;
                     extracted = false;
+                    errorFound = true;
                     return;
                 }
                 YtFile ytFile = getBestStream(ytFiles);
@@ -356,8 +356,8 @@ public class LocalPlayback implements Playback
                         exoPlayer.addListener(eventListener);
                     }
 
-                    @C.AudioUsage int usage = Util.getAudioUsageForStreamType(STREAM_MUSIC);
-                    @C.AudioContentType int contentType = Util.getAudioContentTypeForStreamType(STREAM_MUSIC);
+                    @C.AudioUsage int usage = Util.getAudioUsageForStreamType(STREAM_TYPE_MUSIC);
+                    @C.AudioContentType int contentType = Util.getAudioContentTypeForStreamType(STREAM_TYPE_MUSIC);
                     AudioAttributes audioAttributes = new AudioAttributes.Builder()
                             .setUsage(usage)
                             .setContentType(contentType)
@@ -399,6 +399,8 @@ public class LocalPlayback implements Playback
 //                    LogHelper.e(TAG, "extractUrlAndPlay calls: configurePlayerState");
                     configurePlayerState();
                 } else {
+                    extracted = false;
+                    errorFound = true;
 //                        Log.e(TAG, "No Link found");
                     Toast.makeText(
                             context,
