@@ -451,7 +451,7 @@ public class PlaybackControlsFragment extends Fragment
                 controls.setVisibility(VISIBLE);
                 playPause.setVisibility(VISIBLE);
                 playPause.setImageDrawable(playDrawable);
-//                stopSeekbarUpdate();
+                stopSeekbarUpdate();
                 break;
             case STATE_NONE:
             case STATE_STOPPED:
@@ -476,7 +476,6 @@ public class PlaybackControlsFragment extends Fragment
         if (lastPlaybackState == null) return;
 
         long currentPosition = lastPlaybackState.getPosition();
-//        LogHelper.e(TAG, "currentPosition: " + currentPosition);
         if (lastPlaybackState.getState() != STATE_PAUSED) {
             // Calculate the elapsed time between the last position update and now and unless
             // paused, we can assume (delta * speed) + current position is approximately the
@@ -486,5 +485,6 @@ public class PlaybackControlsFragment extends Fragment
             currentPosition += (int) timeDelta * lastPlaybackState.getPlaybackSpeed();
         }
         seekbar.setProgress((int) currentPosition);
+//        LogHelper.e(TAG, "currentPosition: " + currentPosition);
     }
 }

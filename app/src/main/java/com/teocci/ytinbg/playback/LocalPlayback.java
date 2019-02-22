@@ -15,9 +15,9 @@ import android.widget.Toast;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.audio.AudioAttributes;
@@ -106,7 +106,8 @@ public class LocalPlayback implements Playback
 
     private boolean extractingYTURL = false;
     private boolean errorFound = false;
-    private boolean extracted = false;
+    private boolean urlExtracted = false;
+    private boolean paused = false;
 
     private final IntentFilter audioNoisyIntentFilter = new IntentFilter(ACTION_AUDIO_BECOMING_NOISY);
 
@@ -241,18 +242,20 @@ public class LocalPlayback implements Playback
         tryToGetAudioFocus();
         registerAudioNoisyReceiver();
         String youTubeVideoId = youTubeVideo.getId();
-        boolean videoHasChanged = !TextUtils.equals(youTubeVideoId, currentYouTubeVideoId);
-        if (videoHasChanged) {
+        boolean videoChanged = !TextUtils.equals(youTubeVideoId, currentYouTubeVideoId);
+        if (videoChanged) {
             LogHelper.e(TAG, "play | videoHasChanged");
-            extracted = false;
+            urlExtracted = false;
+            paused = false;
             currentYouTubeVideoId = youTubeVideoId;
         }
-        if (videoHasChanged || exoPlayer == null || !extracted) {
+
+        if (videoChanged || exoPlayer == null || !urlExtracted) {
             LogHelper.e(TAG, "play | calling: extractUrlAndPlay " + (!extractingYTURL ? "true" : "false"));
             if (!extractingYTURL) extractUrlAndPlay();
-        } else if (!extractingYTURL && extracted) {
+        } else if (!errorFound && urlExtracted) {
             LogHelper.e(TAG, "play | calling: seekTo and configurePlayerState");
-//            seekTo(0);
+            if (!paused) seekTo(0);
             configurePlayerState();
         }
     }
@@ -263,6 +266,7 @@ public class LocalPlayback implements Playback
         // Pause player and cancel the 'foreground service' state.
         if (exoPlayer != null) {
             exoPlayer.setPlayWhenReady(false);
+            paused = true;
         }
         // While paused, retain the player instance, but give up audio focus.
         releaseResources(false);
@@ -318,6 +322,8 @@ public class LocalPlayback implements Playback
     {
         final String youtubeLink = "https://youtube.com/watch?v=" + currentYouTubeVideoId;
         extractingYTURL = true;
+        urlExtracted = false;
+        errorFound = false;
 
         LogHelper.e(TAG, "extractUrlAndPlay | called");
         new YouTubeExtractor(context)
@@ -341,14 +347,15 @@ public class LocalPlayback implements Playback
                     ).show();
 //                    LogHelper.e(TAG, "extractUrlAndPlay | ended-error");
                     extractingYTURL = false;
-                    extracted = false;
+                    urlExtracted = false;
                     errorFound = true;
                     return;
                 }
+
                 YtFile ytFile = getBestStream(ytFiles);
-                LogHelper.e(TAG, ytFile.getUrl());
+//                LogHelper.e(TAG, ytFile.getUrl());
                 if (validateUrl(ytFile.getUrl())) {
-//                    LogHelper.e(TAG, "extractUrlAndPlay | validateUrl extracted");
+//                    LogHelper.e(TAG, "extractUrlAndPlay | validateUrl urlExtracted");
 
                     releaseResources(false); // Release everything except the player
                     if (exoPlayer == null) {
@@ -394,12 +401,12 @@ public class LocalPlayback implements Playback
                     // Wifi lock, which prevents the Wifi radio from going to
                     // sleep while the song is playing.
                     wifiLock.acquire();
-                    extracted = true;
+                    urlExtracted = true;
 
 //                    LogHelper.e(TAG, "extractUrlAndPlay calls: configurePlayerState");
                     configurePlayerState();
                 } else {
-                    extracted = false;
+                    urlExtracted = false;
                     errorFound = true;
 //                        Log.e(TAG, "No Link found");
                     Toast.makeText(
@@ -453,6 +460,7 @@ public class LocalPlayback implements Playback
             if (playOnFocusGain) {
                 exoPlayer.setPlayWhenReady(true);
                 playOnFocusGain = false;
+                paused = false;
             }
         }
     }
@@ -531,25 +539,16 @@ public class LocalPlayback implements Playback
         }
     }
 
-    private final class ExoPlayerEventListener implements ExoPlayer.EventListener
+    private final class ExoPlayerEventListener implements Player.EventListener
     {
         @Override
-        public void onTimelineChanged(Timeline timeline, Object manifest, int reason)
-        {
-            // Nothing to do.
-        }
+        public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
 
         @Override
-        public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections)
-        {
-            // Nothing to do.
-        }
+        public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {}
 
         @Override
-        public void onLoadingChanged(boolean isLoading)
-        {
-            // Nothing to do.
-        }
+        public void onLoadingChanged(boolean isLoading) {}
 
         @Override
         public void onPlayerStateChanged(boolean playWhenReady, int playbackState)
@@ -572,16 +571,10 @@ public class LocalPlayback implements Playback
         }
 
         @Override
-        public void onRepeatModeChanged(int repeatMode)
-        {
-
-        }
+        public void onRepeatModeChanged(int repeatMode) {}
 
         @Override
-        public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled)
-        {
-
-        }
+        public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {}
 
         @Override
         public void onPlayerError(ExoPlaybackException error)
@@ -608,21 +601,12 @@ public class LocalPlayback implements Playback
         }
 
         @Override
-        public void onPositionDiscontinuity(int reason)
-        {
-            // Nothing to do.
-        }
+        public void onPositionDiscontinuity(int reason) {}
 
         @Override
-        public void onPlaybackParametersChanged(PlaybackParameters playbackParameters)
-        {
-            // Nothing to do.
-        }
+        public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {}
 
         @Override
-        public void onSeekProcessed()
-        {
-
-        }
+        public void onSeekProcessed() {}
     }
 }
