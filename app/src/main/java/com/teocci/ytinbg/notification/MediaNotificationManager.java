@@ -41,10 +41,10 @@ import static com.teocci.ytinbg.utils.Config.ACTION_STOP;
  * Created by teocci.
  *
  * @author teocci@yandex.com on 2017-Jun-09
- *         <p>
- *         Keeps track of a notification and updates it automatically for a given
- *         MediaSession. Maintaining a visible notification (usually) guarantees that the music service
- *         won't be killed during playback.
+ * <p>
+ * Keeps track of a notification and updates it automatically for a given
+ * MediaSession. Maintaining a visible notification (usually) guarantees that the music service
+ * won't be killed during playback.
  */
 public class MediaNotificationManager extends BroadcastReceiver
 {
@@ -71,11 +71,54 @@ public class MediaNotificationManager extends BroadcastReceiver
     private final PendingIntent playIntent;
     private final PendingIntent previousIntent;
     private final PendingIntent nextIntent;
-    private final PendingIntent mStopCastIntent;
+    private final PendingIntent stopCastIntent;
 
 //    private final int mNotificationColor;
 
     private boolean hasStarted = false;
+
+
+    private final MediaControllerCompat.Callback callback = new MediaControllerCompat.Callback()
+    {
+        @Override
+        public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state)
+        {
+            playbackState = state;
+            LogHelper.e(TAG, "Received new playback state", state);
+            if (state.getState() == PlaybackStateCompat.STATE_STOPPED ||
+                    state.getState() == PlaybackStateCompat.STATE_NONE) {
+                stopNotification();
+            } else {
+                Notification notification = createNotification();
+                if (notification != null) {
+                    notificationManager.notify(NOTIFICATION_ID, notification);
+                }
+            }
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadataCompat metadata)
+        {
+            MediaNotificationManager.this.currentYouTubeVideo = exoAudioService.getCurrentYouTubeVideo();
+            LogHelper.e(TAG, "Received new metadata ", metadata.getDescription());
+            Notification notification = createNotification();
+            if (notification != null) {
+                notificationManager.notify(NOTIFICATION_ID, notification);
+            }
+        }
+
+        @Override
+        public void onSessionDestroyed()
+        {
+            super.onSessionDestroyed();
+            LogHelper.d(TAG, "Session was destroyed, resetting to the new session token");
+            try {
+                updateSessionToken();
+            } catch (RemoteException e) {
+                LogHelper.e(TAG, e, "could not connect media controller");
+            }
+        }
+    };
 
     /**
      * Field which handles image loading
@@ -95,10 +138,7 @@ public class MediaNotificationManager extends BroadcastReceiver
         }
 
         @Override
-        public void onPrepareLoad(Drawable placeHolderDrawable)
-        {
-
-        }
+        public void onPrepareLoad(Drawable placeHolderDrawable) {}
     };
 
     public MediaNotificationManager(BackgroundExoAudioService service) throws RemoteException
@@ -120,7 +160,7 @@ public class MediaNotificationManager extends BroadcastReceiver
                 new Intent(ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
         nextIntent = PendingIntent.getBroadcast(exoAudioService, REQUEST_CODE,
                 new Intent(ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
-        mStopCastIntent = PendingIntent.getBroadcast(exoAudioService, REQUEST_CODE,
+        stopCastIntent = PendingIntent.getBroadcast(exoAudioService, REQUEST_CODE,
                 new Intent(ACTION_STOP).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
 
         // Cancel all notifications to handle the case where the Service was killed and
@@ -238,48 +278,6 @@ public class MediaNotificationManager extends BroadcastReceiver
                 PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
-    private final MediaControllerCompat.Callback callback = new MediaControllerCompat.Callback()
-    {
-        @Override
-        public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state)
-        {
-            playbackState = state;
-            LogHelper.e(TAG, "Received new playback state", state);
-            if (state.getState() == PlaybackStateCompat.STATE_STOPPED ||
-                    state.getState() == PlaybackStateCompat.STATE_NONE) {
-                stopNotification();
-            } else {
-                Notification notification = createNotification();
-                if (notification != null) {
-                    notificationManager.notify(NOTIFICATION_ID, notification);
-                }
-            }
-        }
-
-        @Override
-        public void onMetadataChanged(MediaMetadataCompat metadata)
-        {
-            MediaNotificationManager.this.currentYouTubeVideo = exoAudioService.getCurrentYouTubeVideo();
-            LogHelper.e(TAG, "Received new metadata ", metadata.getDescription());
-            Notification notification = createNotification();
-            if (notification != null) {
-                notificationManager.notify(NOTIFICATION_ID, notification);
-            }
-        }
-
-        @Override
-        public void onSessionDestroyed()
-        {
-            super.onSessionDestroyed();
-            LogHelper.d(TAG, "Session was destroyed, resetting to the new session token");
-            try {
-                updateSessionToken();
-            } catch (RemoteException e) {
-                LogHelper.e(TAG, e, "could not connect media controller");
-            }
-        }
-    };
-
     private Notification createNotification()
     {
         LogHelper.d(TAG, "updateNotificationMetadata. currentYouTubeVideo=" + currentYouTubeVideo);
@@ -302,8 +300,10 @@ public class MediaNotificationManager extends BroadcastReceiver
 
         // If skip to previous action is enabled
         if ((playbackState.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS) != 0) {
-            notificationBuilder.addAction(R.drawable.ic_skip_previous_white_24dp,
-                    exoAudioService.getString(R.string.action_previous), previousIntent);
+            notificationBuilder.addAction(
+                    R.drawable.ic_skip_previous_white_24dp,
+                    exoAudioService.getString(R.string.action_previous), previousIntent
+            );
 
             // If there is a "skip to previous" button, the play/pause button will
             // be the second one. We need to keep track of it, because the MediaStyle notification
@@ -316,8 +316,11 @@ public class MediaNotificationManager extends BroadcastReceiver
 
         // If skip to next action is enabled
         if ((playbackState.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_NEXT) != 0) {
-            notificationBuilder.addAction(R.drawable.ic_skip_next_white_24dp,
-                    exoAudioService.getString(R.string.action_next), nextIntent);
+            notificationBuilder.addAction(
+                    R.drawable.ic_skip_next_white_24dp,
+                    exoAudioService.getString(R.string.action_next),
+                    nextIntent
+            );
         }
 
         notificationBuilder
@@ -410,7 +413,8 @@ public class MediaNotificationManager extends BroadcastReceiver
      * Creates Notification Channel. This is required in Android O+ to display notifications.
      */
     @RequiresApi(Build.VERSION_CODES.O)
-    private void createNotificationChannel() {
+    private void createNotificationChannel()
+    {
         if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
             NotificationChannel notificationChannel =
                     new NotificationChannel(
@@ -419,8 +423,7 @@ public class MediaNotificationManager extends BroadcastReceiver
                             NotificationManager.IMPORTANCE_LOW
                     );
 
-            notificationChannel.setDescription(
-                    exoAudioService.getString(R.string.notification_channel_description));
+            notificationChannel.setDescription(exoAudioService.getString(R.string.notification_channel_description));
 
             notificationManager.createNotificationChannel(notificationChannel);
         }

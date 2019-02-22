@@ -10,6 +10,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 
 import com.teocci.ytinbg.interfaces.Playback;
+import com.teocci.ytinbg.interfaces.PlaybackServiceCallback;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.LogHelper;
 
@@ -43,6 +44,7 @@ public class PlaybackManager implements Playback.Callback
     private QueueManager queueManager;
     private Resources resources;
     private Playback playback;
+
     private PlaybackServiceCallback serviceCallback;
     private MediaSessionCallback mediaSessionCallback;
 
@@ -372,17 +374,5 @@ public class PlaybackManager implements Playback.Callback
 //                updatePlaybackState("Could not find music");
 //            }
         }
-    }
-
-
-    public interface PlaybackServiceCallback
-    {
-        void onPlaybackStart();
-
-        void onNotificationRequired();
-
-        void onPlaybackStop();
-
-        void onPlaybackStateUpdated(PlaybackStateCompat newState);
     }
 }

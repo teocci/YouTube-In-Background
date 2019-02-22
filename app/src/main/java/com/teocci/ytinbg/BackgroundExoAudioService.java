@@ -6,7 +6,6 @@ import android.app.Service;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -22,6 +21,7 @@ import android.telephony.TelephonyManager;
 import com.teocci.ytinbg.handlers.DelayedStopHandler;
 import com.teocci.ytinbg.handlers.ServiceHandler;
 import com.teocci.ytinbg.interfaces.Playback;
+import com.teocci.ytinbg.interfaces.PlaybackServiceCallback;
 import com.teocci.ytinbg.interfaces.YouTubeVideoUpdateListener;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.notification.MediaNotificationManager;
@@ -61,7 +61,7 @@ import static com.teocci.ytinbg.utils.Config.YOUTUBE_MEDIA_TYPE_VIDEO;
  * Service class for background youtube playback
  * Created by Teocci on 9.3.16..
  */
-public class BackgroundExoAudioService extends Service implements PlaybackManager.PlaybackServiceCallback
+public class BackgroundExoAudioService extends Service implements PlaybackServiceCallback
 {
     private static final String TAG = LogHelper.makeLogTag(BackgroundExoAudioService.class);
 
@@ -151,11 +151,13 @@ public class BackgroundExoAudioService extends Service implements PlaybackManage
         // The service needs to continue running even after the bound client (usually a
         // MediaController) disconnects, otherwise the playback will stop.
         // Calling startService(Intent) will keep the service running until it is explicitly killed.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(new Intent(context, BackgroundExoAudioService.class));
-        } else {
-            startService(new Intent(context, BackgroundExoAudioService.class));
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            startForegroundService(new Intent(context, BackgroundExoAudioService.class));
+//        } else {
+//            startService(new Intent(context, BackgroundExoAudioService.class));
+//        }
+
+        mediaNotificationManager.startNotification();
     }
 
     @Override
