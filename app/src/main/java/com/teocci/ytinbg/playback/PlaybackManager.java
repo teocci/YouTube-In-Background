@@ -48,6 +48,7 @@ public class PlaybackManager implements Playback.Callback
     private PlaybackServiceCallback serviceCallback;
     private MediaSessionCallback mediaSessionCallback;
 
+
     public PlaybackManager(PlaybackServiceCallback serviceCallback, Resources resources,
                            QueueManager queueManager,
                            Playback playback)
@@ -284,6 +285,11 @@ public class PlaybackManager implements Playback.Callback
     public void updateYouTubeVideo()
     {
         queueManager.updateYouTubeVideo();
+    }
+
+    public void setRepeatOption(int repeatMode)
+    {
+        playback.setRepeatMode(repeatMode);
     }
 
     private class MediaSessionCallback extends MediaSessionCompat.Callback

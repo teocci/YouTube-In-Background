@@ -42,6 +42,8 @@ import static android.telephony.PhoneStateListener.LISTEN_CALL_STATE;
 import static android.telephony.TelephonyManager.CALL_STATE_IDLE;
 import static android.telephony.TelephonyManager.CALL_STATE_OFFHOOK;
 import static android.telephony.TelephonyManager.CALL_STATE_RINGING;
+import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
+import static com.google.android.exoplayer2.Player.REPEAT_MODE_ONE;
 import static com.teocci.ytinbg.BackgroundAudioService.ACTION_PREVIOUS;
 import static com.teocci.ytinbg.utils.Config.ACTION_NEXT;
 import static com.teocci.ytinbg.utils.Config.ACTION_PAUSE;
@@ -373,6 +375,7 @@ public class BackgroundExoAudioService extends Service implements PlaybackServic
                 currentYouTubeVideo = (YouTubeVideo) intent.getSerializableExtra(KEY_YOUTUBE_TYPE_VIDEO);
                 if (currentYouTubeVideo.getId() != null) {
                     playbackManager.initPlaylist(currentYouTubeVideo, null);
+                    playbackManager.setRepeatOption(REPEAT_MODE_ONE);
                     LogHelper.e(TAG, "handleMedia: YOUTUBE_MEDIA_TYPE_VIDEO");
                     playbackManager.handlePlayRequest();
                     playbackManager.updateYouTubeVideo();
@@ -387,6 +390,7 @@ public class BackgroundExoAudioService extends Service implements PlaybackServic
                 LogHelper.e(TAG, "currentVideoPosition: " + currentVideoPosition);
                 if (youTubeVideos != null && currentVideoPosition != -1) {
                     currentYouTubeVideo = youTubeVideos.get(currentVideoPosition);
+                    playbackManager.setRepeatOption(REPEAT_MODE_OFF);
                     playbackManager.initPlaylist(currentYouTubeVideo, youTubeVideos);
                     LogHelper.e(TAG, "handleMedia: YOUTUBE_MEDIA_TYPE_PLAYLIST");
                     playbackManager.handlePlayRequest();

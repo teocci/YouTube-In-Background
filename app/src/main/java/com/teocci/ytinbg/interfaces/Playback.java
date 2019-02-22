@@ -70,6 +70,8 @@ public interface Playback
 
     void setCurrentYouTubeVideoId(String mediaId);
 
+    void setRepeatMode(int repeatMode);
+
     String getCurrentYouTubeVideoId();
 
     interface Callback

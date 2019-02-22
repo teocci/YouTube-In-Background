@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
+import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -49,6 +50,8 @@ import static android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK;
 import static android.media.AudioManager.STREAM_MUSIC;
 import static android.net.wifi.WifiManager.WIFI_MODE_FULL;
 import static com.google.android.exoplayer2.C.STREAM_TYPE_MUSIC;
+import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
+import static com.google.android.exoplayer2.Player.REPEAT_MODE_ONE;
 import static com.google.android.exoplayer2.Player.STATE_BUFFERING;
 import static com.google.android.exoplayer2.Player.STATE_ENDED;
 import static com.google.android.exoplayer2.Player.STATE_IDLE;
@@ -109,6 +112,8 @@ public class LocalPlayback implements Playback
     private boolean urlExtracted = false;
     private boolean paused = false;
 
+    private int repeatMode = REPEAT_MODE_OFF;
+
     private final IntentFilter audioNoisyIntentFilter = new IntentFilter(ACTION_AUDIO_BECOMING_NOISY);
 
     private final BroadcastReceiver audioNoisyReceiver = new BroadcastReceiver()
@@ -129,6 +134,41 @@ public class LocalPlayback implements Playback
             }
         }
     };
+
+
+    private final OnAudioFocusChangeListener audioFocusChangeListener = new OnAudioFocusChangeListener()
+    {
+        @Override
+        public void onAudioFocusChange(int focusChange)
+        {
+            LogHelper.d(TAG, "onAudioFocusChange. focusChange=", focusChange);
+            switch (focusChange) {
+                case AUDIOFOCUS_GAIN:
+                    currentAudioFocusState = AUDIO_FOCUSED;
+                    break;
+                case AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                    // Audio focus was lost, but it's possible to duck (i.e.: play quietly)
+                    currentAudioFocusState = AUDIO_NO_FOCUS_CAN_DUCK;
+                    break;
+                case AUDIOFOCUS_LOSS_TRANSIENT:
+                    // Lost audio focus, but will gain it back (shortly), so note whether
+                    // playback should resume
+                    currentAudioFocusState = AUDIO_NO_FOCUS_NO_DUCK;
+                    playOnFocusGain = exoPlayer != null && exoPlayer.getPlayWhenReady();
+                    break;
+                case AUDIOFOCUS_LOSS:
+                    // Lost audio focus, probably "permanently"
+                    currentAudioFocusState = AUDIO_NO_FOCUS_NO_DUCK;
+                    break;
+            }
+
+            if (exoPlayer != null) {
+                // Update the player state based on the change
+                configurePlayerState();
+            }
+        }
+    };
+
 
 //    private final BroadcastReceiver mediaButtonReceiver = new BroadcastReceiver()
 //    {
@@ -292,6 +332,12 @@ public class LocalPlayback implements Playback
     public void setCurrentYouTubeVideoId(String youTubeVideoId)
     {
         this.currentYouTubeVideoId = youTubeVideoId;
+    }
+
+    @Override
+    public void setRepeatMode(int repeatMode)
+    {
+        this.repeatMode = repeatMode;
     }
 
     public String getCurrentYouTubeVideoId()
@@ -458,46 +504,13 @@ public class LocalPlayback implements Playback
 
             // If we were playing when we lost focus, we need to resume playing.
             if (playOnFocusGain) {
+                exoPlayer.setRepeatMode(repeatMode);
                 exoPlayer.setPlayWhenReady(true);
                 playOnFocusGain = false;
                 paused = false;
             }
         }
     }
-
-    private final AudioManager.OnAudioFocusChangeListener audioFocusChangeListener =
-            new AudioManager.OnAudioFocusChangeListener()
-            {
-                @Override
-                public void onAudioFocusChange(int focusChange)
-                {
-                    LogHelper.d(TAG, "onAudioFocusChange. focusChange=", focusChange);
-                    switch (focusChange) {
-                        case AUDIOFOCUS_GAIN:
-                            currentAudioFocusState = AUDIO_FOCUSED;
-                            break;
-                        case AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                            // Audio focus was lost, but it's possible to duck (i.e.: play quietly)
-                            currentAudioFocusState = AUDIO_NO_FOCUS_CAN_DUCK;
-                            break;
-                        case AUDIOFOCUS_LOSS_TRANSIENT:
-                            // Lost audio focus, but will gain it back (shortly), so note whether
-                            // playback should resume
-                            currentAudioFocusState = AUDIO_NO_FOCUS_NO_DUCK;
-                            playOnFocusGain = exoPlayer != null && exoPlayer.getPlayWhenReady();
-                            break;
-                        case AUDIOFOCUS_LOSS:
-                            // Lost audio focus, probably "permanently"
-                            currentAudioFocusState = AUDIO_NO_FOCUS_NO_DUCK;
-                            break;
-                    }
-
-                    if (exoPlayer != null) {
-                        // Update the player state based on the change
-                        configurePlayerState();
-                    }
-                }
-            };
 
     /**
      * Releases resources used by the service for playback, which is mostly just the WiFi lock for
@@ -563,7 +576,9 @@ public class LocalPlayback implements Playback
                     break;
                 case STATE_ENDED:
                     // The media player finished playing the current song.
-                    if (callback != null) {
+                    LogHelper.e(TAG, "repeatMode: " + ((repeatMode == REPEAT_MODE_ONE) ? "REPEAT_MODE_ONE" : "REPEAT_MODE_OFF"));
+
+                    if (callback != null && repeatMode != REPEAT_MODE_ONE) {
                         callback.onCompletion();
                     }
                     break;

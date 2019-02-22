@@ -122,14 +122,7 @@ public class RecentlyWatchedFragment extends RecyclerFragment implements
         );
 
         if (videoListAdapter != null) {
-            getActivity().runOnUiThread(new Runnable()
-            {
-                public void run()
-                {
-                    videoListAdapter.setYouTubeVideos(recentlyPlayedVideos);
-                }
-
-            });
+            getActivity().runOnUiThread(() -> videoListAdapter.setYouTubeVideos(recentlyPlayedVideos));
         }
     }
 
