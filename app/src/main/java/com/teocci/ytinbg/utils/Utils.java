@@ -1,16 +1,22 @@
 package com.teocci.ytinbg.utils;
 
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.util.SparseArray;
 
 import com.google.api.services.youtube.model.SearchResult;
 import com.teocci.ytinbg.model.YouTubeVideo;
 
+import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import at.huber.youtubeExtractor.YtFile;
 
@@ -281,5 +287,23 @@ public class Utils
     {
         // Null-safe, short-circuit evaluation.
         return s == null || s.trim().isEmpty();
+    }
+
+
+    public static <K, V> Map.Entry<K, V> entry(K key, V value)
+    {
+        return new AbstractMap.SimpleEntry<>(key, value);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static <K, U> Collector<Map.Entry<K, U>, ?, Map<K, U>> entriesToMap()
+    {
+        return Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static <K, U> Collector<Map.Entry<K, U>, ?, ConcurrentMap<K, U>> entriesToConcurrentMap()
+    {
+        return Collectors.toConcurrentMap(Map.Entry::getKey, Map.Entry::getValue);
     }
 }

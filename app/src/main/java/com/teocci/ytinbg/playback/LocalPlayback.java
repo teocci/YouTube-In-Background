@@ -399,7 +399,7 @@ public class LocalPlayback implements Playback
                 }
 
                 YtFile ytFile = getBestStream(ytFiles);
-//                LogHelper.e(TAG, ytFile.getUrl());
+                LogHelper.e(TAG, ytFile.getUrl());
                 if (validateUrl(ytFile.getUrl())) {
 //                    LogHelper.e(TAG, "extractUrlAndPlay | validateUrl urlExtracted");
 

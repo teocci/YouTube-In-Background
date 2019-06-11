@@ -26,7 +26,6 @@ public class VideoMeta {
     }
 
 
-
     // 120 x 90
     public String getThumbUrl() {
         return IMAGE_BASE_URL + videoId + "/default.jpg";
