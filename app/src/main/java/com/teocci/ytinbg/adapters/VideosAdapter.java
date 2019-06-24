@@ -3,8 +3,6 @@ package com.teocci.ytinbg.adapters;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -33,6 +31,9 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Custom ArrayAdapter which enables setup of a videoList view row views

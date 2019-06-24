@@ -3,8 +3,6 @@ package com.teocci.ytinbg.ui.fragments;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +24,9 @@ import com.teocci.ytinbg.utils.LogHelper;
 import com.teocci.ytinbg.youtube.YouTubeVideoLoader;
 
 import java.util.List;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import static com.teocci.ytinbg.utils.Config.MAX_VIDEOS_RETURNED;
 

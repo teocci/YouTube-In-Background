@@ -1,7 +1,6 @@
 package com.teocci.ytinbg.playback;
 
 import android.content.res.Resources;
-import android.support.annotation.NonNull;
 
 import com.teocci.ytinbg.R;
 import com.teocci.ytinbg.interfaces.YouTubeVideoUpdateListener;
@@ -12,6 +11,8 @@ import com.teocci.ytinbg.utils.QueueHelper;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by teocci.

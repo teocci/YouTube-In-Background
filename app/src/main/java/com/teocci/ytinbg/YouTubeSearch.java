@@ -2,10 +2,8 @@ package com.teocci.ytinbg;
 
 import android.app.Activity;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.widget.Toast;
-
 
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
@@ -45,6 +43,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+
+import androidx.fragment.app.Fragment;
 
 import static com.google.api.client.extensions.android.http.AndroidHttp.newCompatibleTransport;
 

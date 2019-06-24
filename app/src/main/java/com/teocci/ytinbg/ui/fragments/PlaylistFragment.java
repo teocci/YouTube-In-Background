@@ -2,10 +2,6 @@ package com.teocci.ytinbg.ui.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +25,11 @@ import com.teocci.ytinbg.youtube.YouTubePlaylistVideoLoader;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 /**
  * Class that handles list of the playlistList acquired from YouTube
@@ -91,14 +92,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
         userNameTextView = rootView.findViewById(R.id.user_name);
         swipeToRefresh = rootView.findViewById(R.id.swipeToRefresh);
 
-        swipeToRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener()
-        {
-            @Override
-            public void onRefresh()
-            {
-                searchPlaylists();
-            }
-        });
+        swipeToRefresh.setOnRefreshListener(() -> searchPlaylists());
 
         return rootView;
     }
@@ -182,13 +176,9 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
         }
 
         if (playlistAdapter != null) {
-            getActivity().runOnUiThread(new Runnable()
-            {
-                public void run()
-                {
-                    playlistAdapter.setYouTubePlaylists(youTubePlaylistList);
-                    swipeToRefresh.setRefreshing(false);
-                }
+            getActivity().runOnUiThread(() -> {
+                playlistAdapter.setYouTubePlaylists(youTubePlaylistList);
+                swipeToRefresh.setRefreshing(false);
             });
         }
     }
@@ -197,18 +187,14 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
     public void onPlaylistNotFound(final String playlistId, int errorCode)
     {
         LogHelper.e(TAG, "Error 404. Playlist not found!");
-        getActivity().runOnUiThread(new Runnable()
-        {
-            public void run()
-            {
-                Toast.makeText(
-                        getContext(),
-                        getResources().getString(R.string.toast_message_playlist_not_exist),
-                        Toast.LENGTH_SHORT
-                ).show();
-                if (!playlistId.equals("empty")) {
-                    removePlaylist(playlistId);
-                }
+        getActivity().runOnUiThread(() -> {
+            Toast.makeText(
+                    getContext(),
+                    getResources().getString(R.string.toast_message_playlist_not_exist),
+                    Toast.LENGTH_SHORT
+            ).show();
+            if (!playlistId.equals("empty")) {
+                removePlaylist(playlistId);
             }
         });
     }
@@ -223,17 +209,11 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
     {
         // Whenever the playlistList is empty, do not start service
         if (youTubeVideos.isEmpty()) {
-            getActivity().runOnUiThread(new Runnable()
-            {
-                public void run()
-                {
-                    Toast.makeText(
-                            getContext(),
-                            getResources().getString(R.string.toast_message_playlist_empty),
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-            });
+            getActivity().runOnUiThread(() -> Toast.makeText(
+                    getContext(),
+                    getResources().getString(R.string.toast_message_playlist_empty),
+                    Toast.LENGTH_SHORT
+            ).show());
         } else {
             Intent serviceIntent = new Intent(getContext(), BackgroundAudioService.class);
             serviceIntent.setAction(BackgroundAudioService.ACTION_PLAY);

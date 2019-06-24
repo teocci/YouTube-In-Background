@@ -1,6 +1,6 @@
 package com.teocci.ytinbg.interfaces;
 
-import android.support.v7.widget.helper.ItemTouchHelper;
+import androidx.recyclerview.widget.ItemTouchHelper;
 
 /**
  * Interface that notifies an item ViewHolder of relevant callbacks from {@link

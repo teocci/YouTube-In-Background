@@ -1,12 +1,14 @@
 package com.teocci.ytinbg.callbacks;
 
 import android.graphics.Canvas;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 
 import com.teocci.ytinbg.interfaces.ItemTouchListener;
 import com.teocci.ytinbg.interfaces.ItemTouchViewListener;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by teocci.
@@ -38,7 +40,7 @@ public class SimpleItemTouchCallback extends ItemTouchHelper.Callback
     }
 
     @Override
-    public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder)
+    public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder)
     {
         // Set movement flags based on the layout manager
         if (recyclerView.getLayoutManager() instanceof GridLayoutManager) {
@@ -53,7 +55,7 @@ public class SimpleItemTouchCallback extends ItemTouchHelper.Callback
     }
 
     @Override
-    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder source, RecyclerView.ViewHolder target)
+    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder source, @NonNull RecyclerView.ViewHolder target)
     {
         if (source.getItemViewType() != target.getItemViewType()) {
             return false;
@@ -65,7 +67,7 @@ public class SimpleItemTouchCallback extends ItemTouchHelper.Callback
     }
 
     @Override
-    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction)
+    public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction)
     {
         // Notify the adapter of the dismissal
         itemTouchListener.onItemDismiss(viewHolder.getAdapterPosition());
@@ -73,9 +75,9 @@ public class SimpleItemTouchCallback extends ItemTouchHelper.Callback
 
     @Override
     public void onChildDraw(
-            Canvas c,
-            RecyclerView recyclerView,
-            RecyclerView.ViewHolder viewHolder,
+            @NonNull Canvas c,
+            @NonNull RecyclerView recyclerView,
+            @NonNull RecyclerView.ViewHolder viewHolder,
             float dX,
             float dY,
             int actionState,
@@ -107,7 +109,7 @@ public class SimpleItemTouchCallback extends ItemTouchHelper.Callback
     }
 
     @Override
-    public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder)
+    public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder)
     {
         super.clearView(recyclerView, viewHolder);
 

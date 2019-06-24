@@ -2,8 +2,6 @@ package com.teocci.ytinbg.ui.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +19,9 @@ import com.teocci.ytinbg.utils.Config;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import static com.teocci.ytinbg.utils.Config.ACTION_PLAY;
 
@@ -114,14 +115,7 @@ public class FavoritesFragment extends RecyclerFragment
         );
 
         if (videoListAdapter != null) {
-            getActivity().runOnUiThread(new Runnable()
-            {
-                public void run()
-                {
-                    videoListAdapter.setYouTubeVideos(favoriteVideos);
-                }
-
-            });
+            getActivity().runOnUiThread(() -> videoListAdapter.setYouTubeVideos(favoriteVideos));
         }
     }
 

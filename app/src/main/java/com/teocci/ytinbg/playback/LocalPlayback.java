@@ -399,7 +399,7 @@ public class LocalPlayback implements Playback
                 }
 
                 YtFile ytFile = getBestStream(ytFiles);
-                LogHelper.e(TAG, ytFile.getUrl());
+//                LogHelper.e(TAG, ytFile.getUrl());
                 if (validateUrl(ytFile.getUrl())) {
 //                    LogHelper.e(TAG, "extractUrlAndPlay | validateUrl urlExtracted");
 
@@ -454,7 +454,7 @@ public class LocalPlayback implements Playback
                 } else {
                     urlExtracted = false;
                     errorFound = true;
-//                        Log.e(TAG, "No Link found");
+//                        LogHelper.e(TAG, "No Link found");
                     Toast.makeText(
                             context,
                             context.getResources().getString(

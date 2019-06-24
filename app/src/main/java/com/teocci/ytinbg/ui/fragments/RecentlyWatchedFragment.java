@@ -2,9 +2,6 @@ package com.teocci.ytinbg.ui.fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,14 +21,17 @@ import com.teocci.ytinbg.utils.NetworkHelper;
 
 import java.util.ArrayList;
 
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import static com.teocci.ytinbg.utils.Config.ACTION_PLAY;
 
 /**
  * Class that handles list of the recently watched YouTube
  * Created by teocci on 7.3.16..
  */
-public class RecentlyWatchedFragment extends RecyclerFragment implements
-        OnStartDragListener
+public class RecentlyWatchedFragment extends RecyclerFragment implements OnStartDragListener
 {
     private static final String TAG = RecentlyWatchedFragment.class.getSimpleName();
 

@@ -1,7 +1,6 @@
 package com.teocci.ytinbg.utils;
 
 import android.os.Build;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -18,6 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import androidx.annotation.RequiresApi;
 import at.huber.youtubeExtractor.YtFile;
 
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_ITAG_140;

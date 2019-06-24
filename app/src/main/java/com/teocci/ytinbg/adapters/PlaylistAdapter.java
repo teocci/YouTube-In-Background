@@ -2,9 +2,6 @@ package com.teocci.ytinbg.adapters;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.support.annotation.NonNull;
-import android.support.v4.view.MotionEventCompat;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -21,13 +18,16 @@ import com.teocci.ytinbg.interfaces.OnStartDragListener;
 import com.teocci.ytinbg.model.YouTubePlaylist;
 import com.teocci.ytinbg.ui.DownloadActivity;
 import com.teocci.ytinbg.utils.Config;
-import com.teocci.ytinbg.utils.LogHelper;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.core.view.MotionEventCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by teocci.

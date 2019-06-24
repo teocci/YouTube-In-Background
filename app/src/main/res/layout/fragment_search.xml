@@ -5,7 +5,7 @@
                 android:layout_height="match_parent"
                 tools:context=".ui.fragments.RecyclerFragment">
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recently_played"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"

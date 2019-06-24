@@ -5,7 +5,6 @@ import android.media.session.PlaybackState;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 
@@ -15,6 +14,8 @@ import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.LogHelper;
 
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 import static android.support.v4.media.session.PlaybackStateCompat.ACTION_PAUSE;
 import static android.support.v4.media.session.PlaybackStateCompat.ACTION_PLAY;
