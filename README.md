@@ -17,7 +17,7 @@ YTinBG provides mechanisms for searching videos and playlists on YT, as well as 
 This repository contains a simple sample code intended to demonstrate the capabilities of the YouTube API V3. It is not intended to be used as-is in applications as a library dependency, and will not be maintained as such. Bug fix contributions are welcome, but issues and feature requests will not be addressed.
 
 ### Download
-You can [download the APP here](https://goo.gl/Qw9tFB)
+You can [download the APP here](http://bit.ly/2X40WFi)
 
 ### Install
 You can install the APK following the [next guide](https://github.com/teocci/YouTube-In-Background/blob/master/INSTALL.md)

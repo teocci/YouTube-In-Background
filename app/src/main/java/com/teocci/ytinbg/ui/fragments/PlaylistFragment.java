@@ -35,8 +35,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
  * Class that handles list of the playlistList acquired from YouTube
  * Created by teocci on 7.3.16..
  */
-public class PlaylistFragment extends Fragment implements AdapterView.OnItemClickListener,
-        YouTubePlaylistReceiver
+public class PlaylistFragment extends Fragment implements AdapterView.OnItemClickListener, YouTubePlaylistReceiver
 {
     private static final String TAG = PlaylistFragment.class.getSimpleName();
 
@@ -70,8 +69,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState)
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
         View rootView = inflater.inflate(R.layout.fragment_playlists, container, false);
 
@@ -99,7 +97,7 @@ public class PlaylistFragment extends Fragment implements AdapterView.OnItemClic
 
     protected RecyclerView.LayoutManager getLayoutManager()
     {
-        return new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
+        return new LinearLayoutManager(getActivity(), RecyclerView.VERTICAL, false);
     }
 
     protected RecyclerView.ItemDecoration getItemDecoration()
