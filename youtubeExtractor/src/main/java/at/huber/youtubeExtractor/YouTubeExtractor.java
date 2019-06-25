@@ -84,11 +84,9 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
 
     private static final Pattern patItag = Pattern.compile("itag=([0-9]+?)([&,])");
 
-    //    private static final Pattern patEncSig = Pattern.compile("s=([0-9A-F|.]{10,}?)([&,\"])");
-    //    private static final Pattern patIsSigEnc = Pattern.compile("s%3D([0-9A-F|.]{10,}?)(%26|%2C)");
     private static final Pattern patSP = Pattern.compile("&sp=([a-z]{2,}?)([&,\"])");
-    private static final Pattern patEncSig = Pattern.compile("&s=([0-9A-Za-z=_-]{10,}?)([&,\"])");
-    private static final Pattern patIsSigEnc = Pattern.compile("s%3D([0-9a-zA-Z|._-]{10,}?)(%26|%2C|%25)");
+    private static final Pattern patEncSig = Pattern.compile("s=([0-9A-F|.]{10,}?)([&,\"])");
+    private static final Pattern patIsSigEnc = Pattern.compile("s%3D([0-9A-F|.]{10,}?)(%26|%2C|%25)");
     private static final Pattern patNewEncSig = Pattern.compile("(\\A|&|\")s=([0-9A-Za-z\\-_=%]{10,}?)([&,\"])");
     private static final Pattern patIsNewSigEnc = Pattern.compile("(%26|%3F|%2C)s%3D([0-9A-Za-z\\-_=%]{10,}?)(%26|%2C|\\z)");
 
@@ -332,9 +330,6 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
             }
         }
 
-        if (LOGGING) Log.e(LOG_TAG, "sigEnc: " + (sigEnc ? "True" : "False"));
-        if (LOGGING) Log.e(LOG_TAG, "statusFail: " + (statusFail ? "True" : "False"));
-
         // Some videos are using a ciphered signature we need to get the
         // deciphering js-file from the youtubepage.
         if (sigEnc || statusFail) {
@@ -364,13 +359,9 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
             }
             encSignatures = new SparseArray<>();
 
-            if (LOGGING) Log.d(LOG_TAG, "streamMap: " + streamMap);
-
             mat = patDecryptionJsFile.matcher(streamMap);
             if (mat.find()) {
                 curJsFileName = mat.group(1).replace("\\/", "/");
-
-                if (LOGGING) Log.d(LOG_TAG, "curJsFileName found: " + curJsFileName);
                 if (mat.group(2) != null) curJsFileName.replace(mat.group(2), "");
                 if (decipherJsFileName == null || !decipherJsFileName.equals(curJsFileName)) {
                     decipherFunctions = null;
@@ -401,7 +392,7 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
             streamMap = URLDecoder.decode(streamMap, "UTF-8");
         }
 
-        boolean oldSignature = false;
+
         streams = streamMap.split(",|" + STREAM_MAP_STRING + "|&adaptive_fmts=");
         SparseArray<YtFile> ytFiles = new SparseArray<>();
         for (String encStream : streams) {
@@ -411,9 +402,6 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
             }
             String stream;
             stream = URLDecoder.decode(encStream, "UTF-8");
-
-            if (LOGGING) Log.d(LOG_TAG, "Get from youtube page");
-            if (LOGGING) Log.d(LOG_TAG, stream);
 
             mat = patItag.matcher(stream);
             int itag;
@@ -438,8 +426,6 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
                     mat = patEncSig.matcher(stream);
                     if (mat.find()) {
                         encSignatures.append(itag, mat.group(1));
-                        oldSignature = true;
-                        if (LOGGING) Log.d(LOG_TAG, "encSignatures found:" + mat.group(1));
                     }
                 }
             }
@@ -477,8 +463,6 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
                 }
             }
             signature = decipheredSignature;
-            if (LOGGING) Log.e(LOG_TAG, "signature: " + signature);
-
             if (signature == null) {
                 return null;
             } else {
@@ -487,12 +471,10 @@ public abstract class YouTubeExtractor extends AsyncTask<String, Void, SparseArr
                     int iTag = encSignatures.keyAt(i);
                     if (iTag == 0) {
                         dashMpdUrl = dashMpdUrl.replace("/s/" + encSignatures.get(iTag), "/signature/" + sigs[i]);
-                        Log.e(LOG_TAG, "url: " + "&signature=" + sigs[i]);
                     } else {
                         String url = ytFiles.get(iTag).getUrl();
                         String sp = '&' + spKeys.get(iTag) + '=';
                         url += sp + sigs[i];
-                        Log.e(LOG_TAG, "url: " + sp + sigs[i]);
                         YtFile newFile = new YtFile(FORMAT_MAP.get(iTag), url);
                         ytFiles.put(iTag, newFile);
                     }

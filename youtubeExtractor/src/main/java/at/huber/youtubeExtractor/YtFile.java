@@ -28,7 +28,7 @@ public class YtFile {
      * Format data for the specific file.
      */
     @Deprecated
-    public Format getMeta(){
+    public Format getMeta() {
         return format;
     }
 
