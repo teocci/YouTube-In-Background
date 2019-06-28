@@ -30,13 +30,19 @@ import com.teocci.ytinbg.utils.Utils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationCompat.Action;
+import androidx.core.content.ContextCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
 
-import static com.teocci.ytinbg.utils.Config.ACTION_NEXT;
-import static com.teocci.ytinbg.utils.Config.ACTION_PAUSE;
-import static com.teocci.ytinbg.utils.Config.ACTION_PLAY;
-import static com.teocci.ytinbg.utils.Config.ACTION_PREV;
-import static com.teocci.ytinbg.utils.Config.ACTION_STOP;
+import static android.app.PendingIntent.FLAG_CANCEL_CURRENT;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_BUFFERING;
+import static android.support.v4.media.session.PlaybackStateCompat.STATE_PLAYING;
+import static com.teocci.ytinbg.utils.BuildUtil.minAPI26;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_NEXT;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_PAUSE;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_PLAY;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_PREV;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_STOP;
 
 /**
  * Created by teocci.
@@ -56,7 +62,10 @@ public class MediaNotificationManager extends BroadcastReceiver
     private static final int NOTIFICATION_ID = 412;
     private static final int REQUEST_CODE = 100;
 
+    private final Context context;
+
     private final BackgroundExoAudioService exoAudioService;
+
     private MediaSessionCompat.Token sessionToken;
     private MediaControllerCompat mediaController;
     private MediaControllerCompat.TransportControls transportControls;
@@ -68,6 +77,14 @@ public class MediaNotificationManager extends BroadcastReceiver
 
     private final NotificationManager notificationManager;
 
+    private Action skipToPreviousAction;
+    private Action playAction;
+    private Action pauseAction;
+    private Action skipToNextAction;
+
+    private final PendingIntent stopPendingIntent;
+    private final PendingIntent clickPendingIntent;
+
     private final PendingIntent pauseIntent;
     private final PendingIntent playIntent;
     private final PendingIntent previousIntent;
@@ -76,36 +93,39 @@ public class MediaNotificationManager extends BroadcastReceiver
 
 //    private final int mNotificationColor;
 
-    private boolean hasStarted = false;
-
+    private boolean hasRegisterReceiver = false;
+    private boolean isForegroundService = false;
 
     private final MediaControllerCompat.Callback callback = new MediaControllerCompat.Callback()
     {
         @Override
         public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state)
         {
-            playbackState = state;
             LogHelper.e(TAG, "Received new playback state", state);
-            if (state.getState() == PlaybackStateCompat.STATE_STOPPED ||
-                    state.getState() == PlaybackStateCompat.STATE_NONE) {
-                stopNotification();
-            } else {
-                Notification notification = createNotification();
-                if (notification != null) {
-                    notificationManager.notify(NOTIFICATION_ID, notification);
-                }
-            }
+            playbackState = state;
+            updateNotification(state);
+//            if (state.getState() == PlaybackStateCompat.STATE_STOPPED ||
+//                    state.getState() == PlaybackStateCompat.STATE_NONE) {
+//                stopNotification();
+//            } else {
+//                Notification notification = createNotification();
+//                if (notification != null) {
+//                    notificationManager.notify(NOTIFICATION_ID, notification);
+//                }
+//            }
         }
 
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata)
         {
-            MediaNotificationManager.this.currentYouTubeVideo = exoAudioService.getCurrentYouTubeVideo();
             LogHelper.e(TAG, "Received new metadata ", metadata.getDescription());
-            Notification notification = createNotification();
-            if (notification != null) {
-                notificationManager.notify(NOTIFICATION_ID, notification);
-            }
+            MediaNotificationManager.this.currentYouTubeVideo = exoAudioService.getCurrentYouTubeVideo();
+
+            updateNotification(mediaController.getPlaybackState());
+//            Notification notification = createNotification();
+//            if (notification != null) {
+//                notificationManager.notify(NOTIFICATION_ID, notification);
+//            }
         }
 
         @Override
@@ -145,6 +165,8 @@ public class MediaNotificationManager extends BroadcastReceiver
     public MediaNotificationManager(BackgroundExoAudioService service) throws RemoteException
     {
         exoAudioService = service;
+        context = exoAudioService.getApplicationContext();
+
         updateSessionToken();
 
 //        mNotificationColor = ResourceHelper.getThemeColor(exoAudioService, R.attr.colorPrimary,
@@ -152,22 +174,108 @@ public class MediaNotificationManager extends BroadcastReceiver
 
         notificationManager = (NotificationManager) service.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        String pkg = exoAudioService.getPackageName();
-        pauseIntent = PendingIntent.getBroadcast(exoAudioService, REQUEST_CODE,
-                new Intent(ACTION_PAUSE).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
-        playIntent = PendingIntent.getBroadcast(exoAudioService, REQUEST_CODE,
-                new Intent(ACTION_PLAY).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
-        previousIntent = PendingIntent.getBroadcast(exoAudioService, REQUEST_CODE,
-                new Intent(ACTION_PREV).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
-        nextIntent = PendingIntent.getBroadcast(exoAudioService, REQUEST_CODE,
-                new Intent(ACTION_NEXT).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
-        stopCastIntent = PendingIntent.getBroadcast(exoAudioService, REQUEST_CODE,
-                new Intent(ACTION_STOP).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+        String pkg = context.getPackageName();
+        pauseIntent = PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE,
+                new Intent(CUSTOM_ACTION_PAUSE).setPackage(pkg),
+                FLAG_CANCEL_CURRENT
+        );
+        playIntent = PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE,
+                new Intent(CUSTOM_ACTION_PLAY).setPackage(pkg),
+                FLAG_CANCEL_CURRENT
+        );
+        previousIntent = PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE,
+                new Intent(CUSTOM_ACTION_PREV).setPackage(pkg),
+                FLAG_CANCEL_CURRENT
+        );
+        nextIntent = PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE,
+                new Intent(CUSTOM_ACTION_NEXT).setPackage(pkg),
+                FLAG_CANCEL_CURRENT
+        );
+        stopCastIntent = PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE,
+                new Intent(CUSTOM_ACTION_STOP).setPackage(pkg),
+                FLAG_CANCEL_CURRENT
+        );
+
+
+        skipToPreviousAction = new Action(
+                R.drawable.exo_controls_previous,
+                context.getString(R.string.notification_skip_to_previous),
+                previousIntent
+        );
+        playAction = new Action(
+                R.drawable.exo_controls_play,
+                context.getString(R.string.notification_play),
+                playIntent
+        );
+        pauseAction = new Action(
+                R.drawable.exo_controls_pause,
+                context.getString(R.string.notification_pause),
+                pauseIntent
+        );
+        skipToNextAction = new Action(
+                R.drawable.exo_controls_next,
+                context.getString(R.string.notification_skip_to_next),
+                nextIntent
+        );
+
+        stopPendingIntent = PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE,
+                new Intent(CUSTOM_ACTION_STOP).setPackage(pkg),
+                FLAG_CANCEL_CURRENT
+        );
+
+        Intent clickIntent = new Intent(exoAudioService, MainActivity.class);
+        clickIntent.setAction(Intent.ACTION_MAIN);
+        clickIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        clickPendingIntent = PendingIntent.getActivity(exoAudioService, 0, clickIntent, 0);
 
         // Cancel all notifications to handle the case where the Service was killed and
         // restarted by the system.
-        notificationManager.cancelAll();
+        if (notificationManager != null) notificationManager.cancelAll();
     }
+
+    @Override
+    public void onReceive(Context context, Intent intent)
+    {
+        final String action = intent.getAction();
+        LogHelper.d(TAG, "Received intent with action " + action);
+        if (action == null || action.isEmpty()) return;
+
+        switch (action) {
+            case CUSTOM_ACTION_PAUSE:
+                transportControls.pause();
+                break;
+            case CUSTOM_ACTION_PLAY:
+                transportControls.play();
+                break;
+            case CUSTOM_ACTION_NEXT:
+                transportControls.skipToNext();
+                break;
+            case CUSTOM_ACTION_PREV:
+                transportControls.skipToPrevious();
+                break;
+            case CUSTOM_ACTION_STOP:
+                Intent i = new Intent(context, BackgroundExoAudioService.class);
+//                i.setAction(MusicService.ACTION_CMD);
+//                i.putExtra(MusicService.CMD_NAME, MusicService.CMD_STOP_CASTING);
+//                mService.startService(i);
+                break;
+            default:
+                LogHelper.w(TAG, "Unknown intent ignored. Action=", action);
+        }
+    }
+
 
     /**
      * Posts the notification and starts tracking the session to keep it
@@ -176,7 +284,7 @@ public class MediaNotificationManager extends BroadcastReceiver
      */
     public void startNotification()
     {
-        if (!hasStarted) {
+        if (!hasRegisterReceiver) {
             currentYouTubeVideo = exoAudioService.getCurrentYouTubeVideo();
             MediaMetadataCompat metadata = mediaController.getMetadata();
             LogHelper.e(TAG, "metadata: " + metadata);
@@ -184,20 +292,21 @@ public class MediaNotificationManager extends BroadcastReceiver
             playbackState = mediaController.getPlaybackState();
 
             // The notification must be updated after setting started to true
-            Notification notification = createNotification();
-            if (notification != null) {
-                mediaController.registerCallback(callback);
-                IntentFilter filter = new IntentFilter();
-                filter.addAction(ACTION_NEXT);
-                filter.addAction(ACTION_PAUSE);
-                filter.addAction(ACTION_PLAY);
-                filter.addAction(ACTION_PREV);
-                filter.addAction(ACTION_STOP);
-                exoAudioService.registerReceiver(this, filter);
-
-                exoAudioService.startForeground(NOTIFICATION_ID, notification);
-                hasStarted = true;
-            }
+//            Notification notification = createNotification();
+            updateNotification(mediaController.getPlaybackState());
+//            if (notification != null) {
+//                mediaController.registerCallback(callback);
+//                IntentFilter filter = new IntentFilter();
+//                filter.addAction(CUSTOM_ACTION_NEXT);
+//                filter.addAction(CUSTOM_ACTION_PAUSE);
+//                filter.addAction(CUSTOM_ACTION_PLAY);
+//                filter.addAction(CUSTOM_ACTION_PREV);
+//                filter.addAction(CUSTOM_ACTION_STOP);
+//                exoAudioService.registerReceiver(this, filter);
+//
+//                exoAudioService.startForeground(NOTIFICATION_ID, notification);
+//                hasRegisterReceiver = true;
+//            }
         }
     }
 
@@ -207,8 +316,8 @@ public class MediaNotificationManager extends BroadcastReceiver
      */
     public void stopNotification()
     {
-        if (hasStarted) {
-            hasStarted = false;
+        if (hasRegisterReceiver) {
+            hasRegisterReceiver = false;
             mediaController.unregisterCallback(callback);
             try {
                 notificationManager.cancel(NOTIFICATION_ID);
@@ -220,27 +329,148 @@ public class MediaNotificationManager extends BroadcastReceiver
         }
     }
 
-    @Override
-    public void onReceive(Context context, Intent intent)
+
+    /**
+     * This may look strange, but the documentation for [Service.startForeground]
+     * notes that "calling this method does *not* put the service in the started
+     * state itself, even though the name sounds like it."
+     *
+     * @param state current playback state
+     */
+    private void updateNotification(PlaybackStateCompat state)
     {
-        final String action = intent.getAction();
-        LogHelper.d(TAG, "Received intent with action " + action);
-        switch (action) {
-            case ACTION_PAUSE:
-                transportControls.pause();
-                break;
-            case ACTION_PLAY:
-                transportControls.play();
-                break;
-            case ACTION_NEXT:
-                transportControls.skipToNext();
-                break;
-            case ACTION_PREV:
-                transportControls.skipToPrevious();
-                break;
-            default:
-                LogHelper.w(TAG, "Unknown intent ignored. Action=", action);
+        int updatedState = state.getState();
+
+        // Skip building a notification when state is "none" and metadata is null.
+        Notification notification = skipBuildNotification(updatedState) ? buildNotification(sessionToken) : null;
+
+        if (notification != null && !hasRegisterReceiver) {
+            mediaController.registerCallback(callback);
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(CUSTOM_ACTION_NEXT);
+            filter.addAction(CUSTOM_ACTION_PAUSE);
+            filter.addAction(CUSTOM_ACTION_PLAY);
+            filter.addAction(CUSTOM_ACTION_PREV);
+            filter.addAction(CUSTOM_ACTION_STOP);
+            exoAudioService.registerReceiver(this, filter);
+            hasRegisterReceiver = true;
         }
+
+        switch (updatedState) {
+            case STATE_BUFFERING:
+            case STATE_PLAYING:
+                if (notification != null) {
+                    notificationManager.notify(NOTIFICATION_ID, notification);
+                }
+
+                if (!isForegroundService) {
+                    Intent intent = new Intent(context, BackgroundExoAudioService.class);
+                    ContextCompat.startForegroundService(context, intent);
+                    exoAudioService.startForeground(NOTIFICATION_ID, notification);
+                    isForegroundService = true;
+                }
+
+                break;
+            case PlaybackStateCompat.STATE_CONNECTING:
+            case PlaybackStateCompat.STATE_ERROR:
+            case PlaybackStateCompat.STATE_FAST_FORWARDING:
+            case PlaybackStateCompat.STATE_NONE:
+            case PlaybackStateCompat.STATE_PAUSED:
+            case PlaybackStateCompat.STATE_REWINDING:
+            case PlaybackStateCompat.STATE_SKIPPING_TO_NEXT:
+            case PlaybackStateCompat.STATE_SKIPPING_TO_PREVIOUS:
+            case PlaybackStateCompat.STATE_SKIPPING_TO_QUEUE_ITEM:
+            case PlaybackStateCompat.STATE_STOPPED:
+                if (isForegroundService) {
+                    exoAudioService.stopForeground(false);
+                    isForegroundService = false;
+
+                    // If playback has ended, also stop the service.
+                    if (updatedState == PlaybackStateCompat.STATE_NONE) {
+                        exoAudioService.stopSelf();
+                    }
+
+                    if (notification != null) {
+                        notificationManager.notify(NOTIFICATION_ID, notification);
+                    } else {
+                        removeNowPlayingNotification();
+                    }
+                }
+
+                break;
+        }
+    }
+
+    public Notification buildNotification(MediaSessionCompat.Token sessionToken)
+    {
+        LogHelper.d(TAG, "updateNotificationMetadata. currentYouTubeVideo=" + currentYouTubeVideo);
+        if (currentYouTubeVideo == null || playbackState == null) return null;
+
+        if (shouldCreateNowRunningChannel()) {
+            createNotificationChannel();
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID);
+
+        // Only add actions for skip back, play/pause, skip forward, based on what's enabled.
+        int playPauseIndex = 0;
+        if (isSkipToPreviousEnabled()) {
+            builder.addAction(skipToPreviousAction);
+            playPauseIndex++;
+        }
+
+        if (isPlaying()) {
+            builder.addAction(pauseAction);
+        } else if (isPlayEnabled()) {
+            builder.addAction(playAction);
+        }
+
+        if (isSkipToNextEnabled()) {
+            builder.addAction(skipToNextAction);
+        }
+
+        MediaStyle mediaStyle = new MediaStyle()
+                .setMediaSession(sessionToken)
+                .setShowActionsInCompactView(playPauseIndex)
+                .setShowCancelButton(true)
+                .setCancelButtonIntent(stopPendingIntent);
+
+        builder.setContentIntent(mediaController.getSessionActivity())
+                .setContentTitle(currentYouTubeVideo.getTitle())
+                .setContentInfo(currentYouTubeVideo.getDuration())
+                .setSubText(Utils.formatViewCount(currentYouTubeVideo.getViewCount()))
+                .setContentIntent(clickPendingIntent)
+                .setDeleteIntent(stopPendingIntent)
+                .setOnlyAlertOnce(true)
+                .setUsesChronometer(true)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setStyle(mediaStyle)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+
+        if (playbackState.getState() == STATE_PLAYING && playbackState.getPosition() >= 0) {
+            builder
+                    .setWhen(System.nanoTime() / 1000 - playbackState.getPosition())
+                    .setShowWhen(true)
+                    .setUsesChronometer(true);
+        } else {
+            builder
+                    .setWhen(0)
+                    .setShowWhen(false)
+                    .setUsesChronometer(false);
+        }
+
+        // Load bitmap
+        if (currentYouTubeVideo.getThumbnailURL() != null && !currentYouTubeVideo.getThumbnailURL().isEmpty()) {
+            target.setNotificationBuilder(builder);
+            Picasso.with(exoAudioService)
+                    .load(currentYouTubeVideo.getThumbnailURL())
+                    .resize(Config.MAX_WIDTH_ICON, Config.MAX_HEIGHT_ICON)
+                    .centerCrop()
+                    .into(target);
+        }
+
+        return builder.build();
     }
 
     /**
@@ -260,7 +490,7 @@ public class MediaNotificationManager extends BroadcastReceiver
             if (sessionToken != null) {
                 mediaController = new MediaControllerCompat(exoAudioService, sessionToken);
                 transportControls = mediaController.getTransportControls();
-                if (hasStarted) {
+                if (hasRegisterReceiver) {
                     mediaController.registerCallback(callback);
                 }
             }
@@ -276,7 +506,7 @@ public class MediaNotificationManager extends BroadcastReceiver
             openUI.putExtra(Config.EXTRA_CURRENT_MEDIA_DESCRIPTION, description);
         }
         return PendingIntent.getActivity(exoAudioService, REQUEST_CODE, openUI,
-                PendingIntent.FLAG_CANCEL_CURRENT);
+                FLAG_CANCEL_CURRENT);
     }
 
     private Notification createNotification()
@@ -292,7 +522,7 @@ public class MediaNotificationManager extends BroadcastReceiver
         PendingIntent clickPendingIntent = PendingIntent.getActivity(exoAudioService, 0, clickIntent, 0);
 
         // Notification channels are only supported on Android O+.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (shouldCreateNowRunningChannel()) {
             createNotificationChannel();
         }
 
@@ -324,16 +554,23 @@ public class MediaNotificationManager extends BroadcastReceiver
             );
         }
 
+        // show only play/pause in compact view
+        MediaStyle mediaStyle = new MediaStyle()
+                .setCancelButtonIntent(stopPendingIntent)
+                .setMediaSession(sessionToken)
+                .setShowActionsInCompactView(playPauseButtonPosition)
+                .setShowCancelButton(true);
+
         notificationBuilder
-                .setStyle(new MediaStyle()
-                        // show only play/pause in compact view
-                        .setShowActionsInCompactView(playPauseButtonPosition))
+                .setStyle(mediaStyle)
 //                .setColor(mNotificationColor)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentTitle(currentYouTubeVideo.getTitle())
                 .setContentInfo(currentYouTubeVideo.getDuration())
+                .setDeleteIntent(stopPendingIntent)
                 .setUsesChronometer(true)
+                .setOnlyAlertOnce(true)
                 .setContentIntent(clickPendingIntent)
                 .setSubText(Utils.formatViewCount(currentYouTubeVideo.getViewCount()));
 
@@ -357,7 +594,7 @@ public class MediaNotificationManager extends BroadcastReceiver
         String label;
         int icon;
         PendingIntent intent;
-        if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING) {
+        if (playbackState.getState() == STATE_PLAYING) {
             label = exoAudioService.getString(R.string.action_pause);
             icon = R.drawable.ic_pause_white_24dp;
             intent = pauseIntent;
@@ -372,13 +609,12 @@ public class MediaNotificationManager extends BroadcastReceiver
     private void setNotificationPlaybackState(NotificationCompat.Builder builder)
     {
         LogHelper.d(TAG, "updateNotificationPlaybackState. playbackState=" + playbackState);
-        if (playbackState == null || !hasStarted) {
+        if (playbackState == null || !hasRegisterReceiver) {
             LogHelper.d(TAG, "updateNotificationPlaybackState. cancelling notification!");
             exoAudioService.stopForeground(true);
             return;
         }
-        if (playbackState.getState() == PlaybackStateCompat.STATE_PLAYING
-                && playbackState.getPosition() >= 0) {
+        if (playbackState.getState() == STATE_PLAYING && playbackState.getPosition() >= 0) {
             LogHelper.d(TAG, "updateNotificationPlaybackState. updating playback position to ",
                     (System.currentTimeMillis() - playbackState.getPosition()) / 1000, " seconds");
             builder
@@ -394,7 +630,7 @@ public class MediaNotificationManager extends BroadcastReceiver
         }
 
         // Make sure that the notification can be dismissed by the user when we are not playing:
-        builder.setOngoing(playbackState.getState() == PlaybackStateCompat.STATE_PLAYING);
+        builder.setOngoing(playbackState.getState() == STATE_PLAYING);
     }
 
     /**
@@ -428,5 +664,68 @@ public class MediaNotificationManager extends BroadcastReceiver
 
             notificationManager.createNotificationChannel(notificationChannel);
         }
+    }
+
+    /**
+     * Removes the [NOW_PLAYING_NOTIFICATION] notification.
+     * <p>
+     * Since `stopForeground(false)` was already called (see
+     * [MediaControllerCallback.onPlaybackStateChanged], it's possible to cancel the notification
+     * with `notificationManager.cancel(NOW_PLAYING_NOTIFICATION)` if minSdkVersion is >=
+     * [Build.VERSION_CODES.LOLLIPOP].
+     * <p>
+     * Prior to [Build.VERSION_CODES.LOLLIPOP], notifications associated with a foreground
+     * service remained marked as "ongoing" even after calling [Service.stopForeground],
+     * and cannot be cancelled normally.
+     * <p>
+     * Fortunately, it's possible to simply call [Service.stopForeground] a second time, this
+     * time with `true`. This won't change anything about the service's state, but will simply
+     * remove the notification.
+     */
+    private void removeNowPlayingNotification()
+    {
+        exoAudioService.stopForeground(true);
+    }
+
+    /**
+     * @return true if if the minimum API is Oreo and if the notification channel does not exist.
+     */
+    private boolean shouldCreateNowRunningChannel()
+    {
+        return minAPI26() && !nowRunningChannelExist();
+    }
+
+    /**
+     * @return true if the notification channel does exist.
+     */
+    @RequiresApi(Build.VERSION_CODES.O)
+    private boolean nowRunningChannelExist()
+    {
+        return notificationManager.getNotificationChannel(CHANNEL_ID) != null;
+    }
+
+    private boolean skipBuildNotification(int updatedState)
+    {
+        return mediaController.getMetadata() != null && updatedState != PlaybackStateCompat.STATE_NONE;
+    }
+
+    private boolean isSkipToPreviousEnabled()
+    {
+        return (playbackState.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS) != 0;
+    }
+
+    private boolean isSkipToNextEnabled()
+    {
+        return (playbackState.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_NEXT) != 0;
+    }
+
+    private boolean isPlayEnabled()
+    {
+        return (playbackState.getActions() & PlaybackStateCompat.ACTION_PLAY) != 0;
+    }
+
+    private boolean isPlaying()
+    {
+        return (playbackState.getActions() & PlaybackStateCompat.STATE_PLAYING) != 0;
     }
 }

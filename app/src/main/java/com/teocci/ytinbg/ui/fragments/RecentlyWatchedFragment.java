@@ -25,7 +25,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import static com.teocci.ytinbg.utils.Config.ACTION_PLAY;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_PLAY;
 
 /**
  * Class that handles list of the recently watched YouTube
@@ -161,7 +161,7 @@ public class RecentlyWatchedFragment extends RecyclerFragment implements OnStart
                 .create(videoListAdapter.getYouTubeVideo(position));
 
         Intent serviceIntent = new Intent(getContext(), BackgroundExoAudioService.class);
-        serviceIntent.setAction(ACTION_PLAY);
+        serviceIntent.setAction(CUSTOM_ACTION_PLAY);
         serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
         serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
         getActivity().startService(serviceIntent);

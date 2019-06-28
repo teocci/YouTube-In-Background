@@ -136,7 +136,7 @@ public class SearchFragment extends RecyclerFragment implements YouTubeVideoRece
                 .create(videoListAdapter.getYouTubeVideo(position));
 
         Intent serviceIntent = new Intent(getContext(), BackgroundExoAudioService.class);
-        serviceIntent.setAction(Config.ACTION_PLAY);
+        serviceIntent.setAction(Config.CUSTOM_ACTION_PLAY);
         serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE, Config.YOUTUBE_MEDIA_TYPE_VIDEO);
         serviceIntent.putExtra(Config.KEY_YOUTUBE_TYPE_VIDEO, videoListAdapter.getYouTubeVideo(position));
         getActivity().startService(serviceIntent);

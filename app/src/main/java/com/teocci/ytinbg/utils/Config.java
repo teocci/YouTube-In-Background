@@ -74,11 +74,11 @@ public final class Config
      */
     public static final String EXTRA_CURRENT_MEDIA_DESCRIPTION = "com.teocci.ytinbg.CURRENT_MEDIA_DESCRIPTION";
     
-    public static final String ACTION_PAUSE = "com.teocci.ytinbg.pause";
-    public static final String ACTION_PLAY = "com.teocci.ytinbg.play";
-    public static final String ACTION_PREV = "com.teocci.ytinbg.prev";
-    public static final String ACTION_NEXT = "com.teocci.ytinbg.next";
-    public static final String ACTION_STOP = "com.teocci.ytinbg.stop";
+    public static final String CUSTOM_ACTION_PAUSE = "com.teocci.ytinbg.pause";
+    public static final String CUSTOM_ACTION_PLAY = "com.teocci.ytinbg.play";
+    public static final String CUSTOM_ACTION_PREV = "com.teocci.ytinbg.prev";
+    public static final String CUSTOM_ACTION_NEXT = "com.teocci.ytinbg.next";
+    public static final String CUSTOM_ACTION_STOP = "com.teocci.ytinbg.stop";
 
     public static final String MODE_REPEAT_ONE = "mode_repeat_one";
     public static final String MODE_REPEAT_ALL = "mode_repeat_all";

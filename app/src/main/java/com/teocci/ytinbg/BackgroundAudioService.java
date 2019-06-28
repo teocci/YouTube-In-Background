@@ -305,7 +305,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 //                            buildNotification(generateAction(
 //                                    R.drawable.ic_pause_white_24dp,
 //                                    getString(R.string.action_pause),
-//                                    ACTION_PAUSE
+//                                    CUSTOM_ACTION_PAUSE
 //                            ));
                         }
 
@@ -318,7 +318,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 //                            buildNotification(generateAction(
 //                                    R.drawable.ic_play_arrow_white_24dp,
 //                                    getString(R.string.action_play),
-//                                    ACTION_PLAY
+//                                    CUSTOM_ACTION_PLAY
 //                            ));
                         }
 
@@ -333,7 +333,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 //                            buildNotification(generateAction(
 //                                    R.drawable.ic_pause_white_24dp,
 //                                    getString(R.string.action_pause),
-//                                    ACTION_PAUSE
+//                                    CUSTOM_ACTION_PAUSE
 //                            ));
                         }
 
@@ -348,7 +348,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 //                            buildNotification(generateAction(
 //                                    R.drawable.ic_pause_white_24dp,
 //                                    getString(R.string.action_pause),
-//                                    ACTION_PAUSE
+//                                    CUSTOM_ACTION_PAUSE
 //                            ));
                         }
 
@@ -538,7 +538,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
 //        notificationBuilder.updateAction(generateAction(
 //                R.drawable.ic_skip_next_white_24dp,
 //                getApplicationContext().getString(R.string.action_next),
-//                ACTION_NEXT));
+//                CUSTOM_ACTION_NEXT));
         notificationBuilder.addAction(action);
         LogHelper.e(TAG, "setNotificationPlaybackState. mediaPlayer=" + mediaPlayer);
         setNotificationPlaybackState(notificationBuilder);
@@ -1061,7 +1061,7 @@ public class BackgroundAudioService extends Service implements AudioManager.OnAu
         if (mediaType == Config.YOUTUBE_MEDIA_TYPE_PLAYLIST) {
             playNext();
             updateAction(ACTION_PAUSE);
-//            buildNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", ACTION_PAUSE));
+//            buildNotification(generateAction(android.R.drawable.ic_media_pause, "Pause", CUSTOM_ACTION_PAUSE));
         } else {
             restartVideo();
             updateAction(ACTION_PAUSE);

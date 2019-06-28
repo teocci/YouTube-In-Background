@@ -29,10 +29,12 @@ import com.teocci.ytinbg.playback.QueueManager;
 import com.teocci.ytinbg.receivers.MediaButtonIntentReceiver;
 import com.teocci.ytinbg.utils.LogHelper;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.media.MediaBrowserServiceCompat;
 
 import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI;
 import static android.support.v4.media.MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE;
@@ -46,10 +48,10 @@ import static android.telephony.TelephonyManager.CALL_STATE_RINGING;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_OFF;
 import static com.google.android.exoplayer2.Player.REPEAT_MODE_ONE;
 import static com.teocci.ytinbg.BackgroundAudioService.ACTION_PREVIOUS;
-import static com.teocci.ytinbg.utils.Config.ACTION_NEXT;
-import static com.teocci.ytinbg.utils.Config.ACTION_PAUSE;
-import static com.teocci.ytinbg.utils.Config.ACTION_PLAY;
-import static com.teocci.ytinbg.utils.Config.ACTION_STOP;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_NEXT;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_PAUSE;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_PLAY;
+import static com.teocci.ytinbg.utils.Config.CUSTOM_ACTION_STOP;
 import static com.teocci.ytinbg.utils.Config.INTENT_SESSION_TOKEN;
 import static com.teocci.ytinbg.utils.Config.KEY_SESSION_TOKEN;
 import static com.teocci.ytinbg.utils.Config.KEY_YOUTUBE_TYPE;
@@ -61,11 +63,15 @@ import static com.teocci.ytinbg.utils.Config.YOUTUBE_MEDIA_TYPE_PLAYLIST;
 import static com.teocci.ytinbg.utils.Config.YOUTUBE_MEDIA_TYPE_VIDEO;
 
 /**
+ * TODO: Current implementation
+ * <p>
  * Service class for background youtube playback
  * Created by Teocci on 9.3.16..
  */
 public class BackgroundExoAudioService extends Service implements PlaybackServiceCallback
 {
+
+    private MediaBrowserServiceCompat a;
     private static final String TAG = LogHelper.makeLogTag(BackgroundExoAudioService.class);
 
     // Delay stopSelf by using a handler.
@@ -342,16 +348,16 @@ public class BackgroundExoAudioService extends Service implements PlaybackServic
         if (intent == null || intent.getAction() == null)
             return;
         String action = intent.getAction();
-        if (action.equalsIgnoreCase(ACTION_PLAY)) {
+        if (action.equalsIgnoreCase(CUSTOM_ACTION_PLAY)) {
             handleMedia(intent);
             mediaController.getTransportControls().play();
-        } else if (action.equalsIgnoreCase(ACTION_PAUSE)) {
+        } else if (action.equalsIgnoreCase(CUSTOM_ACTION_PAUSE)) {
             mediaController.getTransportControls().pause();
         } else if (action.equalsIgnoreCase(ACTION_PREVIOUS)) {
             mediaController.getTransportControls().skipToPrevious();
-        } else if (action.equalsIgnoreCase(ACTION_NEXT)) {
+        } else if (action.equalsIgnoreCase(CUSTOM_ACTION_NEXT)) {
             mediaController.getTransportControls().skipToNext();
-        } else if (action.equalsIgnoreCase(ACTION_STOP)) {
+        } else if (action.equalsIgnoreCase(CUSTOM_ACTION_STOP)) {
             mediaController.getTransportControls().stop();
         }
     }
@@ -386,7 +392,7 @@ public class BackgroundExoAudioService extends Service implements PlaybackServic
             case YOUTUBE_MEDIA_TYPE_PLAYLIST:
                 mediaType = YOUTUBE_MEDIA_TYPE_PLAYLIST;
 
-                List<YouTubeVideo> youTubeVideos = (List<YouTubeVideo>) intent.getSerializableExtra(KEY_YOUTUBE_TYPE_PLAYLIST);
+                List<YouTubeVideo> youTubeVideos = (ArrayList<YouTubeVideo>) intent.getSerializableExtra(KEY_YOUTUBE_TYPE_PLAYLIST);
                 currentVideoPosition = intent.getIntExtra(KEY_YOUTUBE_TYPE_PLAYLIST_VIDEO_POS, 0);
                 LogHelper.e(TAG, "currentVideoPosition: " + currentVideoPosition);
                 if (youTubeVideos != null && currentVideoPosition != -1) {
@@ -439,15 +445,15 @@ public class BackgroundExoAudioService extends Service implements PlaybackServic
         String label;
         int icon;
         switch (intentAction) {
-            case ACTION_PAUSE:
+            case CUSTOM_ACTION_PAUSE:
                 label = getString(R.string.action_pause);
                 icon = R.drawable.ic_pause_white_24dp;
                 break;
-            case ACTION_PLAY:
+            case CUSTOM_ACTION_PLAY:
                 label = getString(R.string.action_play);
                 icon = R.drawable.ic_play_arrow_white_24dp;
                 break;
-            case ACTION_NEXT:
+            case CUSTOM_ACTION_NEXT:
                 label = getString(R.string.action_next);
                 icon = R.drawable.ic_skip_next_white_24dp;
                 break;
