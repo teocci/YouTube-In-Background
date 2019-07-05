@@ -169,8 +169,7 @@ public class MediaNotificationManager extends BroadcastReceiver
 
         updateSessionToken();
 
-//        mNotificationColor = ResourceHelper.getThemeColor(exoAudioService, R.attr.colorPrimary,
-//                Color.DKGRAY);
+//        mNotificationColor = ResourceHelper.getThemeColor(exoAudioService, R.attr.colorPrimary, Color.DKGRAY);
 
         notificationManager = (NotificationManager) service.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -448,9 +447,9 @@ public class MediaNotificationManager extends BroadcastReceiver
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
 
-        if (playbackState.getState() == STATE_PLAYING && playbackState.getPosition() >= 0) {
+        if (isPlaying() && playbackState.getPosition() > 0) {
             builder
-                    .setWhen(System.nanoTime() / 1000 - playbackState.getPosition())
+                    .setWhen(System.currentTimeMillis() - playbackState.getPosition())
                     .setShowWhen(true)
                     .setUsesChronometer(true);
         } else {
