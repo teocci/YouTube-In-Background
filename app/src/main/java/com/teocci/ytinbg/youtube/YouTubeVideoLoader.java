@@ -13,6 +13,7 @@ import com.teocci.ytinbg.interfaces.YouTubeVideoReceiver;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
+import com.teocci.ytinbg.utils.StringUtils;
 import com.teocci.ytinbg.utils.Utils;
 
 import java.io.IOException;
@@ -216,8 +217,10 @@ public class YouTubeVideoLoader extends AsyncTask<String, Void, List<YouTubeVide
 
                     YouTubeVideo item = new YouTubeVideo();
 
+                    String title = StringUtils.unescapeHtml3(result.getSnippet().getTitle());
+                    LogHelper.e(TAG, "Title: " + title);
                     // SearchList list info
-                    item.setTitle(result.getSnippet().getTitle());
+                    item.setTitle(title);
                     item.setThumbnailURL(result.getSnippet().getThumbnails().getDefault().getUrl());
                     item.setId(result.getId().getVideoId());
 

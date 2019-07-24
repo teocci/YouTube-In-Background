@@ -15,6 +15,7 @@ import com.teocci.ytinbg.interfaces.YouTubePlaylistReceiver;
 import com.teocci.ytinbg.model.YouTubeVideo;
 import com.teocci.ytinbg.utils.Config;
 import com.teocci.ytinbg.utils.LogHelper;
+import com.teocci.ytinbg.utils.StringUtils;
 import com.teocci.ytinbg.utils.Utils;
 
 import java.io.IOException;
@@ -49,7 +50,6 @@ public class YouTubePlaylistVideoLoader extends AsyncTask<String, Void, List<You
     private String playlistId;
 
     private YouTubePlaylistReceiver youTubePlaylistReceiver;
-
 
 
     public YouTubePlaylistVideoLoader(Context context)
@@ -173,6 +173,7 @@ public class YouTubePlaylistVideoLoader extends AsyncTask<String, Void, List<You
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         if (videosList == null) return Collections.emptyList();
 
         VideoListResponse resp = null;
@@ -181,6 +182,7 @@ public class YouTubePlaylistVideoLoader extends AsyncTask<String, Void, List<You
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         if (resp == null) return Collections.emptyList();
 
         List<Video> videoResults = resp.getItems();
@@ -190,9 +192,11 @@ public class YouTubePlaylistVideoLoader extends AsyncTask<String, Void, List<You
             PlaylistItem playlistItem = pit.next();
             Video videoItem = vit.next();
 
+
             YouTubeVideo youTubeVideo = new YouTubeVideo();
             youTubeVideo.setId(playlistItem.getContentDetails().getVideoId());
-            youTubeVideo.setTitle(playlistItem.getSnippet().getTitle());
+            String title = StringUtils.unescapeHtml3(playlistItem.getSnippet().getTitle());
+            youTubeVideo.setTitle(title);
             youTubeVideo.setThumbnailURL(playlistItem.getSnippet().getThumbnails().getDefault().getUrl());
             //video info
             if (videoItem != null) {
@@ -204,6 +208,7 @@ public class YouTubePlaylistVideoLoader extends AsyncTask<String, Void, List<You
             }
             playlistItems.add(youTubeVideo);
         }
+
         return playlistItems;
     }
 }
