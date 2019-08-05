@@ -6,8 +6,8 @@ android {
         applicationId "com.teocci.ytinbg"
         minSdkVersion 16
         targetSdkVersion 28
-        versionCode 160040001
-        versionName "4.0.1"
+        versionCode 160040002
+        versionName "4.0.2"
         multiDexEnabled true
     }
 
