@@ -17,10 +17,10 @@ YTinBG provides mechanisms for searching videos and playlists on YT, as well as 
 This repository contains a simple sample code intended to demonstrate the capabilities of the YouTube API V3. It is not intended to be used as-is in applications as a library dependency, and will not be maintained as such. Bug fix contributions are welcome, but issues and feature requests will not be addressed.
 
 ### Download
-You can [download the APP here](http://bit.ly/2T4Txov)
+You can [download the APP here][5]
 
 ### Install
-You can install the APK following the [next guide](http://bit.ly/2GobNEk)
+You can install the APK following the [next guide][6]
 
 ### Pre-requisites
     
@@ -54,7 +54,7 @@ Color #e43333 (red icons)
 The code supplied here is covered under the MIT Open Source License.
 
 ## Contribute
-You can contribute to YouTube-In-Background by different means. You can help find bugs (and report them in the [issue tracker](https://github.com/teocci/YouTube-In-Background/issues)), help with the translation to different languages or you can try and implement new things yourself.
+You can contribute to YouTube-In-Background by different means. You can help find bugs (and report them in the [issue tracker][7]), help with the translation to different languages or you can try and implement new things yourself.
 
 <img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/playback_control.png" alt="Favorites" width="360" height="640">
 <img src="https://raw.githubusercontent.com/teocci/YouTube-In-Background/master/raw/favorites.png" alt="Favorites" width="360" height="640">
@@ -68,5 +68,7 @@ You can contribute to YouTube-In-Background by different means. You can help fin
 [2]: https://github.com/teocci/RecyclerviewCodeSample
 [3]: https://romannurik.github.io/AndroidAssetStudio
 [4]: https://github.com/google/ExoPlayer
-
+[5]: http://bit.ly/2kUQYZI
+[6]: http://bit.ly/2GobNEk
+[7]: https://github.com/teocci/YouTube-In-Background/issues
 
