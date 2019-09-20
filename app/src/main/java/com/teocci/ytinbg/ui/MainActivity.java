@@ -439,6 +439,8 @@ public class MainActivity extends AppCompatActivity
                 alertDialog.setTitle("Teocci");
                 alertDialog.setIcon(R.mipmap.ic_launcher);
                 alertDialog.setMessage(
+                        "Dedicated to the person who gives me a reason to smile even on the dullest of days." + ".\n" +
+                        "누리 고마워~ Thanks for been in my life." + "\n\n" +
                         "YiB v" + BuildConfig.VERSION_NAME + "\n\nteocci@yandex.com\n\n" +
                                 monthFormat.format(date) + " " + yearFormat.format(date) + ".\n"
                 );
